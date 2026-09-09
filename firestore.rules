@@ -1,0 +1,32 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function estConnecte() {
+      return request.auth != null;
+    }
+
+    function estAdmin() {
+      return estConnecte() &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    // Chaque utilisateur ne peut lire que sa propre fiche (rôle) ; les
+    // comptes sont créés/gérés depuis la console Firebase, jamais par l'app.
+    match /users/{userId} {
+      allow read: if estConnecte() && request.auth.uid == userId;
+      allow write: if false;
+    }
+
+    // Catalogue partagé : tout utilisateur connecté peut consulter,
+    // seul l'admin (PC) peut modifier.
+    match /familles/{id} {
+      allow read: if estConnecte();
+      allow write: if estAdmin();
+    }
+
+    match /articles/{id} {
+      allow read: if estConnecte();
+      allow write: if estAdmin();
+    }
+  }
+}

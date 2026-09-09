@@ -1,11 +1,11 @@
 {
-    "name": "aquajex_catalogue",
-    "short_name": "aquajex_catalogue",
+    "name": "Aquajex Catalogue",
+    "short_name": "Aquajex",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#F4F6F9",
+    "theme_color": "#1B3B5F",
+    "description": "Catalogue commercial Aquajex / Les Cinq Frères.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

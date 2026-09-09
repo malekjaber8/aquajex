@@ -5,7 +5,9 @@ import '../widgets/decorative_background.dart';
 import 'catalogue_screen.dart';
 
 class TarifSelectionScreen extends StatefulWidget {
-  const TarifSelectionScreen({super.key});
+  final bool isAdmin;
+
+  const TarifSelectionScreen({super.key, required this.isAdmin});
 
   @override
   State<TarifSelectionScreen> createState() => _TarifSelectionScreenState();
@@ -28,7 +30,11 @@ class _TarifSelectionScreenState extends State<TarifSelectionScreen> {
   void _ouvrirCatalogue(Tarif tarif) {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => CatalogueScreen(tarif: tarif, modePrix: _modePrix),
+        builder: (_) => CatalogueScreen(
+          tarif: tarif,
+          modePrix: _modePrix,
+          isAdmin: widget.isAdmin,
+        ),
       ),
     );
   }
@@ -41,96 +47,92 @@ class _TarifSelectionScreenState extends State<TarifSelectionScreen> {
         child: Stack(
           children: [
             SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              const SizedBox(height: 32),
-              RichText(
-                textAlign: TextAlign.center,
-                text: const TextSpan(
-                  style: TextStyle(
-                    fontSize: 38,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 0.5,
-                    height: 1.1,
-                  ),
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    TextSpan(
-                      text: 'Choisir un ',
-                      style: TextStyle(color: Color(0xFF1B3B5F)),
-                    ),
-                    TextSpan(
-                      text: 'catalogue',
-                      style: TextStyle(color: Color(0xFF2C8FA0)),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 14),
-              Container(
-                width: 64,
-                height: 4,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF1B3B5F), Color(0xFFC9A24B)],
-                  ),
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              const SizedBox(height: 18),
-              Text(
-                'Sélectionnez la société pour afficher les tarifs',
-                style: TextStyle(
-                  fontSize: 17,
-                  fontStyle: FontStyle.italic,
-                  color: Colors.black.withValues(alpha: 0.5),
-                  letterSpacing: 0.3,
-                ),
-              ),
-              const SizedBox(height: 48),
-              Expanded(
-                child: Center(
-                  child: LayoutBuilder(
-                    builder: (context, constraints) {
-                      final isWide = constraints.maxWidth > 700;
-                      final cards = [
-                        _TarifCard(
-                          tarif: Tarif.aquajex,
-                          onTap: () => _ouvrirCatalogue(Tarif.aquajex),
+                    const SizedBox(height: 32),
+                    RichText(
+                      textAlign: TextAlign.center,
+                      text: const TextSpan(
+                        style: TextStyle(
+                          fontSize: 38,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.5,
+                          height: 1.1,
                         ),
-                        _TarifCard(
-                          tarif: Tarif.cinqFreres,
-                          onTap: () => _ouvrirCatalogue(Tarif.cinqFreres),
+                        children: [
+                          TextSpan(
+                            text: 'Choisir un ',
+                            style: TextStyle(color: Color(0xFF1B3B5F)),
+                          ),
+                          TextSpan(
+                            text: 'catalogue',
+                            style: TextStyle(color: Color(0xFF2C8FA0)),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    Container(
+                      width: 64,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF1B3B5F), Color(0xFFC9A24B)],
                         ),
-                      ];
-                      if (isWide) {
-                        return Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Expanded(child: cards[0]),
-                            const SizedBox(width: 32),
-                            Expanded(child: cards[1]),
-                          ],
-                        );
-                      }
-                      return SingleChildScrollView(
-                        child: Column(
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                    const SizedBox(height: 18),
+                    Text(
+                      'Sélectionnez la société pour afficher les tarifs',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 17,
+                        fontStyle: FontStyle.italic,
+                        color: Colors.black.withValues(alpha: 0.5),
+                        letterSpacing: 0.3,
+                      ),
+                    ),
+                    const SizedBox(height: 48),
+                    LayoutBuilder(
+                      builder: (context, constraints) {
+                        final isWide = constraints.maxWidth > 700;
+                        final cards = [
+                          _TarifCard(
+                            tarif: Tarif.aquajex,
+                            onTap: () => _ouvrirCatalogue(Tarif.aquajex),
+                          ),
+                          _TarifCard(
+                            tarif: Tarif.cinqFreres,
+                            onTap: () => _ouvrirCatalogue(Tarif.cinqFreres),
+                          ),
+                        ];
+                        if (isWide) {
+                          return Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Expanded(child: cards[0]),
+                              const SizedBox(width: 32),
+                              Expanded(child: cards[1]),
+                            ],
+                          );
+                        }
+                        return Column(
                           children: [
                             cards[0],
                             const SizedBox(height: 24),
                             cards[1],
                           ],
-                        ),
-                      );
-                    },
-                  ),
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 24),
+                  ],
                 ),
               ),
-            ],
-          ),
-        ),
             ),
             Positioned(
               top: 16,
@@ -405,13 +407,13 @@ class _TarifCardState extends State<_TarifCard> {
                       gradient: LinearGradient(colors: accent),
                     ),
                   ),
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                          vertical: 36, horizontal: 32),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 36, horizontal: 32),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
                           Container(
                             width: 240,
                             height: 220,
@@ -476,8 +478,7 @@ class _TarifCardState extends State<_TarifCard> {
                               ],
                             ),
                           ),
-                        ],
-                      ),
+                      ],
                     ),
                   ),
                 ],

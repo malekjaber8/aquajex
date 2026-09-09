@@ -38,6 +38,13 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
     ::DispatchMessage(&msg);
   }
 
-  ::CoUninitialize();
+  // Firebase (Firestore en particulier, qui garde des connexions gRPC
+  // ouvertes pour la synchronisation en direct) peut bloquer un arrêt
+  // "propre" : ses threads/destructeurs statiques ne se terminent pas
+  // toujours à temps lors d'un exit() normal, ce qui laissait le
+  // processus tourner en arrière-plan après la fermeture de la fenêtre.
+  // On force donc l'arrêt immédiat du processus au lieu d'attendre un
+  // nettoyage qui peut ne jamais arriver.
+  ::TerminateProcess(::GetCurrentProcess(), 0);
   return EXIT_SUCCESS;
 }
