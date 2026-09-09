@@ -5,6 +5,7 @@ import '../models/article.dart';
 import '../models/client.dart';
 import '../models/commande.dart';
 import '../models/mode_prix.dart';
+import '../models/note.dart';
 import '../models/tarif.dart';
 import '../services/auth_service.dart';
 import '../services/catalogue_repository.dart';
@@ -15,6 +16,7 @@ import '../widgets/panier_sheet.dart';
 import '../widgets/sidebar_nav.dart';
 import 'article_form_screen.dart';
 import 'client_form_screen.dart';
+import 'note_form_screen.dart';
 import 'sections/catalogue_section.dart';
 import 'sections/clients_section.dart';
 import 'sections/commandes_section.dart';
@@ -53,6 +55,7 @@ class _CatalogueScreenState extends State<CatalogueScreen> {
   List<String> _familles = [];
   List<Client> _clients = [];
   List<Commande> _commandes = [];
+  List<Note> _notes = [];
   final List<LigneCommande> _panier = [];
 
   StreamSubscription<List<String>>? _famillesSub;
@@ -102,10 +105,12 @@ class _CatalogueScreenState extends State<CatalogueScreen> {
   Future<void> _chargerGestion() async {
     final clients = await _gestionRepo.getClients();
     final commandes = await _gestionRepo.getCommandes();
+    final notes = await _gestionRepo.getNotes();
     if (!mounted) return;
     setState(() {
       _clients = clients;
       _commandes = commandes;
+      _notes = notes;
       _chargementGestion = false;
     });
   }
@@ -432,9 +437,76 @@ class _CatalogueScreenState extends State<CatalogueScreen> {
     }
   }
 
+  // --- Notes ---
+
+  Future<void> _ajouterNote() async {
+    final accent = widget.tarif.accentGradient;
+    final resultat = await Navigator.of(context).push<Note>(
+      MaterialPageRoute(
+        builder: (_) => NoteFormScreen(accent: accent, clients: _clients),
+      ),
+    );
+    if (resultat != null) {
+      await _gestionRepo.ajouterNote(resultat);
+      setState(() {
+        _notes = [resultat, ..._notes];
+      });
+    }
+  }
+
+  Future<void> _modifierNote(Note note) async {
+    final accent = widget.tarif.accentGradient;
+    final resultat = await Navigator.of(context).push<Note>(
+      MaterialPageRoute(
+        builder: (_) => NoteFormScreen(
+          accent: accent,
+          clients: _clients,
+          noteExistante: note,
+        ),
+      ),
+    );
+    if (resultat != null) {
+      await _gestionRepo.modifierNote(resultat);
+      setState(() {
+        _notes = [
+          for (final n in _notes) n.id == note.id ? resultat : n,
+        ];
+      });
+    }
+  }
+
+  Future<void> _supprimerNote(Note note) async {
+    final confirme = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Supprimer cette note ?'),
+        content: Text(note.contenu, maxLines: 3, overflow: TextOverflow.ellipsis),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Annuler'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child:
+                const Text('Supprimer', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+    if (confirme == true) {
+      await _gestionRepo.supprimerNote(note.id);
+      setState(() {
+        _notes = _notes.where((n) => n.id != note.id).toList();
+      });
+    }
+  }
+
   void _onFabPressed() {
     if (_selectedIndex == 1) {
       _ajouterClient();
+    } else if (_selectedIndex == 3) {
+      _ajouterNote();
     } else if (!widget.isAdmin) {
       return;
     } else if (_familleSelectionnee == null) {
@@ -446,7 +518,7 @@ class _CatalogueScreenState extends State<CatalogueScreen> {
 
   bool get _fabVisible {
     if (_chargement) return false;
-    if (_selectedIndex == 1) return true;
+    if (_selectedIndex == 1 || _selectedIndex == 3) return true;
     return _selectedIndex == 0 && widget.isAdmin;
   }
 
@@ -480,7 +552,13 @@ class _CatalogueScreenState extends State<CatalogueScreen> {
           );
           break;
         case 3:
-          body = NotesSection(tarif: widget.tarif);
+          body = NotesSection(
+            tarif: widget.tarif,
+            notes: _notes,
+            onEdit: _modifierNote,
+            onDelete: _supprimerNote,
+            onAjouter: _ajouterNote,
+          );
           break;
         default:
           body = CatalogueSection(

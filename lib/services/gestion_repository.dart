@@ -3,6 +3,7 @@ import 'dart:convert';
 import '../models/client.dart';
 import '../models/commande.dart';
 import '../models/mode_prix.dart';
+import '../models/note.dart';
 import '../models/tarif.dart';
 import 'database_service.dart';
 
@@ -115,6 +116,56 @@ class GestionRepository {
         lignes: (jsonDecode(r['lignes'] as String) as List)
             .map((j) => LigneCommande.depuisJson(j as Map<String, dynamic>))
             .toList(),
+      );
+
+  // --- Notes ---
+
+  Future<List<Note>> getNotes() async {
+    final db = await DatabaseService.instance.database;
+    final rows = await db.query(
+      'notes',
+      where: 'tarif = ?',
+      whereArgs: [_tarifKey],
+      orderBy: 'date DESC',
+    );
+    return rows.map(_versNote).toList();
+  }
+
+  Future<void> ajouterNote(Note note) async {
+    final db = await DatabaseService.instance.database;
+    await db.insert('notes', _versLigneNote(note));
+  }
+
+  Future<void> modifierNote(Note note) async {
+    final db = await DatabaseService.instance.database;
+    await db.update('notes', _versLigneNote(note),
+        where: 'id = ?', whereArgs: [note.id]);
+  }
+
+  Future<void> supprimerNote(String id) async {
+    final db = await DatabaseService.instance.database;
+    await db.delete('notes', where: 'id = ?', whereArgs: [id]);
+  }
+
+  Map<String, Object?> _versLigneNote(Note n) => {
+        'id': n.id,
+        'tarif': _tarifKey,
+        'contenu': n.contenu,
+        'client_id': n.clientId,
+        'client_nom': n.clientNom,
+        'date': n.date.toIso8601String(),
+        'date_rappel': n.dateRappel?.toIso8601String(),
+      };
+
+  Note _versNote(Map<String, Object?> r) => Note(
+        id: r['id'] as String,
+        contenu: r['contenu'] as String,
+        clientId: r['client_id'] as String?,
+        clientNom: r['client_nom'] as String?,
+        date: DateTime.parse(r['date'] as String),
+        dateRappel: r['date_rappel'] != null
+            ? DateTime.parse(r['date_rappel'] as String)
+            : null,
       );
 
   /// Exporte clients + commandes de ce tarif en structure sérialisable JSON.

@@ -46,14 +46,18 @@ class DatabaseService {
 
     return openDatabase(
       chemin,
-      version: 2,
+      version: 3,
       onCreate: (db, version) async {
         await _creerTablesCatalogue(db);
         await _creerTablesGestion(db);
+        await _creerTableNotes(db);
       },
       onUpgrade: (db, ancienneVersion, nouvelleVersion) async {
         if (ancienneVersion < 2) {
           await _creerTablesGestion(db);
+        }
+        if (ancienneVersion < 3) {
+          await _creerTableNotes(db);
         }
       },
     );
@@ -108,6 +112,20 @@ class DatabaseService {
         date TEXT NOT NULL,
         mode_prix TEXT NOT NULL,
         lignes TEXT NOT NULL
+      )
+    ''');
+  }
+
+  Future<void> _creerTableNotes(Database db) async {
+    await db.execute('''
+      CREATE TABLE notes (
+        id TEXT PRIMARY KEY,
+        tarif TEXT NOT NULL,
+        contenu TEXT NOT NULL,
+        client_id TEXT,
+        client_nom TEXT,
+        date TEXT NOT NULL,
+        date_rappel TEXT
       )
     ''');
   }
