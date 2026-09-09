@@ -579,9 +579,9 @@ class _RubanArticles extends StatefulWidget {
 
 class _RubanArticlesState extends State<_RubanArticles>
     with SingleTickerProviderStateMixin {
-  static const double _largeurCarte = 172;
-  static const double _espacement = 12;
-  static const double _vitessePixelsParSeconde = 26;
+  static const double _largeurCarte = 148;
+  static const double _espacement = 14;
+  static const double _vitessePixelsParSeconde = 24;
 
   final ScrollController _scrollCtrl = ScrollController();
   late final Ticker _ticker;
@@ -605,9 +605,12 @@ class _RubanArticlesState extends State<_RubanArticles>
     _dernierInstant = elapsed;
     final largeurUnite = _largeurUnite;
     if (largeurUnite <= 0 || dt <= 0 || dt > 0.25) return;
-    double offset =
-        _scrollCtrl.offset + _vitessePixelsParSeconde * dt;
-    if (offset >= largeurUnite) offset -= largeurUnite;
+    final maxExtent = _scrollCtrl.position.maxScrollExtent;
+    double offset = _scrollCtrl.offset + _vitessePixelsParSeconde * dt;
+    if (offset >= largeurUnite && maxExtent >= largeurUnite) {
+      offset -= largeurUnite;
+    }
+    if (offset > maxExtent) offset = maxExtent;
     _scrollCtrl.jumpTo(offset);
   }
 
@@ -621,23 +624,21 @@ class _RubanArticlesState extends State<_RubanArticles>
   @override
   Widget build(BuildContext context) {
     if (widget.articles.isEmpty) return const SizedBox.shrink();
-    // Liste dupliquée pour un défilement en boucle sans coupure visible.
-    final items = [...widget.articles, ...widget.articles];
 
     return Container(
       decoration: BoxDecoration(
-        gradient: LinearGradient(colors: widget.accent),
-        borderRadius: BorderRadius.circular(20),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: widget.accent.last.withValues(alpha: 0.16)),
         boxShadow: [
           BoxShadow(
-            color: widget.accent.last.withValues(alpha: 0.28),
-            blurRadius: 18,
-            offset: const Offset(0, 8),
-            spreadRadius: -4,
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
           ),
         ],
       ),
-      padding: const EdgeInsets.symmetric(vertical: 14),
+      padding: const EdgeInsets.symmetric(vertical: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -645,36 +646,61 @@ class _RubanArticlesState extends State<_RubanArticles>
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Row(
               children: [
-                Icon(widget.icone, color: Colors.white, size: 17),
-                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(colors: widget.accent),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(widget.icone, color: Colors.white, size: 13),
+                ),
+                const SizedBox(width: 10),
                 Text(
                   widget.titre,
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: widget.accent.last,
                     fontWeight: FontWeight.w800,
-                    fontSize: 12.5,
-                    letterSpacing: 1.1,
+                    fontSize: 13,
+                    letterSpacing: 0.6,
                   ),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 14),
           SizedBox(
-            height: 100,
-            child: ListView.separated(
-              controller: _scrollCtrl,
-              scrollDirection: Axis.horizontal,
-              physics: const NeverScrollableScrollPhysics(),
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              itemCount: items.length,
-              separatorBuilder: (context, index) =>
-                  const SizedBox(width: _espacement),
-              itemBuilder: (context, index) => _CarteRuban(
-                data: items[index],
-                modePrix: widget.modePrix,
-                largeur: _largeurCarte,
-              ),
+            height: 122,
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final largeurUnite = _largeurUnite;
+                // Répète la liste assez pour couvrir toute la largeur visible
+                // (+ une unité) : sans ça, avec peu d'articles, le ruban
+                // laisse un grand vide au lieu de tourner en boucle propre.
+                var copies = 2;
+                if (largeurUnite > 0) {
+                  copies = ((constraints.maxWidth / largeurUnite).ceil() + 1)
+                      .clamp(2, 30);
+                }
+                final items = List.generate(
+                  copies * widget.articles.length,
+                  (i) => widget.articles[i % widget.articles.length],
+                );
+                return ListView.separated(
+                  controller: _scrollCtrl,
+                  scrollDirection: Axis.horizontal,
+                  physics: const NeverScrollableScrollPhysics(),
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  itemCount: items.length,
+                  separatorBuilder: (context, index) =>
+                      const SizedBox(width: _espacement),
+                  itemBuilder: (context, index) => _CarteRuban(
+                    data: items[index],
+                    accent: widget.accent,
+                    modePrix: widget.modePrix,
+                    largeur: _largeurCarte,
+                  ),
+                );
+              },
             ),
           ),
         ],
@@ -685,14 +711,27 @@ class _RubanArticlesState extends State<_RubanArticles>
 
 class _CarteRuban extends StatelessWidget {
   final ArticleAvecTarif data;
+  final List<Color> accent;
   final ModePrix modePrix;
   final double largeur;
 
   const _CarteRuban({
     required this.data,
+    required this.accent,
     required this.modePrix,
     required this.largeur,
   });
+
+  String _formaterPrix(double prix) {
+    final parts = prix.toStringAsFixed(3).split('.');
+    final chiffres = parts[0];
+    final buffer = StringBuffer();
+    for (int i = 0; i < chiffres.length; i++) {
+      if (i > 0 && (chiffres.length - i) % 3 == 0) buffer.write(' ');
+      buffer.write(chiffres[i]);
+    }
+    return '${buffer.toString()},${parts[1]}';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -703,74 +742,100 @@ class _CarteRuban extends StatelessWidget {
     return Container(
       width: largeur,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: const Color(0xFFF9FAFC),
         borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
       ),
-      padding: const EdgeInsets.all(9),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(10),
-            child: SizedBox(
-              width: 62,
-              height: 62,
-              child: article.imageBytes != null
-                  ? Image.memory(article.imageBytes!, fit: BoxFit.cover)
-                  : Container(
-                      color: const Color(0xFFF3F5F8),
-                      alignment: Alignment.center,
-                      child: Icon(
-                        Icons.inventory_2_outlined,
-                        size: 22,
-                        color: data.tarif.accentColor.withValues(alpha: 0.35),
-                      ),
-                    ),
-            ),
-          ),
-          const SizedBox(width: 9),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              mainAxisSize: MainAxisSize.min,
+            child: Stack(
+              fit: StackFit.expand,
               children: [
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
-                  decoration: BoxDecoration(
-                    color: data.tarif.accentColor.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    data.tarif.nom,
-                    style: TextStyle(
-                      fontSize: 8.5,
-                      fontWeight: FontWeight.w700,
-                      color: data.tarif.accentColor,
+                article.imageBytes != null
+                    ? Image.memory(article.imageBytes!, fit: BoxFit.cover)
+                    : Container(
+                        color: const Color(0xFFEFF2F6),
+                        alignment: Alignment.center,
+                        child: Icon(
+                          Icons.inventory_2_outlined,
+                          size: 26,
+                          color: accent.last.withValues(alpha: 0.3),
+                        ),
+                      ),
+                Positioned(
+                  left: 6,
+                  top: 6,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(colors: accent),
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.18),
+                          blurRadius: 3,
+                          offset: const Offset(0, 1),
+                        ),
+                      ],
+                    ),
+                    child: Text(
+                      data.tarif.nom,
+                      style: const TextStyle(
+                        fontSize: 8,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                        letterSpacing: 0.2,
+                      ),
                     ),
                   ),
                 ),
-                const SizedBox(height: 4),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(9, 7, 9, 9),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
                 Text(
                   article.designation,
-                  maxLines: 2,
+                  maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     fontSize: 11.5,
                     fontWeight: FontWeight.w700,
                     color: Color(0xFF1B3B5F),
-                    height: 1.15,
                   ),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  '${prix.toStringAsFixed(3)} DT',
-                  style: TextStyle(
-                    fontSize: 11.5,
-                    fontWeight: FontWeight.w800,
-                    color: data.tarif.accentColor,
-                  ),
+                const SizedBox(height: 3),
+                Row(
+                  children: [
+                    Text(
+                      _formaterPrix(prix),
+                      style: TextStyle(
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w800,
+                        color: accent.last,
+                      ),
+                    ),
+                    const SizedBox(width: 3),
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 1),
+                      child: Text(
+                        'DT',
+                        style: TextStyle(
+                          fontSize: 9.5,
+                          fontWeight: FontWeight.w600,
+                          color: accent.last.withValues(alpha: 0.7),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
