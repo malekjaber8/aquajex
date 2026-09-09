@@ -1,6 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
+import '../models/article.dart';
 import '../models/mode_prix.dart';
 import '../models/tarif.dart';
+import '../services/catalogue_repository.dart';
 import '../widgets/decorative_background.dart';
 import 'catalogue_screen.dart';
 
@@ -15,6 +20,37 @@ class TarifSelectionScreen extends StatefulWidget {
 
 class _TarifSelectionScreenState extends State<TarifSelectionScreen> {
   ModePrix _modePrix = ModePrix.detail;
+
+  List<ArticleAvecTarif> _articlesPromo = [];
+  List<ArticleAvecTarif> _articlesNouveaute = [];
+  StreamSubscription<List<ArticleAvecTarif>>? _promoSub;
+  StreamSubscription<List<ArticleAvecTarif>>? _nouveauteSub;
+
+  @override
+  void initState() {
+    super.initState();
+    // Rubans mélangeant les deux catalogues (Aquajex + Les Cinq Frères) :
+    // seul l'écran d'accueil montre les deux marques ensemble.
+    _promoSub =
+        CatalogueRepository.streamArticlesParStatut(StatutArticle.promo)
+            .listen((articles) {
+      if (!mounted) return;
+      setState(() => _articlesPromo = articles);
+    }, onError: (_) {});
+    _nouveauteSub =
+        CatalogueRepository.streamArticlesParStatut(StatutArticle.nouveaute)
+            .listen((articles) {
+      if (!mounted) return;
+      setState(() => _articlesNouveaute = articles);
+    }, onError: (_) {});
+  }
+
+  @override
+  void dispose() {
+    _promoSub?.cancel();
+    _nouveauteSub?.cancel();
+    super.dispose();
+  }
 
   Future<void> _choisirModePrix() async {
     final choix = await showModalBottomSheet<ModePrix>(
@@ -96,7 +132,20 @@ class _TarifSelectionScreenState extends State<TarifSelectionScreen> {
                         letterSpacing: 0.3,
                       ),
                     ),
-                    const SizedBox(height: 48),
+                    const SizedBox(height: 40),
+                    if (_articlesPromo.isNotEmpty) ...[
+                      ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 952),
+                        child: _RubanArticles(
+                          titre: 'EN CE MOMENT EN PROMO',
+                          icone: Icons.local_offer_outlined,
+                          accent: StatutArticle.promo.degradeBandeau!,
+                          articles: _articlesPromo,
+                          modePrix: _modePrix,
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                    ],
                     LayoutBuilder(
                       builder: (context, constraints) {
                         final isWide = constraints.maxWidth > 700;
@@ -129,6 +178,19 @@ class _TarifSelectionScreenState extends State<TarifSelectionScreen> {
                         );
                       },
                     ),
+                    if (_articlesNouveaute.isNotEmpty) ...[
+                      const SizedBox(height: 24),
+                      ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 952),
+                        child: _RubanArticles(
+                          titre: 'LES DERNIÈRES NOUVEAUTÉS',
+                          icone: Icons.auto_awesome_outlined,
+                          accent: StatutArticle.nouveaute.degradeBandeau!,
+                          articles: _articlesNouveaute,
+                          modePrix: _modePrix,
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: 24),
                   ],
                 ),
@@ -488,6 +550,232 @@ class _TarifCardState extends State<_TarifCard> {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Bandeau animé qui fait défiler en continu les articles d'un statut donné
+/// (promo ou nouveauté), en mélangeant les deux catalogues Aquajex / Les
+/// Cinq Frères — utilisé uniquement sur l'écran d'accueil.
+class _RubanArticles extends StatefulWidget {
+  final String titre;
+  final IconData icone;
+  final List<Color> accent;
+  final List<ArticleAvecTarif> articles;
+  final ModePrix modePrix;
+
+  const _RubanArticles({
+    required this.titre,
+    required this.icone,
+    required this.accent,
+    required this.articles,
+    required this.modePrix,
+  });
+
+  @override
+  State<_RubanArticles> createState() => _RubanArticlesState();
+}
+
+class _RubanArticlesState extends State<_RubanArticles>
+    with SingleTickerProviderStateMixin {
+  static const double _largeurCarte = 172;
+  static const double _espacement = 12;
+  static const double _vitessePixelsParSeconde = 26;
+
+  final ScrollController _scrollCtrl = ScrollController();
+  late final Ticker _ticker;
+  Duration _dernierInstant = Duration.zero;
+
+  double get _largeurUnite =>
+      widget.articles.length * (_largeurCarte + _espacement);
+
+  @override
+  void initState() {
+    super.initState();
+    _ticker = createTicker(_surTick)..start();
+  }
+
+  void _surTick(Duration elapsed) {
+    if (widget.articles.isEmpty || !_scrollCtrl.hasClients) {
+      _dernierInstant = elapsed;
+      return;
+    }
+    final dt = (elapsed - _dernierInstant).inMicroseconds / 1e6;
+    _dernierInstant = elapsed;
+    final largeurUnite = _largeurUnite;
+    if (largeurUnite <= 0 || dt <= 0 || dt > 0.25) return;
+    double offset =
+        _scrollCtrl.offset + _vitessePixelsParSeconde * dt;
+    if (offset >= largeurUnite) offset -= largeurUnite;
+    _scrollCtrl.jumpTo(offset);
+  }
+
+  @override
+  void dispose() {
+    _ticker.dispose();
+    _scrollCtrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (widget.articles.isEmpty) return const SizedBox.shrink();
+    // Liste dupliquée pour un défilement en boucle sans coupure visible.
+    final items = [...widget.articles, ...widget.articles];
+
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(colors: widget.accent),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: widget.accent.last.withValues(alpha: 0.28),
+            blurRadius: 18,
+            offset: const Offset(0, 8),
+            spreadRadius: -4,
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.symmetric(vertical: 14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Row(
+              children: [
+                Icon(widget.icone, color: Colors.white, size: 17),
+                const SizedBox(width: 8),
+                Text(
+                  widget.titre,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 12.5,
+                    letterSpacing: 1.1,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            height: 100,
+            child: ListView.separated(
+              controller: _scrollCtrl,
+              scrollDirection: Axis.horizontal,
+              physics: const NeverScrollableScrollPhysics(),
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              itemCount: items.length,
+              separatorBuilder: (context, index) =>
+                  const SizedBox(width: _espacement),
+              itemBuilder: (context, index) => _CarteRuban(
+                data: items[index],
+                modePrix: widget.modePrix,
+                largeur: _largeurCarte,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CarteRuban extends StatelessWidget {
+  final ArticleAvecTarif data;
+  final ModePrix modePrix;
+  final double largeur;
+
+  const _CarteRuban({
+    required this.data,
+    required this.modePrix,
+    required this.largeur,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final article = data.article;
+    final prix =
+        modePrix == ModePrix.detail ? article.prixDetail : article.prixGros;
+
+    return Container(
+      width: largeur,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      padding: const EdgeInsets.all(9),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: SizedBox(
+              width: 62,
+              height: 62,
+              child: article.imageBytes != null
+                  ? Image.memory(article.imageBytes!, fit: BoxFit.cover)
+                  : Container(
+                      color: const Color(0xFFF3F5F8),
+                      alignment: Alignment.center,
+                      child: Icon(
+                        Icons.inventory_2_outlined,
+                        size: 22,
+                        color: data.tarif.accentColor.withValues(alpha: 0.35),
+                      ),
+                    ),
+            ),
+          ),
+          const SizedBox(width: 9),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+                  decoration: BoxDecoration(
+                    color: data.tarif.accentColor.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    data.tarif.nom,
+                    style: TextStyle(
+                      fontSize: 8.5,
+                      fontWeight: FontWeight.w700,
+                      color: data.tarif.accentColor,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  article.designation,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF1B3B5F),
+                    height: 1.15,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '${prix.toStringAsFixed(3)} DT',
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w800,
+                    color: data.tarif.accentColor,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

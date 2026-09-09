@@ -5,6 +5,16 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/article.dart';
 import '../models/tarif.dart';
 
+/// Un article accompagné du tarif (catalogue) auquel il appartient — utilisé
+/// pour les rubans promo/nouveauté de l'écran d'accueil, qui mélangent les
+/// articles des deux catalogues.
+class ArticleAvecTarif {
+  final Article article;
+  final Tarif tarif;
+
+  const ArticleAvecTarif({required this.article, required this.tarif});
+}
+
 /// Accès aux familles et articles, propre à chaque tarif (Aquajex / Les
 /// Cinq Frères ont chacun leur propre catalogue).
 ///
@@ -51,6 +61,29 @@ class CatalogueRepository {
           .toList();
       articles.sort((a, b) => a.designation.compareTo(b.designation));
       return articles;
+    });
+  }
+
+  /// Flux en direct (tous tarifs confondus) des articles ayant un statut
+  /// donné — utilisé par les rubans promo/nouveauté de l'écran d'accueil.
+  static Stream<List<ArticleAvecTarif>> streamArticlesParStatut(
+      StatutArticle statut) {
+    return FirebaseFirestore.instance
+        .collection('articles')
+        .where('statut', isEqualTo: statut.name)
+        .snapshots()
+        .map((snap) {
+      final resultats = snap.docs.map((d) {
+        final data = {...d.data(), 'id': d.id};
+        final tarif = Tarif.values.firstWhere(
+          (t) => t.name == data['tarif'],
+          orElse: () => Tarif.aquajex,
+        );
+        return ArticleAvecTarif(article: _versArticle(data), tarif: tarif);
+      }).toList();
+      resultats.sort(
+          (a, b) => a.article.designation.compareTo(b.article.designation));
+      return resultats;
     });
   }
 
@@ -118,7 +151,7 @@ class CatalogueRepository {
         'statut': a.statut.name,
       };
 
-  Article _versArticle(Map<String, dynamic> d) => Article(
+  static Article _versArticle(Map<String, dynamic> d) => Article(
         id: d['id'] as String? ?? '',
         categorie: d['categorie'] as String? ?? '',
         designation: d['designation'] as String? ?? '',
