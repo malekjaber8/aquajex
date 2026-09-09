@@ -35,6 +35,7 @@ class _ArticleFormScreenState extends State<ArticleFormScreen> {
 
   String? _familleChoisie;
   Uint8List? _imageBytes;
+  late StatutArticle _statut;
 
   bool get _modification => widget.articleExistant != null;
 
@@ -54,6 +55,7 @@ class _ArticleFormScreenState extends State<ArticleFormScreen> {
         TextEditingController(text: a?.prixGros.toStringAsFixed(3) ?? '');
     _familleChoisie = a?.categorie ?? widget.familleInitiale;
     _imageBytes = a?.imageBytes;
+    _statut = a?.statut ?? StatutArticle.normal;
   }
 
   @override
@@ -102,6 +104,7 @@ class _ArticleFormScreenState extends State<ArticleFormScreen> {
       taille: _videVersNull(_tailleCtrl.text),
       colisage: int.tryParse(_colisageCtrl.text.trim()),
       imageBytes: _imageBytes,
+      statut: _statut,
     );
 
     Navigator.of(context).pop(article);
@@ -150,7 +153,9 @@ class _ArticleFormScreenState extends State<ArticleFormScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Center(child: _buildImagePicker(accent)),
-                          const SizedBox(height: 28),
+                          const SizedBox(height: 24),
+                          _buildStatutSelector(),
+                          const SizedBox(height: 24),
                           _buildFamilleSelector(accent),
                           const SizedBox(height: 16),
                           _champTexte(
@@ -332,6 +337,92 @@ class _ArticleFormScreenState extends State<ArticleFormScreen> {
                   ),
                 ],
               ),
+      ),
+    );
+  }
+
+  Widget _buildStatutSelector() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Statut de l\'article',
+          style: TextStyle(
+            fontSize: 12.5,
+            fontWeight: FontWeight.w600,
+            color: Colors.black.withValues(alpha: 0.55),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            for (final statut in StatutArticle.values) ...[
+              Expanded(child: _statutChip(statut)),
+              if (statut != StatutArticle.values.last)
+                const SizedBox(width: 10),
+            ],
+          ],
+        ),
+        if (_statut != StatutArticle.normal) ...[
+          const SizedBox(height: 8),
+          Text(
+            _statut == StatutArticle.promo
+                ? 'Un bandeau "Promo" s\'affichera automatiquement sur la carte. Pensez à mettre à jour le prix ci-dessous.'
+                : 'Un bandeau "Nouveauté" s\'affichera automatiquement sur la carte.',
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.black.withValues(alpha: 0.45),
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _statutChip(StatutArticle statut) {
+    final selectionne = _statut == statut;
+    final degrade = statut.degradeBandeau;
+    final couleur = degrade?.last ?? const Color(0xFF6B7A8D);
+    return Material(
+      color: selectionne ? null : const Color(0xFFF3F5F8),
+      borderRadius: BorderRadius.circular(14),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(14),
+        onTap: () => setState(() => _statut = statut),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14),
+            gradient: selectionne
+                ? LinearGradient(colors: degrade ?? [couleur, couleur])
+                : null,
+            border: Border.all(
+              color: selectionne
+                  ? Colors.transparent
+                  : Colors.black.withValues(alpha: 0.08),
+            ),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                statut.icone,
+                size: 18,
+                color: selectionne ? Colors.white : couleur,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                statut.libelle,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: selectionne ? Colors.white : const Color(0xFF1B3B5F),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

@@ -115,12 +115,14 @@ class CatalogueRepository {
         'prixDetail': a.prixDetail,
         'prixGros': a.prixGros,
         'image': a.imageBytes != null ? base64Encode(a.imageBytes!) : null,
+        'statut': a.statut.name,
       };
 
   Article _versArticle(Map<String, dynamic> d) => Article(
         id: d['id'] as String? ?? '',
         categorie: d['categorie'] as String? ?? '',
         designation: d['designation'] as String? ?? '',
+        statut: StatutArticle.depuisNom(d['statut'] as String?),
         codeArticle: d['codeArticle'] as String?,
         codeBarre: d['codeBarre'] as String?,
         taille: d['taille'] as String?,

@@ -21,6 +21,12 @@ class CatalogueSection extends StatelessWidget {
   final String recherche;
   final ValueChanged<String> onRechercheChanged;
 
+  /// null = "Tous" (catalogue normal, par famille). Promo/nouveauté sont
+  /// des filtres transversaux qui affichent les articles concernés de
+  /// toutes les familles, comme la recherche.
+  final StatutArticle? filtreStatut;
+  final ValueChanged<StatutArticle?> onFiltreStatutChanged;
+
   /// Seul l'admin (PC) peut modifier le catalogue. Le commercial
   /// (tablette) le consulte en lecture seule.
   final bool isAdmin;
@@ -40,6 +46,8 @@ class CatalogueSection extends StatelessWidget {
     required this.onAjouterPanier,
     required this.recherche,
     required this.onRechercheChanged,
+    required this.filtreStatut,
+    required this.onFiltreStatutChanged,
     required this.isAdmin,
   });
 
@@ -83,10 +91,11 @@ class CatalogueSection extends StatelessWidget {
     );
   }
 
-  List<Article> get _resultatsRecherche {
+  List<Article> get _articlesFiltres {
     final q = recherche.trim().toLowerCase();
-    if (q.isEmpty) return const [];
     return articles.where((a) {
+      if (filtreStatut != null && a.statut != filtreStatut) return false;
+      if (q.isEmpty) return true;
       return a.designation.toLowerCase().contains(q) ||
           a.categorie.toLowerCase().contains(q) ||
           (a.codeArticle?.toLowerCase().contains(q) ?? false) ||
@@ -94,9 +103,20 @@ class CatalogueSection extends StatelessWidget {
     }).toList();
   }
 
+  String _libelleResultats(int total) {
+    final pluriel = total > 1 ? 's' : '';
+    if (recherche.trim().isNotEmpty && filtreStatut != null) {
+      return '$total résultat$pluriel en ${filtreStatut!.libelle.toLowerCase()}';
+    }
+    if (filtreStatut != null) {
+      return '$total article$pluriel en ${filtreStatut!.libelle.toLowerCase()}';
+    }
+    return '$total résultat$pluriel';
+  }
+
   @override
   Widget build(BuildContext context) {
-    final enRecherche = recherche.trim().isNotEmpty;
+    final filtreActif = recherche.trim().isNotEmpty || filtreStatut != null;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -108,9 +128,17 @@ class CatalogueSection extends StatelessWidget {
             onChanged: onRechercheChanged,
           ),
         ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(24, 10, 24, 0),
+          child: _FiltreStatutBar(
+            accent: tarif.accentGradient,
+            valeur: filtreStatut,
+            onChanged: onFiltreStatutChanged,
+          ),
+        ),
         Expanded(
-          child: enRecherche
-              ? _buildResultatsRecherche(context)
+          child: filtreActif
+              ? _buildArticlesFiltres(context)
               : (familleSelectionnee == null
                   ? _buildFamilles(context)
                   : _buildArticles(context)),
@@ -119,14 +147,16 @@ class CatalogueSection extends StatelessWidget {
     );
   }
 
-  Widget _buildResultatsRecherche(BuildContext context) {
+  Widget _buildArticlesFiltres(BuildContext context) {
     final accent = tarif.accentGradient;
-    final resultats = _resultatsRecherche;
+    final resultats = _articlesFiltres;
 
     if (resultats.isEmpty) {
       return Center(
         child: Text(
-          'Aucun article ne correspond à "${recherche.trim()}".',
+          recherche.trim().isNotEmpty
+              ? 'Aucun article ne correspond à "${recherche.trim()}".'
+              : 'Aucun article ${filtreStatut == StatutArticle.promo ? 'en promo' : 'en nouveauté'} pour le moment.',
           textAlign: TextAlign.center,
           style: TextStyle(color: Colors.black.withValues(alpha: 0.45)),
         ),
@@ -142,7 +172,7 @@ class CatalogueSection extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.fromLTRB(24, 8, 24, 4),
               child: Text(
-                '${resultats.length} résultat${resultats.length > 1 ? 's' : ''}',
+                _libelleResultats(resultats.length),
                 style: TextStyle(
                   fontSize: 12.5,
                   color: Colors.black.withValues(alpha: 0.4),
@@ -416,6 +446,85 @@ class _BarreRechercheState extends State<_BarreRecherche> {
           border: InputBorder.none,
           contentPadding:
               const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        ),
+      ),
+    );
+  }
+}
+
+class _FiltreStatutBar extends StatelessWidget {
+  final List<Color> accent;
+  final StatutArticle? valeur;
+  final ValueChanged<StatutArticle?> onChanged;
+
+  const _FiltreStatutBar({
+    required this.accent,
+    required this.valeur,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: [
+          _puce(context, null, 'Tous', Icons.grid_view_rounded, null),
+          const SizedBox(width: 8),
+          _puce(context, StatutArticle.promo, 'Promo',
+              StatutArticle.promo.icone, StatutArticle.promo.degradeBandeau),
+          const SizedBox(width: 8),
+          _puce(
+              context,
+              StatutArticle.nouveaute,
+              'Nouveauté',
+              StatutArticle.nouveaute.icone,
+              StatutArticle.nouveaute.degradeBandeau),
+        ],
+      ),
+    );
+  }
+
+  Widget _puce(BuildContext context, StatutArticle? statut, String libelle,
+      IconData icone, List<Color>? degrade) {
+    final selectionne = valeur == statut;
+    final couleur = degrade?.last ?? accent.last;
+    return Material(
+      color: selectionne ? null : Colors.white,
+      borderRadius: BorderRadius.circular(20),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(20),
+        onTap: () => onChanged(selectionne ? null : statut),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            gradient: selectionne
+                ? LinearGradient(colors: degrade ?? accent)
+                : null,
+            border: Border.all(
+              color: selectionne
+                  ? Colors.transparent
+                  : Colors.black.withValues(alpha: 0.08),
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icone,
+                  size: 15, color: selectionne ? Colors.white : couleur),
+              const SizedBox(width: 6),
+              Text(
+                libelle,
+                style: TextStyle(
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w700,
+                  color:
+                      selectionne ? Colors.white : const Color(0xFF1B3B5F),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

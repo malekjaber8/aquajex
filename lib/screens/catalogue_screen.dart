@@ -43,6 +43,7 @@ class _CatalogueScreenState extends State<CatalogueScreen> {
   int _selectedIndex = 0;
   String? _familleSelectionnee;
   String _rechercheArticle = '';
+  StatutArticle? _filtreStatut;
   bool _chargementGestion = true;
   bool _chargementFamilles = true;
   bool _chargementArticles = true;
@@ -497,6 +498,8 @@ class _CatalogueScreenState extends State<CatalogueScreen> {
             onAjouterPanier: _ajouterAuPanier,
             recherche: _rechercheArticle,
             onRechercheChanged: (v) => setState(() => _rechercheArticle = v),
+            filtreStatut: _filtreStatut,
+            onFiltreStatutChanged: (v) => setState(() => _filtreStatut = v),
             isAdmin: widget.isAdmin,
           );
       }

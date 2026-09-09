@@ -105,6 +105,43 @@ class _ArticleCardState extends State<ArticleCard> {
                               ),
                       ),
                     ),
+                    if (widget.article.statut != StatutArticle.normal)
+                      Positioned(
+                        top: 14,
+                        left: -36,
+                        child: Transform.rotate(
+                          angle: -0.7853981633974483,
+                          child: Container(
+                            width: 140,
+                            alignment: Alignment.center,
+                            padding: const EdgeInsets.symmetric(vertical: 5),
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: widget.article.statut.degradeBandeau!,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.25),
+                                  blurRadius: 4,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: Text(
+                              widget.article.statut == StatutArticle.promo
+                                  ? 'PROMO'
+                                  : 'NOUVEAU',
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: 1.2,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
                     if (widget.onEdit != null || widget.onDelete != null)
                       Positioned(
                         top: 8,
