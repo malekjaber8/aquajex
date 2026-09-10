@@ -25,10 +25,13 @@ class ClientTile extends StatefulWidget {
 class _ClientTileState extends State<ClientTile> {
   bool _hovering = false;
 
-  String get _initiales {
-    final p = widget.client.prenom.isNotEmpty ? widget.client.prenom[0] : '';
-    final n = widget.client.nom.isNotEmpty ? widget.client.nom[0] : '';
-    return '$p$n'.toUpperCase();
+  String? get _sousTitre {
+    final c = widget.client;
+    final parties = c.estSociete ? [c.responsable, c.telephone] : [c.telephone];
+    final texte = parties
+        .where((e) => e != null && e.trim().isNotEmpty)
+        .join(' · ');
+    return texte.isEmpty ? null : texte;
   }
 
   @override
@@ -75,7 +78,7 @@ class _ClientTileState extends State<ClientTile> {
                     ),
                     alignment: Alignment.center,
                     child: Text(
-                      _initiales,
+                      c.initiales,
                       style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.w700,
@@ -89,21 +92,18 @@ class _ClientTileState extends State<ClientTile> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          c.nomComplet,
+                          c.nomAffichage,
                           style: const TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.w700,
                             color: Color(0xFF1B3B5F),
                           ),
                         ),
-                        if (c.nomSociete != null || c.telephone != null)
+                        if (_sousTitre != null)
                           Padding(
                             padding: const EdgeInsets.only(top: 2),
                             child: Text(
-                              [
-                                c.nomSociete,
-                                c.telephone,
-                              ].where((e) => e != null).join(' · '),
+                              _sousTitre!,
                               style: TextStyle(
                                 fontSize: 12.5,
                                 color: Colors.black.withValues(alpha: 0.45),

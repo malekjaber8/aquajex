@@ -176,9 +176,10 @@ Future<Uint8List> genererFacturePdf({
                             color: encre,
                           ),
                         ),
-                        if (client?.nomSociete != null)
+                        if (client?.estSociete == true &&
+                            client?.responsable != null)
                           pw.Text(
-                            client!.nomSociete!,
+                            'Responsable : ${client!.responsable}',
                             style: const pw.TextStyle(fontSize: 9),
                           ),
                         if (client?.telephone != null)

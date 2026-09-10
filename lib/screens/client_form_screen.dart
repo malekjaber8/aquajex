@@ -20,23 +20,28 @@ class ClientFormScreen extends StatefulWidget {
 class _ClientFormScreenState extends State<ClientFormScreen> {
   final _formKey = GlobalKey<FormState>();
 
+  late TypeClient _type;
   late final TextEditingController _nomCtrl;
   late final TextEditingController _prenomCtrl;
   late final TextEditingController _societeCtrl;
+  late final TextEditingController _responsableCtrl;
   late final TextEditingController _telephoneCtrl;
   late final TextEditingController _adresseCtrl;
   late final TextEditingController _matriculeCtrl;
   late final TextEditingController _cinCtrl;
 
   bool get _modification => widget.clientExistant != null;
+  bool get _estSociete => _type == TypeClient.societe;
 
   @override
   void initState() {
     super.initState();
     final c = widget.clientExistant;
+    _type = c?.type ?? TypeClient.particulier;
     _nomCtrl = TextEditingController(text: c?.nom ?? '');
     _prenomCtrl = TextEditingController(text: c?.prenom ?? '');
     _societeCtrl = TextEditingController(text: c?.nomSociete ?? '');
+    _responsableCtrl = TextEditingController(text: c?.responsable ?? '');
     _telephoneCtrl = TextEditingController(text: c?.telephone ?? '');
     _adresseCtrl = TextEditingController(text: c?.adresse ?? '');
     _matriculeCtrl = TextEditingController(text: c?.matriculeFiscal ?? '');
@@ -48,6 +53,7 @@ class _ClientFormScreenState extends State<ClientFormScreen> {
     _nomCtrl.dispose();
     _prenomCtrl.dispose();
     _societeCtrl.dispose();
+    _responsableCtrl.dispose();
     _telephoneCtrl.dispose();
     _adresseCtrl.dispose();
     _matriculeCtrl.dispose();
@@ -63,13 +69,15 @@ class _ClientFormScreenState extends State<ClientFormScreen> {
       id:
           widget.clientExistant?.id ??
           DateTime.now().millisecondsSinceEpoch.toString(),
-      nom: _nomCtrl.text.trim(),
-      prenom: _prenomCtrl.text.trim(),
-      nomSociete: _videVersNull(_societeCtrl.text),
+      type: _type,
+      nom: _estSociete ? '' : _nomCtrl.text.trim(),
+      prenom: _estSociete ? '' : _prenomCtrl.text.trim(),
+      nomSociete: _estSociete ? _videVersNull(_societeCtrl.text) : null,
+      responsable: _estSociete ? _videVersNull(_responsableCtrl.text) : null,
       telephone: _videVersNull(_telephoneCtrl.text),
       adresse: _videVersNull(_adresseCtrl.text),
       matriculeFiscal: _videVersNull(_matriculeCtrl.text),
-      cin: _videVersNull(_cinCtrl.text),
+      cin: _estSociete ? null : _videVersNull(_cinCtrl.text),
     );
     Navigator.of(context).pop(client);
   }
@@ -116,65 +124,100 @@ class _ClientFormScreenState extends State<ClientFormScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Row(
-                            children: [
-                              Expanded(
-                                child: _champTexte(
-                                  controller: _prenomCtrl,
-                                  label: 'Prénom',
-                                  requis: true,
+                          _TypeClientToggle(
+                            type: _type,
+                            accent: accent,
+                            onChanged: (type) => setState(() => _type = type),
+                          ),
+                          const SizedBox(height: 20),
+                          if (_estSociete) ...[
+                            _champTexte(
+                              controller: _societeCtrl,
+                              label: 'Nom de la société',
+                              requis: true,
+                            ),
+                            const SizedBox(height: 16),
+                            _champTexte(
+                              controller: _responsableCtrl,
+                              label: 'Responsable',
+                            ),
+                            const SizedBox(height: 16),
+                            _champTexte(
+                              controller: _telephoneCtrl,
+                              label: 'Téléphone',
+                              clavierNumerique: true,
+                            ),
+                            const SizedBox(height: 16),
+                            _champTexte(
+                              controller: _adresseCtrl,
+                              label: 'Adresse',
+                            ),
+                            const SizedBox(height: 24),
+                            Container(
+                              height: 1,
+                              color: Colors.black.withValues(alpha: 0.06),
+                            ),
+                            const SizedBox(height: 24),
+                            _champTexte(
+                              controller: _matriculeCtrl,
+                              label: 'Matricule fiscale',
+                            ),
+                          ] else ...[
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: _champTexte(
+                                    controller: _prenomCtrl,
+                                    label: 'Prénom',
+                                    requis: true,
+                                  ),
                                 ),
-                              ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: _champTexte(
-                                  controller: _nomCtrl,
-                                  label: 'Nom',
-                                  requis: true,
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: _champTexte(
+                                    controller: _nomCtrl,
+                                    label: 'Nom',
+                                    requis: true,
+                                  ),
                                 ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 16),
-                          _champTexte(
-                            controller: _societeCtrl,
-                            label: 'Nom de la société',
-                          ),
-                          const SizedBox(height: 16),
-                          _champTexte(
-                            controller: _telephoneCtrl,
-                            label: 'Téléphone',
-                            clavierNumerique: true,
-                          ),
-                          const SizedBox(height: 16),
-                          _champTexte(
-                            controller: _adresseCtrl,
-                            label: 'Adresse',
-                          ),
-                          const SizedBox(height: 24),
-                          Container(
-                            height: 1,
-                            color: Colors.black.withValues(alpha: 0.06),
-                          ),
-                          const SizedBox(height: 24),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: _champTexte(
-                                  controller: _matriculeCtrl,
-                                  label: 'Matricule fiscale',
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+                            _champTexte(
+                              controller: _telephoneCtrl,
+                              label: 'Téléphone',
+                              clavierNumerique: true,
+                            ),
+                            const SizedBox(height: 16),
+                            _champTexte(
+                              controller: _adresseCtrl,
+                              label: 'Adresse',
+                            ),
+                            const SizedBox(height: 24),
+                            Container(
+                              height: 1,
+                              color: Colors.black.withValues(alpha: 0.06),
+                            ),
+                            const SizedBox(height: 24),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: _champTexte(
+                                    controller: _matriculeCtrl,
+                                    label: 'Matricule fiscale',
+                                  ),
                                 ),
-                              ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: _champTexte(
-                                  controller: _cinCtrl,
-                                  label: 'CIN',
-                                  clavierNumerique: true,
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: _champTexte(
+                                    controller: _cinCtrl,
+                                    label: 'CIN',
+                                    clavierNumerique: true,
+                                  ),
                                 ),
-                              ),
-                            ],
-                          ),
+                              ],
+                            ),
+                          ],
                         ],
                       ),
                     ),
@@ -264,6 +307,86 @@ class _ClientFormScreenState extends State<ClientFormScreen> {
       validator: requis
           ? (v) => (v == null || v.trim().isEmpty) ? 'Champ requis' : null
           : null,
+    );
+  }
+}
+
+class _TypeClientToggle extends StatelessWidget {
+  final TypeClient type;
+  final List<Color> accent;
+  final ValueChanged<TypeClient> onChanged;
+
+  const _TypeClientToggle({
+    required this.type,
+    required this.accent,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF0F2F5),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Row(
+        children: [
+          _option(TypeClient.particulier, 'Particulier', Icons.person_outline),
+          _option(TypeClient.societe, 'Société', Icons.apartment_outlined),
+        ],
+      ),
+    );
+  }
+
+  Widget _option(TypeClient valeur, String label, IconData icon) {
+    final selectionne = valeur == type;
+    return Expanded(
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(10),
+          onTap: () => onChanged(valeur),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 150),
+            padding: const EdgeInsets.symmetric(vertical: 11),
+            decoration: BoxDecoration(
+              color: selectionne ? Colors.white : Colors.transparent,
+              borderRadius: BorderRadius.circular(10),
+              boxShadow: selectionne
+                  ? [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.08),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ]
+                  : null,
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  icon,
+                  size: 17,
+                  color: selectionne ? accent.last : Colors.black45,
+                ),
+                const SizedBox(width: 7),
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 13.5,
+                    fontWeight: selectionne ? FontWeight.w700 : FontWeight.w500,
+                    color: selectionne
+                        ? const Color(0xFF1B3B5F)
+                        : Colors.black45,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

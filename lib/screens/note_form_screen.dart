@@ -71,7 +71,7 @@ class _NoteFormScreenState extends State<NoteFormScreen> {
           DateTime.now().millisecondsSinceEpoch.toString(),
       contenu: _contenuCtrl.text.trim(),
       clientId: _clientLie?.id,
-      clientNom: _clientLie?.nomComplet,
+      clientNom: _clientLie?.nomAffichage,
       date: widget.noteExistante?.date ?? DateTime.now(),
       dateRappel: _dateRappel,
     );
@@ -183,7 +183,7 @@ class _NoteFormScreenState extends State<NoteFormScreen> {
                                 DropdownMenuItem<Client?>(
                                   value: c,
                                   child: Text(
-                                    c.nomComplet,
+                                    c.nomAffichage,
                                     overflow: TextOverflow.ellipsis,
                                   ),
                                 ),

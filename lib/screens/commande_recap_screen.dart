@@ -176,11 +176,7 @@ class _CommandeRecapScreenState extends State<CommandeRecapScreen> {
                                     alpha: 0.15,
                                   ),
                                   foregroundColor: accent.last,
-                                  child: Text(
-                                    client.prenom.isNotEmpty
-                                        ? client.prenom[0].toUpperCase()
-                                        : '?',
-                                  ),
+                                  child: Text(client.initiales),
                                 ),
                                 const SizedBox(width: 12),
                                 Expanded(
@@ -189,16 +185,17 @@ class _CommandeRecapScreenState extends State<CommandeRecapScreen> {
                                         CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        client.nomComplet,
+                                        client.nomAffichage,
                                         style: const TextStyle(
                                           fontSize: 15,
                                           fontWeight: FontWeight.w700,
                                           color: Color(0xFF1B3B5F),
                                         ),
                                       ),
-                                      if (client.nomSociete != null)
+                                      if (client.estSociete &&
+                                          client.responsable != null)
                                         Text(
-                                          client.nomSociete!,
+                                          client.responsable!,
                                           style: TextStyle(
                                             fontSize: 12,
                                             color: Colors.black.withValues(

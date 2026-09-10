@@ -81,7 +81,7 @@ class DatabaseService {
 
     return openDatabase(
       chemin,
-      version: 5,
+      version: 6,
       onCreate: (db, version) async {
         await _creerTablesCatalogue(db);
         await _creerTablesGestion(db);
@@ -101,6 +101,12 @@ class DatabaseService {
           await db.execute(
             'ALTER TABLE commandes ADD COLUMN remise_pourcent REAL NOT NULL DEFAULT 0',
           );
+        }
+        if (ancienneVersion < 6) {
+          await db.execute(
+            "ALTER TABLE clients ADD COLUMN type TEXT NOT NULL DEFAULT 'particulier'",
+          );
+          await db.execute('ALTER TABLE clients ADD COLUMN responsable TEXT');
         }
       },
     );
@@ -137,9 +143,11 @@ class DatabaseService {
       CREATE TABLE clients (
         id TEXT PRIMARY KEY,
         tarif TEXT NOT NULL,
+        type TEXT NOT NULL DEFAULT 'particulier',
         nom TEXT NOT NULL,
         prenom TEXT NOT NULL,
         nom_societe TEXT,
+        responsable TEXT,
         telephone TEXT,
         adresse TEXT,
         matricule_fiscal TEXT,

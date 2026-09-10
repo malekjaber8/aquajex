@@ -30,8 +30,8 @@ class ClientsSection extends StatelessWidget {
     final q = recherche.trim().toLowerCase();
     if (q.isEmpty) return clients;
     return clients.where((c) {
-      return c.nomComplet.toLowerCase().contains(q) ||
-          (c.nomSociete?.toLowerCase().contains(q) ?? false);
+      return c.nomAffichage.toLowerCase().contains(q) ||
+          (c.responsable?.toLowerCase().contains(q) ?? false);
     }).toList();
   }
 

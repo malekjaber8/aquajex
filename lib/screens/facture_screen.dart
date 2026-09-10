@@ -312,8 +312,11 @@ class _FactureScreenState extends State<FactureScreen> {
                                           color: Color(0xFF1B3B5F),
                                         ),
                                       ),
-                                      if (client?.nomSociete != null)
-                                        _texteInfo(client!.nomSociete!),
+                                      if (client?.estSociete == true &&
+                                          client?.responsable != null)
+                                        _texteInfo(
+                                          'Responsable : ${client!.responsable}',
+                                        ),
                                       if (client?.telephone != null)
                                         _texteInfo(
                                           'Tél : ${client!.telephone}',

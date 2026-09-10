@@ -177,7 +177,7 @@ class _CommandeEditSheetState extends State<_CommandeEditSheet> {
     if (client == null || !mounted) return;
     setState(() {
       _clientId = client.id;
-      _clientNom = client.nomComplet;
+      _clientNom = client.nomAffichage;
     });
   }
 
@@ -593,8 +593,8 @@ class _ClientPickerSheetState extends State<_ClientPickerSheet> {
     final clientsFiltres = widget.clients.where((c) {
       if (_recherche.isEmpty) return true;
       final q = _recherche.toLowerCase();
-      return c.nomComplet.toLowerCase().contains(q) ||
-          (c.nomSociete?.toLowerCase().contains(q) ?? false);
+      return c.nomAffichage.toLowerCase().contains(q) ||
+          (c.responsable?.toLowerCase().contains(q) ?? false);
     }).toList();
 
     return DraggableScrollableSheet(
@@ -705,18 +705,15 @@ class _ClientPickerSheetState extends State<_ClientPickerSheet> {
                               alpha: 0.15,
                             ),
                             foregroundColor: accent.last,
-                            child: Text(
-                              client.prenom.isNotEmpty
-                                  ? client.prenom[0].toUpperCase()
-                                  : '?',
-                            ),
+                            child: Text(client.initiales),
                           ),
                           title: Text(
-                            client.nomComplet,
+                            client.nomAffichage,
                             style: const TextStyle(fontWeight: FontWeight.w600),
                           ),
-                          subtitle: client.nomSociete != null
-                              ? Text(client.nomSociete!)
+                          subtitle:
+                              client.estSociete && client.responsable != null
+                              ? Text(client.responsable!)
                               : null,
                           onTap: () => Navigator.of(context).pop(client),
                         );

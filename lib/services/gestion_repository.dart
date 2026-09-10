@@ -24,9 +24,15 @@ class GestionRepository {
       'clients',
       where: 'tarif = ?',
       whereArgs: [_tarifKey],
-      orderBy: 'nom ASC',
     );
-    return rows.map(_versClient).toList();
+    final clients = rows.map(_versClient).toList();
+    // Trié côté Dart (et non en SQL) car le nom à afficher dépend du type
+    // de client (société vs particulier) — voir Client.nomAffichage.
+    clients.sort(
+      (a, b) =>
+          a.nomAffichage.toLowerCase().compareTo(b.nomAffichage.toLowerCase()),
+    );
+    return clients;
   }
 
   Future<void> ajouterClient(Client client) async {
@@ -52,9 +58,11 @@ class GestionRepository {
   Map<String, Object?> _versLigneClient(Client c) => {
     'id': c.id,
     'tarif': _tarifKey,
+    'type': c.type.name,
     'nom': c.nom,
     'prenom': c.prenom,
     'nom_societe': c.nomSociete,
+    'responsable': c.responsable,
     'telephone': c.telephone,
     'adresse': c.adresse,
     'matricule_fiscal': c.matriculeFiscal,
@@ -63,9 +71,11 @@ class GestionRepository {
 
   Client _versClient(Map<String, Object?> r) => Client(
     id: r['id'] as String,
+    type: TypeClient.values.byName(r['type'] as String? ?? 'particulier'),
     nom: r['nom'] as String,
     prenom: r['prenom'] as String,
     nomSociete: r['nom_societe'] as String?,
+    responsable: r['responsable'] as String?,
     telephone: r['telephone'] as String?,
     adresse: r['adresse'] as String?,
     matriculeFiscal: r['matricule_fiscal'] as String?,
@@ -193,9 +203,11 @@ class GestionRepository {
           .map(
             (c) => {
               'id': c.id,
+              'type': c.type.name,
               'nom': c.nom,
               'prenom': c.prenom,
               'nomSociete': c.nomSociete,
+              'responsable': c.responsable,
               'telephone': c.telephone,
               'adresse': c.adresse,
               'matriculeFiscal': c.matriculeFiscal,
@@ -232,9 +244,11 @@ class GestionRepository {
         await txn.insert('clients', {
           'id': m['id'],
           'tarif': _tarifKey,
+          'type': m['type'] ?? 'particulier',
           'nom': m['nom'],
           'prenom': m['prenom'],
           'nom_societe': m['nomSociete'],
+          'responsable': m['responsable'],
           'telephone': m['telephone'],
           'adresse': m['adresse'],
           'matricule_fiscal': m['matriculeFiscal'],

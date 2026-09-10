@@ -349,7 +349,7 @@ class _CatalogueScreenState extends State<CatalogueScreen> {
       await _gestionRepo.ajouterClient(resultat);
       setState(() {
         _clients = [..._clients, resultat]
-          ..sort((a, b) => a.nom.compareTo(b.nom));
+          ..sort((a, b) => a.nomAffichage.compareTo(b.nomAffichage));
       });
     }
     return resultat;
@@ -376,7 +376,7 @@ class _CatalogueScreenState extends State<CatalogueScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Supprimer ce client ?'),
-        content: Text(client.nomComplet),
+        content: Text(client.nomAffichage),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -454,7 +454,7 @@ class _CatalogueScreenState extends State<CatalogueScreen> {
             final commande = Commande(
               id: DateTime.now().millisecondsSinceEpoch.toString(),
               clientId: client.id,
-              clientNom: client.nomComplet,
+              clientNom: client.nomAffichage,
               date: DateTime.now(),
               modePrix: widget.modePrix,
               lignes: List.of(_panier),
