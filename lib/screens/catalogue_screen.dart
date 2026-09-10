@@ -48,6 +48,8 @@ class _CatalogueScreenState extends State<CatalogueScreen> {
   int _selectedIndex = 0;
   String? _familleSelectionnee;
   String _rechercheArticle = '';
+  String _rechercheClient = '';
+  String _rechercheCommande = '';
   StatutArticle? _filtreStatut;
   bool _chargementGestion = true;
   bool _chargementFamilles = true;
@@ -649,6 +651,8 @@ class _CatalogueScreenState extends State<CatalogueScreen> {
             onEdit: _modifierClient,
             onDelete: _supprimerClient,
             onAjouter: _ajouterClient,
+            recherche: _rechercheClient,
+            onRechercheChanged: (v) => setState(() => _rechercheClient = v),
           );
           break;
         case _indexCommandes:
@@ -658,6 +662,8 @@ class _CatalogueScreenState extends State<CatalogueScreen> {
             clients: _clients,
             onEdit: _modifierCommande,
             onDelete: _supprimerCommande,
+            recherche: _rechercheCommande,
+            onRechercheChanged: (v) => setState(() => _rechercheCommande = v),
           );
           break;
         case _indexNotes:

@@ -5,6 +5,7 @@ import '../../models/mode_prix.dart';
 import '../../models/tarif.dart';
 import '../../widgets/article_card.dart';
 import '../../widgets/article_detail_dialog.dart';
+import '../../widgets/barre_recherche.dart';
 import '../../widgets/famille_card.dart';
 
 class CatalogueSection extends StatelessWidget {
@@ -124,9 +125,10 @@ class CatalogueSection extends StatelessWidget {
       children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(24, 12, 24, 4),
-          child: _BarreRecherche(
+          child: BarreRecherche(
             valeur: recherche,
             accent: tarif.accentGradient,
+            hintText: 'Rechercher un article (nom, code, code-barre)…',
             onChanged: onRechercheChanged,
           ),
         ),
@@ -383,84 +385,6 @@ class CatalogueSection extends StatelessWidget {
           ],
         );
       },
-    );
-  }
-}
-
-class _BarreRecherche extends StatefulWidget {
-  final String valeur;
-  final List<Color> accent;
-  final ValueChanged<String> onChanged;
-
-  const _BarreRecherche({
-    required this.valeur,
-    required this.accent,
-    required this.onChanged,
-  });
-
-  @override
-  State<_BarreRecherche> createState() => _BarreRechercheState();
-}
-
-class _BarreRechercheState extends State<_BarreRecherche> {
-  late final TextEditingController _controller = TextEditingController(
-    text: widget.valeur,
-  );
-
-  @override
-  void didUpdateWidget(covariant _BarreRecherche oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.valeur != _controller.text) {
-      _controller.value = TextEditingValue(
-        text: widget.valeur,
-        selection: TextSelection.collapsed(offset: widget.valeur.length),
-      );
-    }
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final accent = widget.accent;
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.black.withValues(alpha: 0.08)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: TextField(
-        controller: _controller,
-        onChanged: widget.onChanged,
-        decoration: InputDecoration(
-          hintText: 'Rechercher un article (nom, code, code-barre)…',
-          hintStyle: TextStyle(color: Colors.black.withValues(alpha: 0.35)),
-          prefixIcon: Icon(Icons.search, color: accent.last, size: 20),
-          suffixIcon: widget.valeur.isEmpty
-              ? null
-              : IconButton(
-                  icon: const Icon(Icons.close, size: 18),
-                  color: Colors.black38,
-                  onPressed: () => widget.onChanged(''),
-                ),
-          border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 14,
-          ),
-        ),
-      ),
     );
   }
 }
