@@ -99,28 +99,48 @@ class _TarifSelectionScreenState extends State<TarifSelectionScreen> {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           const SizedBox(height: 32),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
+            decoration: BoxDecoration(
+              color: const Color(0xFFC9A24B).withValues(alpha: 0.10),
+              borderRadius: BorderRadius.circular(30),
+              border: Border.all(
+                color: const Color(0xFFC9A24B).withValues(alpha: 0.35),
+              ),
+            ),
+            child: Text(
+              'AQUAJEX  •  LES CINQ FRÈRES',
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 2.2,
+                color: const Color(0xFF1B3B5F).withValues(alpha: 0.7),
+              ),
+            ),
+          ),
+          const SizedBox(height: 22),
           RichText(
             textAlign: TextAlign.center,
             text: const TextSpan(
               style: TextStyle(
-                fontSize: 38,
-                fontWeight: FontWeight.w800,
-                letterSpacing: 0.5,
-                height: 1.1,
+                fontSize: 40,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 1.2,
+                height: 1.15,
               ),
               children: [
                 TextSpan(
-                  text: 'Choisir un ',
+                  text: 'CHOISIR UN\n',
                   style: TextStyle(color: Color(0xFF1B3B5F)),
                 ),
                 TextSpan(
-                  text: 'catalogue',
+                  text: 'CATALOGUE',
                   style: TextStyle(color: Color(0xFF2C8FA0)),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 16),
           Container(
             width: 64,
             height: 4,
@@ -133,13 +153,13 @@ class _TarifSelectionScreenState extends State<TarifSelectionScreen> {
           ),
           const SizedBox(height: 18),
           Text(
-            'Sélectionnez la société pour afficher les tarifs',
+            'SÉLECTIONNEZ LA SOCIÉTÉ POUR AFFICHER LES TARIFS',
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: 17,
-              fontStyle: FontStyle.italic,
-              color: Colors.black.withValues(alpha: 0.5),
-              letterSpacing: 0.3,
+              fontSize: 12.5,
+              fontWeight: FontWeight.w600,
+              color: Colors.black.withValues(alpha: 0.4),
+              letterSpacing: 1.8,
             ),
           ),
           const SizedBox(height: 48),
