@@ -27,6 +27,7 @@ class CatalogueScreen extends StatefulWidget {
   final ModePrix modePrix;
   final bool isAdmin;
   final StatutArticle? filtreStatutInitial;
+  final String? familleInitiale;
 
   const CatalogueScreen({
     super.key,
@@ -34,6 +35,7 @@ class CatalogueScreen extends StatefulWidget {
     required this.modePrix,
     required this.isAdmin,
     this.filtreStatutInitial,
+    this.familleInitiale,
   });
 
   @override
@@ -45,7 +47,7 @@ class _CatalogueScreenState extends State<CatalogueScreen> {
   late final GestionRepository _gestionRepo = GestionRepository(widget.tarif);
 
   int _selectedIndex = 0;
-  String? _familleSelectionnee;
+  late String? _familleSelectionnee = widget.familleInitiale;
   String _rechercheArticle = '';
   late StatutArticle? _filtreStatut = widget.filtreStatutInitial;
   bool _chargementGestion = true;
