@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+
 import '../models/article.dart';
 import '../models/client.dart';
 import '../models/commande.dart';
@@ -75,17 +76,20 @@ class _CatalogueScreenState extends State<CatalogueScreen> {
     // Le catalogue (familles/articles) est partagé en direct via Firestore :
     // toute modification faite par l'admin (PC) apparaît ici automatiquement,
     // sans rechargement manuel.
-    _famillesSub = _repo.streamFamilles().listen((familles) {
-      if (!mounted) return;
-      setState(() {
-        _familles = familles;
-        _chargementFamilles = false;
-      });
-    }, onError: (_) {
-      // Se produit normalement à la déconnexion (les règles Firestore
-      // coupent l'accès à un utilisateur qui n'est plus authentifié) :
-      // l'écran est de toute façon en train de disparaître, rien à faire.
-    });
+    _famillesSub = _repo.streamFamilles().listen(
+      (familles) {
+        if (!mounted) return;
+        setState(() {
+          _familles = familles;
+          _chargementFamilles = false;
+        });
+      },
+      onError: (_) {
+        // Se produit normalement à la déconnexion (les règles Firestore
+        // coupent l'accès à un utilisateur qui n'est plus authentifié) :
+        // l'écran est de toute façon en train de disparaître, rien à faire.
+      },
+    );
     _articlesSub = _repo.streamArticles().listen((articles) {
       if (!mounted) return;
       setState(() {
@@ -124,7 +128,9 @@ class _CatalogueScreenState extends State<CatalogueScreen> {
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text(nomInitial == null ? 'Nouvelle famille' : 'Renommer la famille'),
+        title: Text(
+          nomInitial == null ? 'Nouvelle famille' : 'Renommer la famille',
+        ),
         content: TextField(
           controller: controller,
           autofocus: true,
@@ -152,13 +158,13 @@ class _CatalogueScreenState extends State<CatalogueScreen> {
   Future<void> _ajouterFamille() async {
     final nom = await _demanderNomFamille();
     if (nom == null || nom.isEmpty) return;
-    final existeDeja =
-        _familles.any((f) => f.toLowerCase() == nom.toLowerCase());
+    final existeDeja = _familles.any(
+      (f) => f.toLowerCase() == nom.toLowerCase(),
+    );
     if (existeDeja) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('"$nom" existe déjà')),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('"$nom" existe déjà')));
       return;
     }
     await _repo.ajouterFamille(nom);
@@ -167,13 +173,13 @@ class _CatalogueScreenState extends State<CatalogueScreen> {
   Future<void> _modifierFamille(String ancienNom) async {
     final nom = await _demanderNomFamille(nomInitial: ancienNom);
     if (nom == null || nom.isEmpty || nom == ancienNom) return;
-    final existeDeja = _familles
-        .any((f) => f.toLowerCase() == nom.toLowerCase() && f != ancienNom);
+    final existeDeja = _familles.any(
+      (f) => f.toLowerCase() == nom.toLowerCase() && f != ancienNom,
+    );
     if (existeDeja) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('"$nom" existe déjà')),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('"$nom" existe déjà')));
       return;
     }
     await _repo.renommerFamille(ancienNom, nom);
@@ -183,8 +189,7 @@ class _CatalogueScreenState extends State<CatalogueScreen> {
   }
 
   Future<void> _supprimerFamille(String nom) async {
-    final nombreArticles =
-        _articles.where((a) => a.categorie == nom).length;
+    final nombreArticles = _articles.where((a) => a.categorie == nom).length;
     final confirme = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -201,8 +206,7 @@ class _CatalogueScreenState extends State<CatalogueScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child:
-                const Text('Supprimer', style: TextStyle(color: Colors.red)),
+            child: const Text('Supprimer', style: TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -262,8 +266,7 @@ class _CatalogueScreenState extends State<CatalogueScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child:
-                const Text('Supprimer', style: TextStyle(color: Colors.red)),
+            child: const Text('Supprimer', style: TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -294,15 +297,14 @@ class _CatalogueScreenState extends State<CatalogueScreen> {
     final accent = widget.tarif.accentGradient;
     final resultat = await Navigator.of(context).push<Client>(
       MaterialPageRoute(
-        builder: (_) => ClientFormScreen(accent: accent, clientExistant: client),
+        builder: (_) =>
+            ClientFormScreen(accent: accent, clientExistant: client),
       ),
     );
     if (resultat != null) {
       await _gestionRepo.modifierClient(resultat);
       setState(() {
-        _clients = [
-          for (final c in _clients) c.id == client.id ? resultat : c,
-        ];
+        _clients = [for (final c in _clients) c.id == client.id ? resultat : c];
       });
     }
   }
@@ -320,8 +322,7 @@ class _CatalogueScreenState extends State<CatalogueScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child:
-                const Text('Supprimer', style: TextStyle(color: Colors.red)),
+            child: const Text('Supprimer', style: TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -343,15 +344,18 @@ class _CatalogueScreenState extends State<CatalogueScreen> {
     setState(() {
       final index = _panier.indexWhere((l) => l.articleId == article.id);
       if (index != -1) {
-        _panier[index] =
-            _panier[index].copyWith(quantite: _panier[index].quantite + 1);
+        _panier[index] = _panier[index].copyWith(
+          quantite: _panier[index].quantite + 1,
+        );
       } else {
-        _panier.add(LigneCommande(
-          articleId: article.id,
-          designation: article.designation,
-          prixUnitaire: prix,
-          quantite: 1,
-        ));
+        _panier.add(
+          LigneCommande(
+            articleId: article.id,
+            designation: article.designation,
+            prixUnitaire: prix,
+            quantite: 1,
+          ),
+        );
       }
     });
     // Ouvre directement le panier pour que la quantité se règle sur place,
@@ -423,8 +427,7 @@ class _CatalogueScreenState extends State<CatalogueScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child:
-                const Text('Supprimer', style: TextStyle(color: Colors.red)),
+            child: const Text('Supprimer', style: TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -468,9 +471,7 @@ class _CatalogueScreenState extends State<CatalogueScreen> {
     if (resultat != null) {
       await _gestionRepo.modifierNote(resultat);
       setState(() {
-        _notes = [
-          for (final n in _notes) n.id == note.id ? resultat : n,
-        ];
+        _notes = [for (final n in _notes) n.id == note.id ? resultat : n];
       });
     }
   }
@@ -480,7 +481,11 @@ class _CatalogueScreenState extends State<CatalogueScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Supprimer cette note ?'),
-        content: Text(note.contenu, maxLines: 3, overflow: TextOverflow.ellipsis),
+        content: Text(
+          note.contenu,
+          maxLines: 3,
+          overflow: TextOverflow.ellipsis,
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -488,8 +493,7 @@ class _CatalogueScreenState extends State<CatalogueScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child:
-                const Text('Supprimer', style: TextStyle(color: Colors.red)),
+            child: const Text('Supprimer', style: TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -528,9 +532,7 @@ class _CatalogueScreenState extends State<CatalogueScreen> {
 
     final Widget body;
     if (_chargement) {
-      body = Center(
-        child: CircularProgressIndicator(color: accent.last),
-      );
+      body = Center(child: CircularProgressIndicator(color: accent.last));
     } else {
       switch (_selectedIndex) {
         case 1:
@@ -585,74 +587,76 @@ class _CatalogueScreenState extends State<CatalogueScreen> {
 
     final panierCount = _panier.fold(0, (s, l) => s + l.quantite);
 
-    return LayoutBuilder(builder: (context, constraints) {
-      final mobile = constraints.maxWidth < 700;
-      final contenu = Column(
-        children: [
-          _TopBar(
-            tarif: widget.tarif,
-            modePrix: widget.modePrix,
-            panierCount: panierCount,
-            onOuvrirPanier: _ouvrirPanier,
-          ),
-          Expanded(child: body),
-        ],
-      );
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final mobile = constraints.maxWidth < 700;
+        final contenu = Column(
+          children: [
+            _TopBar(
+              tarif: widget.tarif,
+              modePrix: widget.modePrix,
+              panierCount: panierCount,
+              onOuvrirPanier: _ouvrirPanier,
+            ),
+            Expanded(child: body),
+          ],
+        );
 
-      return Scaffold(
-        backgroundColor: Colors.transparent,
-        body: DecorativeBackground(
-          child: SafeArea(
-            bottom: !mobile,
-            child: mobile
-                ? contenu
-                : Row(
-                    children: [
-                      SidebarNav(
-                        items: _items,
-                        selectedIndex: _selectedIndex,
-                        onSelect: (i) => setState(() => _selectedIndex = i),
-                        accent: accent,
+        return Scaffold(
+          backgroundColor: Colors.transparent,
+          body: DecorativeBackground(
+            child: SafeArea(
+              bottom: !mobile,
+              child: mobile
+                  ? contenu
+                  : Row(
+                      children: [
+                        SidebarNav(
+                          items: _items,
+                          selectedIndex: _selectedIndex,
+                          onSelect: (i) => setState(() => _selectedIndex = i),
+                          accent: accent,
+                        ),
+                        Expanded(child: contenu),
+                      ],
+                    ),
+            ),
+          ),
+          bottomNavigationBar: mobile && !_chargement
+              ? BottomNav(
+                  items: _items,
+                  selectedIndex: _selectedIndex,
+                  onSelect: (i) => setState(() => _selectedIndex = i),
+                  accent: accent,
+                )
+              : null,
+          floatingActionButton: _fabVisible
+              ? Container(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: LinearGradient(colors: accent),
+                    boxShadow: [
+                      BoxShadow(
+                        color: accent.last.withValues(alpha: 0.4),
+                        blurRadius: 16,
+                        offset: const Offset(0, 6),
                       ),
-                      Expanded(child: contenu),
                     ],
                   ),
-          ),
-        ),
-        bottomNavigationBar: mobile && !_chargement
-            ? _BottomNav(
-                items: _items,
-                selectedIndex: _selectedIndex,
-                onSelect: (i) => setState(() => _selectedIndex = i),
-                accent: accent,
-              )
-            : null,
-        floatingActionButton: _fabVisible
-          ? Container(
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: LinearGradient(colors: accent),
-                boxShadow: [
-                  BoxShadow(
-                    color: accent.last.withValues(alpha: 0.4),
-                    blurRadius: 16,
-                    offset: const Offset(0, 6),
+                  child: FloatingActionButton(
+                    onPressed: _onFabPressed,
+                    backgroundColor: Colors.transparent,
+                    elevation: 0,
+                    child: Icon(
+                      _selectedIndex == 1 ? Icons.person_add_alt_1 : Icons.add,
+                      color: Colors.white,
+                    ),
                   ),
-                ],
-              ),
-              child: FloatingActionButton(
-                onPressed: _onFabPressed,
-                backgroundColor: Colors.transparent,
-                elevation: 0,
-                child: Icon(
-                  _selectedIndex == 1 ? Icons.person_add_alt_1 : Icons.add,
-                  color: Colors.white,
-                ),
-              ),
-            )
-          : null,
-      );
-    });
+                )
+              : null,
+        );
+      },
+    );
   }
 }
 
@@ -672,202 +676,155 @@ class _TopBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final accent = tarif.accentGradient;
-    return LayoutBuilder(builder: (context, constraints) {
-      final etroit = constraints.maxWidth < 420;
-      return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 12, 24, 8),
-      child: Row(
-        children: [
-          IconButton(
-            onPressed: () => Navigator.of(context).pop(),
-            icon: const Icon(Icons.arrow_back, color: Color(0xFF1B3B5F)),
-          ),
-          const SizedBox(width: 4),
-          Expanded(
-            child: Text(
-              tarif.nom,
-              maxLines: 1,
-              softWrap: false,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: etroit ? 17 : 22,
-                fontWeight: FontWeight.w800,
-                color: const Color(0xFF1B3B5F),
-              ),
-            ),
-          ),
-          const SizedBox(width: 8),
-          Container(
-            padding: EdgeInsets.symmetric(
-                horizontal: etroit ? 8 : 10, vertical: etroit ? 6 : 7),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(colors: accent),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.sell_outlined, size: 14, color: Colors.white),
-                const SizedBox(width: 6),
-                Text(
-                  etroit ? modePrix.libelleCourt : modePrix.libelle,
-                  style: const TextStyle(
-                    fontSize: 12.5,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 6),
-          Stack(
-            clipBehavior: Clip.none,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final etroit = constraints.maxWidth < 420;
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(20, 12, 24, 8),
+          child: Row(
             children: [
               IconButton(
-                onPressed: onOuvrirPanier,
-                icon: Icon(Icons.shopping_cart_outlined,
-                    color: Colors.black.withValues(alpha: 0.6)),
+                onPressed: () => Navigator.of(context).pop(),
+                icon: const Icon(Icons.arrow_back, color: Color(0xFF1B3B5F)),
               ),
-              if (panierCount > 0)
-                Positioned(
-                  right: 4,
-                  top: 4,
-                  child: Container(
-                    padding: const EdgeInsets.all(3),
-                    constraints:
-                        const BoxConstraints(minWidth: 16, minHeight: 16),
-                    decoration: BoxDecoration(
-                      color: accent.last,
-                      shape: BoxShape.circle,
+              const SizedBox(width: 4),
+              Expanded(
+                child: Text(
+                  tarif.nom,
+                  maxLines: 1,
+                  softWrap: false,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: etroit ? 17 : 22,
+                    fontWeight: FontWeight.w800,
+                    color: const Color(0xFF1B3B5F),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Container(
+                padding: EdgeInsets.symmetric(
+                  horizontal: etroit ? 8 : 10,
+                  vertical: etroit ? 6 : 7,
+                ),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(colors: accent),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.sell_outlined,
+                      size: 14,
+                      color: Colors.white,
                     ),
-                    child: Text(
-                      '$panierCount',
-                      textAlign: TextAlign.center,
+                    const SizedBox(width: 6),
+                    Text(
+                      etroit ? modePrix.libelleCourt : modePrix.libelle,
                       style: const TextStyle(
-                        fontSize: 9.5,
+                        fontSize: 12.5,
                         fontWeight: FontWeight.w700,
                         color: Colors.white,
                       ),
                     ),
-                  ),
+                  ],
                 ),
-            ],
-          ),
-          if (!etroit) ...[
-            const SizedBox(width: 4),
-            Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              decoration: BoxDecoration(
-                color: Colors.black.withValues(alpha: 0.05),
-                borderRadius: BorderRadius.circular(20),
               ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
+              const SizedBox(width: 6),
+              Stack(
+                clipBehavior: Clip.none,
                 children: [
-                  Icon(Icons.person_outline,
-                      size: 14, color: Colors.black.withValues(alpha: 0.45)),
-                  const SizedBox(width: 5),
-                  Text(
-                    _nomUtilisateurAffiche,
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black.withValues(alpha: 0.55),
+                  IconButton(
+                    onPressed: onOuvrirPanier,
+                    icon: Icon(
+                      Icons.shopping_cart_outlined,
+                      color: Colors.black.withValues(alpha: 0.6),
                     ),
                   ),
+                  if (panierCount > 0)
+                    Positioned(
+                      right: 4,
+                      top: 4,
+                      child: Container(
+                        padding: const EdgeInsets.all(3),
+                        constraints: const BoxConstraints(
+                          minWidth: 16,
+                          minHeight: 16,
+                        ),
+                        decoration: BoxDecoration(
+                          color: accent.last,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Text(
+                          '$panierCount',
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontSize: 9.5,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
                 ],
               ),
-            ),
-          ],
-          IconButton(
-            onPressed: () {
-              // CatalogueScreen est empilé par-dessus l'écran racine
-              // (AuthGate) via Navigator.push : sans ce popUntil, la
-              // déconnexion fonctionne en interne mais l'écran de
-              // connexion réapparaît caché derrière cet écran encore ouvert.
-              Navigator.of(context).popUntil((route) => route.isFirst);
-              AuthService.deconnecter();
-            },
-            icon: Icon(Icons.logout, color: Colors.black.withValues(alpha: 0.5)),
-            tooltip: 'Se déconnecter',
+              if (!etroit) ...[
+                const SizedBox(width: 4),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.person_outline,
+                        size: 14,
+                        color: Colors.black.withValues(alpha: 0.45),
+                      ),
+                      const SizedBox(width: 5),
+                      Text(
+                        _nomUtilisateurAffiche,
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black.withValues(alpha: 0.55),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+              IconButton(
+                onPressed: () {
+                  // CatalogueScreen est empilé par-dessus l'écran racine
+                  // (AuthGate) via Navigator.push : sans ce popUntil, la
+                  // déconnexion fonctionne en interne mais l'écran de
+                  // connexion réapparaît caché derrière cet écran encore ouvert.
+                  Navigator.of(context).popUntil((route) => route.isFirst);
+                  AuthService.deconnecter();
+                },
+                icon: Icon(
+                  Icons.logout,
+                  color: Colors.black.withValues(alpha: 0.5),
+                ),
+                tooltip: 'Se déconnecter',
+              ),
+            ],
           ),
-        ],
-      ),
-      );
-    });
+        );
+      },
+    );
   }
 
   String get _nomUtilisateurAffiche {
     final email = AuthService.utilisateurActuel?.email ?? '';
     return email.split('@').first;
-  }
-}
-
-class _BottomNav extends StatelessWidget {
-  final List<SidebarItem> items;
-  final int selectedIndex;
-  final ValueChanged<int> onSelect;
-  final List<Color> accent;
-
-  const _BottomNav({
-    required this.items,
-    required this.selectedIndex,
-    required this.onSelect,
-    required this.accent,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.92),
-        border: Border(
-          top: BorderSide(color: Colors.black.withValues(alpha: 0.06)),
-        ),
-      ),
-      child: SafeArea(
-        top: false,
-        child: SizedBox(
-          height: 62,
-          child: Row(
-            children: [
-              for (int i = 0; i < items.length; i++)
-                Expanded(
-                  child: InkWell(
-                    onTap: () => onSelect(i),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          items[i].icon,
-                          size: 22,
-                          color: i == selectedIndex
-                              ? accent.last
-                              : const Color(0xFF6B7A8D),
-                        ),
-                        const SizedBox(height: 3),
-                        Text(
-                          items[i].label,
-                          style: TextStyle(
-                            fontSize: 10.5,
-                            fontWeight: i == selectedIndex
-                                ? FontWeight.w700
-                                : FontWeight.w500,
-                            color: i == selectedIndex
-                                ? accent.last
-                                : const Color(0xFF6B7A8D),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-            ],
-          ),
-        ),
-      ),
-    );
   }
 }

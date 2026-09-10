@@ -5,6 +5,15 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/article.dart';
 import '../models/tarif.dart';
 
+/// Un article accompagné du tarif (catalogue) auquel il appartient — utilisé
+/// pour les listes promo/nouveauté qui mélangent les deux catalogues.
+class ArticleAvecTarif {
+  final Article article;
+  final Tarif tarif;
+
+  const ArticleAvecTarif({required this.article, required this.tarif});
+}
+
 /// Accès aux familles et articles, propre à chaque tarif (Aquajex / Les
 /// Cinq Frères ont chacun leur propre catalogue).
 ///
@@ -30,10 +39,9 @@ class CatalogueRepository {
 
   /// Flux en direct des familles de ce tarif, toujours triées par nom.
   Stream<List<String>> streamFamilles() {
-    return _famillesRef
-        .where('tarif', isEqualTo: _tarifKey)
-        .snapshots()
-        .map((snap) {
+    return _famillesRef.where('tarif', isEqualTo: _tarifKey).snapshots().map((
+      snap,
+    ) {
       final noms = snap.docs.map((d) => d.data()['nom'] as String).toList();
       noms.sort();
       return noms;
@@ -42,10 +50,9 @@ class CatalogueRepository {
 
   /// Flux en direct des articles de ce tarif, toujours triés par désignation.
   Stream<List<Article>> streamArticles() {
-    return _articlesRef
-        .where('tarif', isEqualTo: _tarifKey)
-        .snapshots()
-        .map((snap) {
+    return _articlesRef.where('tarif', isEqualTo: _tarifKey).snapshots().map((
+      snap,
+    ) {
       final articles = snap.docs
           .map((d) => _versArticle({...d.data(), 'id': d.id}))
           .toList();
@@ -54,19 +61,47 @@ class CatalogueRepository {
     });
   }
 
+  /// Flux en direct (tous tarifs confondus) des articles ayant un statut
+  /// donné — utilisé par les rubriques Promotion/Nouveauté du menu latéral.
+  static Stream<List<ArticleAvecTarif>> streamArticlesParStatut(
+    StatutArticle statut,
+  ) {
+    return FirebaseFirestore.instance
+        .collection('articles')
+        .where('statut', isEqualTo: statut.name)
+        .snapshots()
+        .map((snap) {
+          final resultats = snap.docs.map((d) {
+            final data = {...d.data(), 'id': d.id};
+            final tarif = Tarif.values.firstWhere(
+              (t) => t.name == data['tarif'],
+              orElse: () => Tarif.aquajex,
+            );
+            return ArticleAvecTarif(article: _versArticle(data), tarif: tarif);
+          }).toList();
+          resultats.sort(
+            (a, b) => a.article.designation.compareTo(b.article.designation),
+          );
+          return resultats;
+        });
+  }
+
   String _idFamille(String nom) => '${_tarifKey}__$nom';
 
   Future<void> ajouterFamille(String nom) async {
-    await _famillesRef
-        .doc(_idFamille(nom))
-        .set({'tarif': _tarifKey, 'nom': nom});
+    await _famillesRef.doc(_idFamille(nom)).set({
+      'tarif': _tarifKey,
+      'nom': nom,
+    });
   }
 
   Future<void> renommerFamille(String ancienNom, String nouveauNom) async {
     final batch = _db.batch();
     batch.delete(_famillesRef.doc(_idFamille(ancienNom)));
-    batch.set(_famillesRef.doc(_idFamille(nouveauNom)),
-        {'tarif': _tarifKey, 'nom': nouveauNom});
+    batch.set(_famillesRef.doc(_idFamille(nouveauNom)), {
+      'tarif': _tarifKey,
+      'nom': nouveauNom,
+    });
 
     final articles = await _articlesRef
         .where('tarif', isEqualTo: _tarifKey)
@@ -105,31 +140,30 @@ class CatalogueRepository {
   }
 
   Map<String, dynamic> _versDocument(Article a) => {
-        'tarif': _tarifKey,
-        'categorie': a.categorie,
-        'designation': a.designation,
-        'codeArticle': a.codeArticle,
-        'codeBarre': a.codeBarre,
-        'taille': a.taille,
-        'colisage': a.colisage,
-        'prixDetail': a.prixDetail,
-        'prixGros': a.prixGros,
-        'image': a.imageBytes != null ? base64Encode(a.imageBytes!) : null,
-        'statut': a.statut.name,
-      };
+    'tarif': _tarifKey,
+    'categorie': a.categorie,
+    'designation': a.designation,
+    'codeArticle': a.codeArticle,
+    'codeBarre': a.codeBarre,
+    'taille': a.taille,
+    'colisage': a.colisage,
+    'prixDetail': a.prixDetail,
+    'prixGros': a.prixGros,
+    'image': a.imageBytes != null ? base64Encode(a.imageBytes!) : null,
+    'statut': a.statut.name,
+  };
 
-  Article _versArticle(Map<String, dynamic> d) => Article(
-        id: d['id'] as String? ?? '',
-        categorie: d['categorie'] as String? ?? '',
-        designation: d['designation'] as String? ?? '',
-        statut: StatutArticle.depuisNom(d['statut'] as String?),
-        codeArticle: d['codeArticle'] as String?,
-        codeBarre: d['codeBarre'] as String?,
-        taille: d['taille'] as String?,
-        colisage: d['colisage'] as int?,
-        prixDetail: (d['prixDetail'] as num?)?.toDouble() ?? 0,
-        prixGros: (d['prixGros'] as num?)?.toDouble() ?? 0,
-        imageBytes:
-            d['image'] != null ? base64Decode(d['image'] as String) : null,
-      );
+  static Article _versArticle(Map<String, dynamic> d) => Article(
+    id: d['id'] as String? ?? '',
+    categorie: d['categorie'] as String? ?? '',
+    designation: d['designation'] as String? ?? '',
+    statut: StatutArticle.depuisNom(d['statut'] as String?),
+    codeArticle: d['codeArticle'] as String?,
+    codeBarre: d['codeBarre'] as String?,
+    taille: d['taille'] as String?,
+    colisage: d['colisage'] as int?,
+    prixDetail: (d['prixDetail'] as num?)?.toDouble() ?? 0,
+    prixGros: (d['prixGros'] as num?)?.toDouble() ?? 0,
+    imageBytes: d['image'] != null ? base64Decode(d['image'] as String) : null,
+  );
 }

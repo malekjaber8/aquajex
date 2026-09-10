@@ -1,8 +1,27 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+
+import '../models/article.dart';
 import '../models/mode_prix.dart';
 import '../models/tarif.dart';
+import '../services/catalogue_repository.dart';
 import '../widgets/decorative_background.dart';
+import '../widgets/sidebar_nav.dart';
 import 'catalogue_screen.dart';
+
+const _navItems = [
+  SidebarItem(icon: Icons.grid_view_rounded, label: 'Catalogue'),
+  SidebarItem(icon: Icons.local_offer_outlined, label: 'Promotion'),
+  SidebarItem(icon: Icons.auto_awesome_outlined, label: 'Nouveauté'),
+  SidebarItem(icon: Icons.people_outline, label: 'Clients'),
+  SidebarItem(icon: Icons.request_quote_outlined, label: 'Commandes'),
+  SidebarItem(icon: Icons.sticky_note_2_outlined, label: 'Notes'),
+];
+
+const _indexCatalogue = 0;
+const _indexPromotion = 1;
+const _indexNouveaute = 2;
 
 class TarifSelectionScreen extends StatefulWidget {
   final bool isAdmin;
@@ -15,6 +34,37 @@ class TarifSelectionScreen extends StatefulWidget {
 
 class _TarifSelectionScreenState extends State<TarifSelectionScreen> {
   ModePrix _modePrix = ModePrix.detail;
+  int _selectedIndex = _indexCatalogue;
+
+  List<ArticleAvecTarif> _articlesPromo = [];
+  List<ArticleAvecTarif> _articlesNouveaute = [];
+  StreamSubscription<List<ArticleAvecTarif>>? _promoSub;
+  StreamSubscription<List<ArticleAvecTarif>>? _nouveauteSub;
+
+  @override
+  void initState() {
+    super.initState();
+    // Mélange les deux catalogues (Aquajex + Les Cinq Frères) pour les
+    // rubriques Promotion/Nouveauté du menu latéral.
+    _promoSub = CatalogueRepository.streamArticlesParStatut(StatutArticle.promo)
+        .listen((articles) {
+          if (!mounted) return;
+          setState(() => _articlesPromo = articles);
+        }, onError: (_) {});
+    _nouveauteSub =
+        CatalogueRepository.streamArticlesParStatut(StatutArticle.nouveaute)
+            .listen((articles) {
+              if (!mounted) return;
+              setState(() => _articlesNouveaute = articles);
+            }, onError: (_) {});
+  }
+
+  @override
+  void dispose() {
+    _promoSub?.cancel();
+    _nouveauteSub?.cancel();
+    super.dispose();
+  }
 
   Future<void> _choisirModePrix() async {
     final choix = await showModalBottomSheet<ModePrix>(
@@ -39,101 +89,175 @@ class _TarifSelectionScreenState extends State<TarifSelectionScreen> {
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      body: DecorativeBackground(
-        child: Stack(
-          children: [
-            SafeArea(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
+  static const _accentNeutre = [Color(0xFF1B3B5F), Color(0xFFC9A24B)];
+
+  Widget _buildContenuCatalogue() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          const SizedBox(height: 32),
+          RichText(
+            textAlign: TextAlign.center,
+            text: const TextSpan(
+              style: TextStyle(
+                fontSize: 38,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 0.5,
+                height: 1.1,
+              ),
+              children: [
+                TextSpan(
+                  text: 'Choisir un ',
+                  style: TextStyle(color: Color(0xFF1B3B5F)),
+                ),
+                TextSpan(
+                  text: 'catalogue',
+                  style: TextStyle(color: Color(0xFF2C8FA0)),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 14),
+          Container(
+            width: 64,
+            height: 4,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFF1B3B5F), Color(0xFFC9A24B)],
+              ),
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(height: 18),
+          Text(
+            'Sélectionnez la société pour afficher les tarifs',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 17,
+              fontStyle: FontStyle.italic,
+              color: Colors.black.withValues(alpha: 0.5),
+              letterSpacing: 0.3,
+            ),
+          ),
+          const SizedBox(height: 48),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isWide = constraints.maxWidth > 700;
+              final cards = [
+                _TarifCard(
+                  tarif: Tarif.aquajex,
+                  onTap: () => _ouvrirCatalogue(Tarif.aquajex),
+                ),
+                _TarifCard(
+                  tarif: Tarif.cinqFreres,
+                  onTap: () => _ouvrirCatalogue(Tarif.cinqFreres),
+                ),
+              ];
+              if (isWide) {
+                return Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const SizedBox(height: 32),
-                    RichText(
-                      textAlign: TextAlign.center,
-                      text: const TextSpan(
-                        style: TextStyle(
-                          fontSize: 38,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: 0.5,
-                          height: 1.1,
-                        ),
-                        children: [
-                          TextSpan(
-                            text: 'Choisir un ',
-                            style: TextStyle(color: Color(0xFF1B3B5F)),
-                          ),
-                          TextSpan(
-                            text: 'catalogue',
-                            style: TextStyle(color: Color(0xFF2C8FA0)),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-                    Container(
-                      width: 64,
-                      height: 4,
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [Color(0xFF1B3B5F), Color(0xFFC9A24B)],
-                        ),
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                    ),
-                    const SizedBox(height: 18),
-                    Text(
-                      'Sélectionnez la société pour afficher les tarifs',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 17,
-                        fontStyle: FontStyle.italic,
-                        color: Colors.black.withValues(alpha: 0.5),
-                        letterSpacing: 0.3,
-                      ),
-                    ),
-                    const SizedBox(height: 48),
-                    LayoutBuilder(
-                      builder: (context, constraints) {
-                        final isWide = constraints.maxWidth > 700;
-                        final cards = [
-                          _TarifCard(
-                            tarif: Tarif.aquajex,
-                            onTap: () => _ouvrirCatalogue(Tarif.aquajex),
-                          ),
-                          _TarifCard(
-                            tarif: Tarif.cinqFreres,
-                            onTap: () => _ouvrirCatalogue(Tarif.cinqFreres),
-                          ),
-                        ];
-                        if (isWide) {
-                          return Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Expanded(child: cards[0]),
-                              const SizedBox(width: 32),
-                              Expanded(child: cards[1]),
-                            ],
-                          );
-                        }
-                        return Column(
-                          children: [
-                            cards[0],
-                            const SizedBox(height: 24),
-                            cards[1],
-                          ],
-                        );
-                      },
-                    ),
-                    const SizedBox(height: 24),
+                    Expanded(child: cards[0]),
+                    const SizedBox(width: 32),
+                    Expanded(child: cards[1]),
                   ],
+                );
+              }
+              return Column(
+                children: [cards[0], const SizedBox(height: 24), cards[1]],
+              );
+            },
+          ),
+          const SizedBox(height: 24),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildContenuStatut(
+    StatutArticle statut,
+    List<ArticleAvecTarif> articles,
+  ) {
+    final accent = statut.degradeBandeau!;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(24, 32, 24, 4),
+          child: Row(
+            children: [
+              Icon(statut.icone, color: accent.last, size: 22),
+              const SizedBox(width: 10),
+              Text(
+                statut.libelle,
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w800,
+                  color: Color(0xFF1B3B5F),
                 ),
               ),
-            ),
+            ],
+          ),
+        ),
+        Expanded(
+          child: articles.isEmpty
+              ? Center(
+                  child: Text(
+                    'Aucun article en ${statut.libelle.toLowerCase()} pour le moment',
+                    style: TextStyle(
+                      color: Colors.black.withValues(alpha: 0.4),
+                    ),
+                  ),
+                )
+              : GridView.builder(
+                  padding: const EdgeInsets.all(24),
+                  gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                    maxCrossAxisExtent: 220,
+                    mainAxisSpacing: 16,
+                    crossAxisSpacing: 16,
+                    childAspectRatio: 0.72,
+                  ),
+                  itemCount: articles.length,
+                  itemBuilder: (context, i) => _CarteArticleMixte(
+                    data: articles[i],
+                    modePrix: _modePrix,
+                    onTap: () => _ouvrirCatalogue(articles[i].tarif),
+                  ),
+                ),
+        ),
+      ],
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final mobile = constraints.maxWidth < 700;
+
+        final Widget corpsPrincipal;
+        switch (_selectedIndex) {
+          case _indexPromotion:
+            corpsPrincipal = _buildContenuStatut(
+              StatutArticle.promo,
+              _articlesPromo,
+            );
+            break;
+          case _indexNouveaute:
+            corpsPrincipal = _buildContenuStatut(
+              StatutArticle.nouveaute,
+              _articlesNouveaute,
+            );
+            break;
+          default:
+            corpsPrincipal = _buildContenuCatalogue();
+        }
+
+        final contenu = Stack(
+          children: [
+            SafeArea(child: corpsPrincipal),
             Positioned(
               top: 16,
               right: 16,
@@ -143,8 +267,43 @@ class _TarifSelectionScreenState extends State<TarifSelectionScreen> {
               ),
             ),
           ],
-        ),
-      ),
+        );
+
+        return Scaffold(
+          backgroundColor: Colors.transparent,
+          body: DecorativeBackground(
+            child: mobile
+                ? contenu
+                : Row(
+                    children: [
+                      SidebarNav(
+                        items: _navItems,
+                        selectedIndex: _selectedIndex,
+                        onSelect: (i) => setState(() => _selectedIndex = i),
+                        accent: _accentNeutre,
+                        enabled: (i) =>
+                            i == _indexCatalogue ||
+                            i == _indexPromotion ||
+                            i == _indexNouveaute,
+                      ),
+                      Expanded(child: contenu),
+                    ],
+                  ),
+          ),
+          bottomNavigationBar: mobile
+              ? BottomNav(
+                  items: _navItems,
+                  selectedIndex: _selectedIndex,
+                  onSelect: (i) => setState(() => _selectedIndex = i),
+                  accent: _accentNeutre,
+                  enabled: (i) =>
+                      i == _indexCatalogue ||
+                      i == _indexPromotion ||
+                      i == _indexNouveaute,
+                )
+              : null,
+        );
+      },
     );
   }
 }
@@ -172,8 +331,11 @@ class _ModePrixBadge extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.sell_outlined,
-                  size: 15, color: Colors.black.withValues(alpha: 0.35)),
+              Icon(
+                Icons.sell_outlined,
+                size: 15,
+                color: Colors.black.withValues(alpha: 0.35),
+              ),
               const SizedBox(width: 6),
               Text(
                 'Tarif : ${modePrix.libelleCourt}',
@@ -274,9 +436,7 @@ class _ModePrixOption extends StatelessWidget {
                 selectionne
                     ? Icons.radio_button_checked
                     : Icons.radio_button_off,
-                color: selectionne
-                    ? const Color(0xFF1B3B5F)
-                    : Colors.black38,
+                color: selectionne ? const Color(0xFF1B3B5F) : Colors.black38,
               ),
               const SizedBox(width: 14),
               Text(
@@ -321,7 +481,11 @@ class _TarifCardState extends State<_TarifCard> {
         curve: Curves.easeOut,
         transform: Matrix4.identity()
           ..scaleByDouble(
-              _hovering ? 1.02 : 1.0, _hovering ? 1.02 : 1.0, 1.0, 1.0),
+            _hovering ? 1.02 : 1.0,
+            _hovering ? 1.02 : 1.0,
+            1.0,
+            1.0,
+          ),
         transformAlignment: Alignment.center,
         constraints: const BoxConstraints(minHeight: 380, maxWidth: 460),
         decoration: BoxDecoration(
@@ -400,93 +564,217 @@ class _TarifCardState extends State<_TarifCard> {
                     ),
                   ),
                   Column(
-                children: [
-                  Container(
-                    height: 6,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(colors: accent),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                        vertical: 36, horizontal: 32),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                          Container(
-                            width: 240,
-                            height: 220,
-                            alignment: Alignment.center,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              gradient: RadialGradient(
-                                colors: [
-                                  accent.last.withValues(alpha: 0.10),
-                                  accent.last.withValues(alpha: 0.0),
+                    children: [
+                      Container(
+                        height: 6,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(colors: accent),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 36,
+                          horizontal: 32,
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              width: 240,
+                              height: 220,
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                gradient: RadialGradient(
+                                  colors: [
+                                    accent.last.withValues(alpha: 0.10),
+                                    accent.last.withValues(alpha: 0.0),
+                                  ],
+                                ),
+                              ),
+                              child: Image.asset(
+                                widget.tarif.logoAsset,
+                                fit: BoxFit.contain,
+                                width: 200,
+                                height: 200,
+                              ),
+                            ),
+                            const SizedBox(height: 20),
+                            Text(
+                              widget.tarif.nom,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                fontSize: 26,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF1B3B5F),
+                                letterSpacing: 0.3,
+                              ),
+                            ),
+                            const SizedBox(height: 14),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 22,
+                                vertical: 12,
+                              ),
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(colors: accent),
+                                borderRadius: BorderRadius.circular(30),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: accent.last.withValues(alpha: 0.35),
+                                    blurRadius: 12,
+                                    offset: const Offset(0, 6),
+                                  ),
+                                ],
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Text(
+                                    'Voir le catalogue',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w700,
+                                      color: Colors.white,
+                                      letterSpacing: 0.3,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  const Icon(
+                                    Icons.arrow_forward,
+                                    size: 16,
+                                    color: Colors.white,
+                                  ),
                                 ],
                               ),
                             ),
-                            child: Image.asset(
-                              widget.tarif.logoAsset,
-                              fit: BoxFit.contain,
-                              width: 200,
-                              height: 200,
-                            ),
-                          ),
-                          const SizedBox(height: 20),
-                          Text(
-                            widget.tarif.nom,
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              fontSize: 26,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF1B3B5F),
-                              letterSpacing: 0.3,
-                            ),
-                          ),
-                          const SizedBox(height: 14),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 22, vertical: 12),
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(colors: accent),
-                              borderRadius: BorderRadius.circular(30),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: accent.last.withValues(alpha: 0.35),
-                                  blurRadius: 12,
-                                  offset: const Offset(0, 6),
-                                ),
-                              ],
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Text(
-                                  'Voir le catalogue',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w700,
-                                    color: Colors.white,
-                                    letterSpacing: 0.3,
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                const Icon(Icons.arrow_forward,
-                                    size: 16, color: Colors.white),
-                              ],
-                            ),
-                          ),
-                      ],
-                    ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
                 ],
               ),
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Mini-fiche article utilisée dans les listes Promotion/Nouveauté du menu
+/// latéral, qui mélangent les deux catalogues (Aquajex / Les Cinq Frères).
+class _CarteArticleMixte extends StatelessWidget {
+  final ArticleAvecTarif data;
+  final ModePrix modePrix;
+  final VoidCallback onTap;
+
+  const _CarteArticleMixte({
+    required this.data,
+    required this.modePrix,
+    required this.onTap,
+  });
+
+  String _formaterPrix(double prix) {
+    final parts = prix.toStringAsFixed(3).split('.');
+    final chiffres = parts[0];
+    final buffer = StringBuffer();
+    for (int i = 0; i < chiffres.length; i++) {
+      if (i > 0 && (chiffres.length - i) % 3 == 0) buffer.write(' ');
+      buffer.write(chiffres[i]);
+    }
+    return '${buffer.toString()},${parts[1]}';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final article = data.article;
+    final accent = data.tarif.accentGradient;
+    final prix = modePrix == ModePrix.detail
+        ? article.prixDetail
+        : article.prixGros;
+
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(16),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  article.imageBytes != null
+                      ? Image.memory(article.imageBytes!, fit: BoxFit.cover)
+                      : Container(
+                          color: const Color(0xFFF3F5F8),
+                          alignment: Alignment.center,
+                          child: Icon(
+                            Icons.inventory_2_outlined,
+                            size: 30,
+                            color: accent.last.withValues(alpha: 0.3),
+                          ),
+                        ),
+                  Positioned(
+                    left: 8,
+                    top: 8,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(colors: accent),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        data.tarif.nom,
+                        style: const TextStyle(
+                          fontSize: 9,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    article.designation,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF1B3B5F),
+                      height: 1.2,
+                    ),
+                  ),
+                  const SizedBox(height: 5),
+                  Text(
+                    '${_formaterPrix(prix)} DT',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w800,
+                      color: accent.last,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );
