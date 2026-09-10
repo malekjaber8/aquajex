@@ -15,6 +15,7 @@ import '../widgets/commande_edit_sheet.dart';
 import '../widgets/decorative_background.dart';
 import '../widgets/panier_sheet.dart';
 import '../widgets/sidebar_nav.dart';
+import '../widgets/statut_articles_view.dart';
 import 'article_form_screen.dart';
 import 'client_form_screen.dart';
 import 'note_form_screen.dart';
@@ -59,15 +60,29 @@ class _CatalogueScreenState extends State<CatalogueScreen> {
   List<Note> _notes = [];
   final List<LigneCommande> _panier = [];
 
+  List<ArticleAvecTarif> _articlesPromo = [];
+  List<ArticleAvecTarif> _articlesNouveaute = [];
+
   StreamSubscription<List<String>>? _famillesSub;
   StreamSubscription<List<Article>>? _articlesSub;
+  StreamSubscription<List<ArticleAvecTarif>>? _promoSub;
+  StreamSubscription<List<ArticleAvecTarif>>? _nouveauteSub;
 
   static const _items = [
     SidebarItem(icon: Icons.grid_view_rounded, label: 'Catalogue'),
+    SidebarItem(icon: Icons.local_offer_outlined, label: 'Promotion'),
+    SidebarItem(icon: Icons.auto_awesome_outlined, label: 'Nouveauté'),
     SidebarItem(icon: Icons.people_outline, label: 'Clients'),
     SidebarItem(icon: Icons.request_quote_outlined, label: 'Commandes'),
     SidebarItem(icon: Icons.sticky_note_2_outlined, label: 'Notes'),
   ];
+
+  static const _indexCatalogue = 0;
+  static const _indexPromotion = 1;
+  static const _indexNouveaute = 2;
+  static const _indexClients = 3;
+  static const _indexCommandes = 4;
+  static const _indexNotes = 5;
 
   @override
   void initState() {
@@ -97,13 +112,41 @@ class _CatalogueScreenState extends State<CatalogueScreen> {
         _chargementArticles = false;
       });
     }, onError: (_) {});
+    // Mélange les deux catalogues (Aquajex + Les Cinq Frères) pour les
+    // rubriques Promotion/Nouveauté, identiques à celles de la page d'accueil.
+    _promoSub = CatalogueRepository.streamArticlesParStatut(StatutArticle.promo)
+        .listen((articles) {
+          if (!mounted) return;
+          setState(() => _articlesPromo = articles);
+        }, onError: (_) {});
+    _nouveauteSub =
+        CatalogueRepository.streamArticlesParStatut(StatutArticle.nouveaute)
+            .listen((articles) {
+              if (!mounted) return;
+              setState(() => _articlesNouveaute = articles);
+            }, onError: (_) {});
   }
 
   @override
   void dispose() {
     _famillesSub?.cancel();
     _articlesSub?.cancel();
+    _promoSub?.cancel();
+    _nouveauteSub?.cancel();
     super.dispose();
+  }
+
+  void _ouvrirCatalogueTarif(Tarif tarif) {
+    if (tarif == widget.tarif) return;
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(
+        builder: (_) => CatalogueScreen(
+          tarif: tarif,
+          modePrix: widget.modePrix,
+          isAdmin: widget.isAdmin,
+        ),
+      ),
+    );
   }
 
   Future<void> _chargerGestion() async {
@@ -507,9 +550,9 @@ class _CatalogueScreenState extends State<CatalogueScreen> {
   }
 
   void _onFabPressed() {
-    if (_selectedIndex == 1) {
+    if (_selectedIndex == _indexClients) {
       _ajouterClient();
-    } else if (_selectedIndex == 3) {
+    } else if (_selectedIndex == _indexNotes) {
       _ajouterNote();
     } else if (!widget.isAdmin) {
       return;
@@ -522,8 +565,10 @@ class _CatalogueScreenState extends State<CatalogueScreen> {
 
   bool get _fabVisible {
     if (_chargement) return false;
-    if (_selectedIndex == 1 || _selectedIndex == 3) return true;
-    return _selectedIndex == 0 && widget.isAdmin;
+    if (_selectedIndex == _indexClients || _selectedIndex == _indexNotes) {
+      return true;
+    }
+    return _selectedIndex == _indexCatalogue && widget.isAdmin;
   }
 
   @override
@@ -535,7 +580,23 @@ class _CatalogueScreenState extends State<CatalogueScreen> {
       body = Center(child: CircularProgressIndicator(color: accent.last));
     } else {
       switch (_selectedIndex) {
-        case 1:
+        case _indexPromotion:
+          body = StatutArticlesView(
+            statut: StatutArticle.promo,
+            articles: _articlesPromo,
+            modePrix: widget.modePrix,
+            onTapArticle: (data) => _ouvrirCatalogueTarif(data.tarif),
+          );
+          break;
+        case _indexNouveaute:
+          body = StatutArticlesView(
+            statut: StatutArticle.nouveaute,
+            articles: _articlesNouveaute,
+            modePrix: widget.modePrix,
+            onTapArticle: (data) => _ouvrirCatalogueTarif(data.tarif),
+          );
+          break;
+        case _indexClients:
           body = ClientsSection(
             tarif: widget.tarif,
             clients: _clients,
@@ -544,7 +605,7 @@ class _CatalogueScreenState extends State<CatalogueScreen> {
             onAjouter: _ajouterClient,
           );
           break;
-        case 2:
+        case _indexCommandes:
           body = CommandesSection(
             tarif: widget.tarif,
             commandes: _commandes,
@@ -553,7 +614,7 @@ class _CatalogueScreenState extends State<CatalogueScreen> {
             onDelete: _supprimerCommande,
           );
           break;
-        case 3:
+        case _indexNotes:
           body = NotesSection(
             tarif: widget.tarif,
             notes: _notes,
@@ -648,7 +709,9 @@ class _CatalogueScreenState extends State<CatalogueScreen> {
                     backgroundColor: Colors.transparent,
                     elevation: 0,
                     child: Icon(
-                      _selectedIndex == 1 ? Icons.person_add_alt_1 : Icons.add,
+                      _selectedIndex == _indexClients
+                          ? Icons.person_add_alt_1
+                          : Icons.add,
                       color: Colors.white,
                     ),
                   ),
