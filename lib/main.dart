@@ -65,16 +65,22 @@ class _AuthGateState extends State<AuthGate> {
         }
         final utilisateur = snapshot.data;
 
-        if (!_premierEtatTraite) {
+        // Sur desktop, la restauration de session ne se fait pas forcément
+        // en un seul événement : le flux peut d'abord émettre "personne"
+        // puis, un instant après, l'utilisateur restauré. Ne consommer ce
+        // garde-fou que sur le premier événement où un utilisateur est
+        // effectivement présent (peu importe son rang dans le flux) permet
+        // de forcer la déconnexion de session restaurée à coup sûr, sans
+        // jamais redéconnecter un utilisateur qui vient de se connecter
+        // volontairement via l'écran de connexion.
+        if (!_premierEtatTraite && utilisateur != null) {
           _premierEtatTraite = true;
-          if (utilisateur != null) {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              AuthService.deconnecter();
-            });
-            return const Scaffold(
-              body: Center(child: CircularProgressIndicator()),
-            );
-          }
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            AuthService.deconnecter();
+          });
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
         }
 
         if (utilisateur == null) {
