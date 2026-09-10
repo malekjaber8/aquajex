@@ -62,7 +62,12 @@ Future<Uint8List> genererFacturePdf({
             pw.Row(
               crossAxisAlignment: pw.CrossAxisAlignment.start,
               children: [
-                pw.Container(height: 50, width: 50, child: pw.Image(logo)),
+                pw.Container(
+                  height: 60,
+                  width: 100,
+                  alignment: pw.Alignment.centerLeft,
+                  child: pw.Image(logo, fit: pw.BoxFit.contain),
+                ),
                 pw.Spacer(),
                 pw.Column(
                   crossAxisAlignment: pw.CrossAxisAlignment.end,
@@ -296,7 +301,6 @@ Future<Uint8List> genererFacturePdf({
                       _ligneTotalPdf('TOTAL HT (NET)', commande.totalHtNet),
                       pw.SizedBox(height: 4),
                       _ligneTotalPdf('T.V.A.', commande.montantTva),
-                      _ligneTotalPdf('TIMBRE FISCAL', timbreFiscalFacture),
                       pw.SizedBox(height: 6),
                       pw.Divider(color: PdfColors.grey400),
                       pw.Row(

@@ -3,9 +3,6 @@ import 'mode_prix.dart';
 /// Taux de TVA appliqué aux factures (19%, taux standard en Tunisie).
 const double tauxTvaFacture = 0.19;
 
-/// Droit de timbre fiscal, montant fixe par facture (en dinars).
-const double timbreFiscalFacture = 1.0;
-
 class LigneCommande {
   final String articleId;
   final String designation;
@@ -93,7 +90,7 @@ class Commande {
 
   double get montantTva => totalHtNet * tauxTvaFacture;
 
-  double get totalTtc => totalHtNet + montantTva + timbreFiscalFacture;
+  double get totalTtc => totalHtNet + montantTva;
 
   int get nombreArticles => lignes.fold(0, (s, l) => s + l.quantite);
 

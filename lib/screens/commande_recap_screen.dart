@@ -54,7 +54,7 @@ class _CommandeRecapScreenState extends State<CommandeRecapScreen> {
   double get _remiseMontant => _totalHt * (_remisePourcent / 100);
   double get _totalHtNet => _totalHt - _remiseMontant;
   double get _tva => _totalHtNet * tauxTvaFacture;
-  double get _totalTtc => _totalHtNet + _tva + timbreFiscalFacture;
+  double get _totalTtc => _totalHtNet + _tva;
 
   String _formatMontant(double montant) {
     final parts = montant.toStringAsFixed(3).split('.');
@@ -284,10 +284,6 @@ class _CommandeRecapScreenState extends State<CommandeRecapScreen> {
                                       _ligneTotal(
                                         'TVA (${(tauxTvaFacture * 100).toStringAsFixed(0)}%)',
                                         _tva,
-                                      ),
-                                      _ligneTotal(
-                                        'Timbre fiscal',
-                                        timbreFiscalFacture,
                                       ),
                                       const SizedBox(height: 4),
                                       Row(

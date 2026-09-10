@@ -107,7 +107,7 @@ class _CommandeEditSheetState extends State<_CommandeEditSheet> {
   double get _remiseMontant => _total * (_remisePourcent / 100);
   double get _totalHtNet => _total - _remiseMontant;
   double get _tva => _totalHtNet * tauxTvaFacture;
-  double get _totalTtc => _totalHtNet + _tva + timbreFiscalFacture;
+  double get _totalTtc => _totalHtNet + _tva;
 
   String _formatMontant(double montant) {
     final parts = montant.toStringAsFixed(3).split('.');

@@ -208,13 +208,13 @@ class _FactureScreenState extends State<FactureScreen> {
                             Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                ClipRRect(
-                                  borderRadius: BorderRadius.circular(8),
+                                SizedBox(
+                                  height: 64,
+                                  width: 110,
                                   child: Image.asset(
                                     widget.tarif.logoAsset,
-                                    height: 50,
-                                    width: 50,
-                                    fit: BoxFit.cover,
+                                    fit: BoxFit.contain,
+                                    alignment: Alignment.centerLeft,
                                   ),
                                 ),
                                 const Spacer(),
@@ -539,10 +539,6 @@ class _FactureScreenState extends State<FactureScreen> {
                                     ),
                                     const SizedBox(height: 4),
                                     _ligneTotal('T.V.A.', commande.montantTva),
-                                    _ligneTotal(
-                                      'TIMBRE FISCAL',
-                                      timbreFiscalFacture,
-                                    ),
                                     const SizedBox(height: 6),
                                     Divider(
                                       color: Colors.black.withValues(
