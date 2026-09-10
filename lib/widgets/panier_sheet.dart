@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../models/client.dart';
 import '../models/commande.dart';
+import 'stepper_quantite.dart';
 
 /// Affiche le panier en cours. Retourne le client choisi si l'utilisateur a
 /// demandé à passer à l'étape suivante (récapitulatif) — le panier n'est pas
@@ -58,13 +59,17 @@ class _PanierSheetState extends State<_PanierSheet> {
   }
 
   void _modifierQuantite(int index, int delta) {
+    _definirQuantite(index, widget.lignes[index].quantite + delta);
+  }
+
+  void _definirQuantite(int index, int quantite) {
     setState(() {
-      final ligne = widget.lignes[index];
-      final nouvelleQte = ligne.quantite + delta;
-      if (nouvelleQte <= 0) {
+      if (quantite <= 0) {
         widget.lignes.removeAt(index);
       } else {
-        widget.lignes[index] = ligne.copyWith(quantite: nouvelleQte);
+        widget.lignes[index] = widget.lignes[index].copyWith(
+          quantite: quantite,
+        );
       }
     });
   }
@@ -186,11 +191,12 @@ class _PanierSheetState extends State<_PanierSheet> {
                                   ],
                                 ),
                               ),
-                              _StepperQuantite(
+                              StepperQuantite(
                                 quantite: ligne.quantite,
                                 accent: accent,
                                 onMoins: () => _modifierQuantite(index, -1),
                                 onPlus: () => _modifierQuantite(index, 1),
+                                onChanged: (q) => _definirQuantite(index, q),
                               ),
                               const SizedBox(width: 12),
                               SizedBox(
@@ -286,60 +292,6 @@ class _PanierSheetState extends State<_PanierSheet> {
               ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class _StepperQuantite extends StatelessWidget {
-  final int quantite;
-  final List<Color> accent;
-  final VoidCallback onMoins;
-  final VoidCallback onPlus;
-
-  const _StepperQuantite({
-    required this.quantite,
-    required this.accent,
-    required this.onMoins,
-    required this.onPlus,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: const Color(0xFFF3F5F8),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _boutonStepper(Icons.remove, onMoins),
-          SizedBox(
-            width: 26,
-            child: Text(
-              '$quantite',
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 13.5,
-                fontWeight: FontWeight.w700,
-                color: Color(0xFF1B3B5F),
-              ),
-            ),
-          ),
-          _boutonStepper(Icons.add, onPlus),
-        ],
-      ),
-    );
-  }
-
-  Widget _boutonStepper(IconData icon, VoidCallback onTap) {
-    return InkWell(
-      customBorder: const CircleBorder(),
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.all(6),
-        child: Icon(icon, size: 15, color: const Color(0xFF1B3B5F)),
       ),
     );
   }
