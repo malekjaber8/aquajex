@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
 
@@ -36,8 +39,40 @@ class DatabaseService {
 
   Future<String> _cheminFichier() async {
     if (kIsWeb) return 'aquajex.db';
+    if (defaultTargetPlatform == TargetPlatform.windows ||
+        defaultTargetPlatform == TargetPlatform.linux) {
+      // Dossier stable du profil utilisateur (ex. %APPDATA%\aquajex_catalogue
+      // sous Windows), indépendant du dossier où se trouve l'exécutable —
+      // pour que remplacer le dossier de l'app lors d'une mise à jour ne
+      // supprime jamais les clients/commandes/notes déjà enregistrés.
+      final dossier = await getApplicationSupportDirectory();
+      await dossier.create(recursive: true);
+      final chemin = join(dossier.path, 'aquajex.db');
+      await _migrerDepuisAncienEmplacement(chemin);
+      return chemin;
+    }
     final dossier = await getDatabasesPath();
     return join(dossier, 'aquajex.db');
+  }
+
+  /// Avant ce correctif, la base sur Windows/Linux était stockée à
+  /// l'intérieur du dossier de l'exécutable (`.dart_tool/...`). Si une base
+  /// existe déjà là-bas et qu'aucune base n'existe encore au nouvel
+  /// emplacement stable, on la déplace pour ne pas perdre l'historique des
+  /// installations déjà en place.
+  Future<void> _migrerDepuisAncienEmplacement(String nouveauChemin) async {
+    if (await File(nouveauChemin).exists()) return;
+    final ancienChemin = join(
+      Directory.current.path,
+      '.dart_tool',
+      'sqflite_common_ffi',
+      'databases',
+      'aquajex.db',
+    );
+    final ancienFichier = File(ancienChemin);
+    if (await ancienFichier.exists()) {
+      await ancienFichier.copy(nouveauChemin);
+    }
   }
 
   Future<Database> _ouvrir() async {
