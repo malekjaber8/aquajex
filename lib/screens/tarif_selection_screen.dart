@@ -162,6 +162,10 @@ class _TarifSelectionScreenState extends State<TarifSelectionScreen> {
               letterSpacing: 1.8,
             ),
           ),
+          if (_articlesPromo.isNotEmpty) ...[
+            const SizedBox(height: 36),
+            _buildOffresDuMoment(),
+          ],
           const SizedBox(height: 48),
           LayoutBuilder(
             builder: (context, constraints) {
@@ -192,6 +196,57 @@ class _TarifSelectionScreenState extends State<TarifSelectionScreen> {
             },
           ),
           const SizedBox(height: 24),
+        ],
+      ),
+    );
+  }
+
+  /// Bandeau "Offres du moment" visible directement sur l'accueil, sans
+  /// avoir à cliquer sur "Promotion" dans le menu latéral. Volontairement
+  /// une simple liste horizontale (ListView + SizedBox de hauteur fixe) —
+  /// un pattern sans risque de largeur/hauteur infinie, contrairement à la
+  /// bannière précédente qui avait fait planter l'écran.
+  Widget _buildOffresDuMoment() {
+    return SizedBox(
+      width: double.infinity,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              Text('🔥', style: TextStyle(fontSize: 19)),
+              SizedBox(width: 8),
+              Text(
+                'OFFRES DU MOMENT',
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 1,
+                  color: Color(0xFF1B3B5F),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          SizedBox(
+            height: 236,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: _articlesPromo.length,
+              separatorBuilder: (_, _) => const SizedBox(width: 14),
+              itemBuilder: (context, i) {
+                final data = _articlesPromo[i];
+                return SizedBox(
+                  width: 160,
+                  child: CarteArticleMixte(
+                    data: data,
+                    modePrix: _modePrix,
+                    onTap: () => _ouvrirCatalogue(data.tarif),
+                  ),
+                );
+              },
+            ),
+          ),
         ],
       ),
     );

@@ -2,6 +2,8 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 
+import 'mode_prix.dart';
+
 /// Statut d'affichage d'un article dans le catalogue : `normal` (aucun
 /// bandeau), `promo` ou `nouveaute` (bandeau décoratif automatique sur la
 /// carte, et filtre dédié dans le catalogue).
@@ -66,6 +68,14 @@ class Article {
   final Uint8List? imageBytes;
   final StatutArticle statut;
 
+  /// Anciens prix (avant remise), affichés barrés — uniquement pertinents
+  /// pour un article en promo. Null = pas de prix barré à afficher.
+  final double? prixDetailBarre;
+  final double? prixGrosBarre;
+
+  /// Disponibilité de l'article (badge affiché sur la carte).
+  final bool disponible;
+
   const Article({
     required this.id,
     required this.designation,
@@ -78,7 +88,25 @@ class Article {
     this.colisage,
     this.imageBytes,
     this.statut = StatutArticle.normal,
+    this.prixDetailBarre,
+    this.prixGrosBarre,
+    this.disponible = true,
   });
+
+  double prixPour(ModePrix mode) =>
+      mode == ModePrix.detail ? prixDetail : prixGros;
+
+  double? prixBarrePour(ModePrix mode) =>
+      mode == ModePrix.detail ? prixDetailBarre : prixGrosBarre;
+
+  /// Pourcentage de remise arrondi (ex. 17 pour -17%), ou null si aucun
+  /// prix barré n'est renseigné ou qu'il n'est pas supérieur au prix actuel.
+  int? pourcentageRemisePour(ModePrix mode) {
+    final barre = prixBarrePour(mode);
+    final prix = prixPour(mode);
+    if (barre == null || barre <= prix) return null;
+    return (((barre - prix) / barre) * 100).round();
+  }
 
   Article copyWith({
     String? designation,
@@ -91,6 +119,11 @@ class Article {
     int? colisage,
     Uint8List? imageBytes,
     StatutArticle? statut,
+    double? prixDetailBarre,
+    bool effacerPrixDetailBarre = false,
+    double? prixGrosBarre,
+    bool effacerPrixGrosBarre = false,
+    bool? disponible,
   }) {
     return Article(
       id: id,
@@ -104,6 +137,13 @@ class Article {
       colisage: colisage ?? this.colisage,
       imageBytes: imageBytes ?? this.imageBytes,
       statut: statut ?? this.statut,
+      prixDetailBarre: effacerPrixDetailBarre
+          ? null
+          : (prixDetailBarre ?? this.prixDetailBarre),
+      prixGrosBarre: effacerPrixGrosBarre
+          ? null
+          : (prixGrosBarre ?? this.prixGrosBarre),
+      disponible: disponible ?? this.disponible,
     );
   }
 }

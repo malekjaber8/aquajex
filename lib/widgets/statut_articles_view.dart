@@ -103,9 +103,9 @@ class CarteArticleMixte extends StatelessWidget {
   Widget build(BuildContext context) {
     final article = data.article;
     final accent = data.tarif.accentGradient;
-    final prix = modePrix == ModePrix.detail
-        ? article.prixDetail
-        : article.prixGros;
+    final prix = article.prixPour(modePrix);
+    final prixBarre = article.prixBarrePour(modePrix);
+    final pourcentage = article.pourcentageRemisePour(modePrix);
 
     return Material(
       color: Colors.white,
@@ -153,6 +153,54 @@ class CarteArticleMixte extends StatelessWidget {
                       ),
                     ),
                   ),
+                  if (pourcentage != null)
+                    Positioned(
+                      right: 8,
+                      top: 8,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 7,
+                          vertical: 3,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFE53935),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          '-$pourcentage%',
+                          style: const TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                  if (!article.disponible)
+                    Positioned.fill(
+                      child: Container(
+                        color: Colors.black.withValues(alpha: 0.4),
+                        alignment: Alignment.center,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: const Text(
+                            'Indisponible',
+                            style: TextStyle(
+                              fontSize: 9.5,
+                              fontWeight: FontWeight.w800,
+                              color: Colors.black87,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
                 ],
               ),
             ),
@@ -174,6 +222,15 @@ class CarteArticleMixte extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 5),
+                  if (prixBarre != null)
+                    Text(
+                      '${_formaterPrix(prixBarre)} DT',
+                      style: TextStyle(
+                        fontSize: 10.5,
+                        color: Colors.black.withValues(alpha: 0.4),
+                        decoration: TextDecoration.lineThrough,
+                      ),
+                    ),
                   Text(
                     '${_formaterPrix(prix)} DT',
                     style: TextStyle(
@@ -181,6 +238,30 @@ class CarteArticleMixte extends StatelessWidget {
                       fontWeight: FontWeight.w800,
                       color: accent.last,
                     ),
+                  ),
+                  const SizedBox(height: 3),
+                  Row(
+                    children: [
+                      Container(
+                        width: 6,
+                        height: 6,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: article.disponible
+                              ? const Color(0xFF2FAE60)
+                              : Colors.black26,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        article.disponible ? 'Disponible' : 'Indisponible',
+                        style: TextStyle(
+                          fontSize: 9.5,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black.withValues(alpha: 0.45),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),

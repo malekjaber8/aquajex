@@ -34,10 +34,13 @@ class _ArticleFormScreenState extends State<ArticleFormScreen> {
   late final TextEditingController _colisageCtrl;
   late final TextEditingController _prixDetailCtrl;
   late final TextEditingController _prixGrosCtrl;
+  late final TextEditingController _prixDetailBarreCtrl;
+  late final TextEditingController _prixGrosBarreCtrl;
 
   String? _familleChoisie;
   Uint8List? _imageBytes;
   late StatutArticle _statut;
+  late bool _disponible;
 
   bool get _modification => widget.articleExistant != null;
 
@@ -56,9 +59,16 @@ class _ArticleFormScreenState extends State<ArticleFormScreen> {
     _prixGrosCtrl = TextEditingController(
       text: a?.prixGros.toStringAsFixed(3) ?? '',
     );
+    _prixDetailBarreCtrl = TextEditingController(
+      text: a?.prixDetailBarre?.toStringAsFixed(3) ?? '',
+    );
+    _prixGrosBarreCtrl = TextEditingController(
+      text: a?.prixGrosBarre?.toStringAsFixed(3) ?? '',
+    );
     _familleChoisie = a?.categorie ?? widget.familleInitiale;
     _imageBytes = a?.imageBytes;
     _statut = a?.statut ?? StatutArticle.normal;
+    _disponible = a?.disponible ?? true;
   }
 
   @override
@@ -70,6 +80,8 @@ class _ArticleFormScreenState extends State<ArticleFormScreen> {
     _colisageCtrl.dispose();
     _prixDetailCtrl.dispose();
     _prixGrosCtrl.dispose();
+    _prixDetailBarreCtrl.dispose();
+    _prixGrosBarreCtrl.dispose();
     super.dispose();
   }
 
@@ -109,6 +121,13 @@ class _ArticleFormScreenState extends State<ArticleFormScreen> {
       colisage: int.tryParse(_colisageCtrl.text.trim()),
       imageBytes: _imageBytes,
       statut: _statut,
+      prixDetailBarre: _statut == StatutArticle.promo
+          ? double.tryParse(_prixDetailBarreCtrl.text.replaceAll(',', '.'))
+          : null,
+      prixGrosBarre: _statut == StatutArticle.promo
+          ? double.tryParse(_prixGrosBarreCtrl.text.replaceAll(',', '.'))
+          : null,
+      disponible: _disponible,
     );
 
     Navigator.of(context).pop(article);
@@ -161,6 +180,8 @@ class _ArticleFormScreenState extends State<ArticleFormScreen> {
                           Center(child: _buildImagePicker(accent)),
                           const SizedBox(height: 24),
                           _buildStatutSelector(),
+                          const SizedBox(height: 16),
+                          _buildDisponibiliteSwitch(accent),
                           const SizedBox(height: 24),
                           _buildFamilleSelector(accent),
                           const SizedBox(height: 16),
@@ -234,6 +255,37 @@ class _ArticleFormScreenState extends State<ArticleFormScreen> {
                               ),
                             ],
                           ),
+                          if (_statut == StatutArticle.promo) ...[
+                            const SizedBox(height: 16),
+                            Text(
+                              'Ancien prix (affiché barré, facultatif)',
+                              style: TextStyle(
+                                fontSize: 12.5,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.black.withValues(alpha: 0.55),
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: _champTexte(
+                                    controller: _prixDetailBarreCtrl,
+                                    label: 'Ancien prix détail (DT)',
+                                    clavierNumerique: true,
+                                  ),
+                                ),
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: _champTexte(
+                                    controller: _prixGrosBarreCtrl,
+                                    label: 'Ancien prix gros (DT)',
+                                    clavierNumerique: true,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
                         ],
                       ),
                     ),
@@ -430,6 +482,36 @@ class _ArticleFormScreenState extends State<ArticleFormScreen> {
                 ),
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDisponibiliteSwitch(List<Color> accent) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.black.withValues(alpha: 0.08)),
+      ),
+      child: SwitchListTile(
+        contentPadding: EdgeInsets.zero,
+        value: _disponible,
+        onChanged: (v) => setState(() => _disponible = v),
+        activeThumbColor: accent.last,
+        title: const Text(
+          'Disponible',
+          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+        ),
+        subtitle: Text(
+          _disponible
+              ? 'Visible comme disponible dans le catalogue'
+              : 'Affiché comme indisponible (grisé)',
+          style: TextStyle(
+            fontSize: 11.5,
+            color: Colors.black.withValues(alpha: 0.45),
           ),
         ),
       ),

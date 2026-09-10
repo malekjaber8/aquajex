@@ -34,11 +34,14 @@ class _ArticleDetailCard extends StatelessWidget {
     required this.accent,
   });
 
-  double get _prix =>
-      modePrix == ModePrix.detail ? article.prixDetail : article.prixGros;
+  double get _prix => article.prixPour(modePrix);
+  double? get _prixBarre => article.prixBarrePour(modePrix);
+  int? get _pourcentage => article.pourcentageRemisePour(modePrix);
 
-  String get _prixFormate {
-    final parts = _prix.toStringAsFixed(3).split('.');
+  String get _prixFormate => _formatMontant(_prix);
+
+  String _formatMontant(double montant) {
+    final parts = montant.toStringAsFixed(3).split('.');
     final chiffres = parts[0];
     final buffer = StringBuffer();
     for (int i = 0; i < chiffres.length; i++) {
@@ -186,6 +189,27 @@ class _ArticleDetailCard extends StatelessWidget {
                         ),
                       ),
                     ],
+                    if (!article.disponible) ...[
+                      const SizedBox(height: 16),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.06),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Text(
+                          'Indisponible',
+                          style: TextStyle(
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.black54,
+                          ),
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: 20),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -198,28 +222,69 @@ class _ArticleDetailCard extends StatelessWidget {
                             color: Colors.black.withValues(alpha: 0.45),
                           ),
                         ),
-                        Row(
+                        Column(
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
-                            Text(
-                              _prixFormate,
-                              style: TextStyle(
-                                fontSize: 28,
-                                fontWeight: FontWeight.w800,
-                                color: accent.last,
+                            if (_prixBarre != null)
+                              Row(
+                                children: [
+                                  Text(
+                                    '${_formatMontant(_prixBarre!)} DT',
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      color: Colors.black.withValues(
+                                        alpha: 0.4,
+                                      ),
+                                      decoration: TextDecoration.lineThrough,
+                                    ),
+                                  ),
+                                  if (_pourcentage != null) ...[
+                                    const SizedBox(width: 6),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 6,
+                                        vertical: 2,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFFE53935),
+                                        borderRadius: BorderRadius.circular(6),
+                                      ),
+                                      child: Text(
+                                        '-$_pourcentage%',
+                                        style: const TextStyle(
+                                          fontSize: 10.5,
+                                          fontWeight: FontWeight.w800,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ],
                               ),
-                            ),
-                            const SizedBox(width: 4),
-                            Padding(
-                              padding: const EdgeInsets.only(bottom: 4),
-                              child: Text(
-                                'DT',
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w600,
-                                  color: accent.last.withValues(alpha: 0.7),
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Text(
+                                  _prixFormate,
+                                  style: TextStyle(
+                                    fontSize: 28,
+                                    fontWeight: FontWeight.w800,
+                                    color: accent.last,
+                                  ),
                                 ),
-                              ),
+                                const SizedBox(width: 4),
+                                Padding(
+                                  padding: const EdgeInsets.only(bottom: 4),
+                                  child: Text(
+                                    'DT',
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                      color: accent.last.withValues(alpha: 0.7),
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ),

@@ -149,6 +149,9 @@ class CatalogueRepository {
     'colisage': a.colisage,
     'prixDetail': a.prixDetail,
     'prixGros': a.prixGros,
+    'prixDetailBarre': a.prixDetailBarre,
+    'prixGrosBarre': a.prixGrosBarre,
+    'disponible': a.disponible,
     'image': a.imageBytes != null ? base64Encode(a.imageBytes!) : null,
     'statut': a.statut.name,
   };
@@ -164,6 +167,9 @@ class CatalogueRepository {
     colisage: d['colisage'] as int?,
     prixDetail: (d['prixDetail'] as num?)?.toDouble() ?? 0,
     prixGros: (d['prixGros'] as num?)?.toDouble() ?? 0,
+    prixDetailBarre: (d['prixDetailBarre'] as num?)?.toDouble(),
+    prixGrosBarre: (d['prixGrosBarre'] as num?)?.toDouble(),
+    disponible: d['disponible'] as bool? ?? true,
     imageBytes: d['image'] != null ? base64Decode(d['image'] as String) : null,
   );
 }

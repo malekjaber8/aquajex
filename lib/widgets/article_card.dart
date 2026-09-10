@@ -30,12 +30,15 @@ class ArticleCard extends StatefulWidget {
 class _ArticleCardState extends State<ArticleCard> {
   bool _hovering = false;
 
-  double get _prix => widget.modePrix == ModePrix.detail
-      ? widget.article.prixDetail
-      : widget.article.prixGros;
+  double get _prix => widget.article.prixPour(widget.modePrix);
+  double? get _prixBarre => widget.article.prixBarrePour(widget.modePrix);
+  int? get _pourcentage =>
+      widget.article.pourcentageRemisePour(widget.modePrix);
 
-  String get _prixFormate {
-    final entier = _prix.toStringAsFixed(3);
+  String get _prixFormate => _formatMontant(_prix);
+
+  String _formatMontant(double montant) {
+    final entier = montant.toStringAsFixed(3);
     final parts = entier.split('.');
     final chiffres = parts[0];
     final buffer = StringBuffer();
@@ -147,6 +150,31 @@ class _ArticleCardState extends State<ArticleCard> {
                           ),
                         ),
                       ),
+                    if (!widget.article.disponible)
+                      Positioned.fill(
+                        child: Container(
+                          color: Colors.black.withValues(alpha: 0.45),
+                          alignment: Alignment.center,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: const Text(
+                              'Indisponible',
+                              style: TextStyle(
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.w800,
+                                color: Colors.black87,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
                     if (widget.onEdit != null || widget.onDelete != null)
                       Positioned(
                         top: 8,
@@ -209,6 +237,43 @@ class _ArticleCardState extends State<ArticleCard> {
                         ),
                       ),
                       const SizedBox(height: 10),
+                      if (_prixBarre != null)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 3),
+                          child: Row(
+                            children: [
+                              Text(
+                                '${_formatMontant(_prixBarre!)} DT',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.black.withValues(alpha: 0.4),
+                                  decoration: TextDecoration.lineThrough,
+                                ),
+                              ),
+                              if (_pourcentage != null) ...[
+                                const SizedBox(width: 6),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 6,
+                                    vertical: 2,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFE53935),
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Text(
+                                    '-$_pourcentage%',
+                                    style: const TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w800,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
@@ -242,11 +307,15 @@ class _ArticleCardState extends State<ArticleCard> {
                           ),
                           if (widget.onAjouterPanier != null)
                             Material(
-                              color: accent.last,
+                              color: widget.article.disponible
+                                  ? accent.last
+                                  : Colors.grey.shade400,
                               shape: const CircleBorder(),
                               child: InkWell(
                                 customBorder: const CircleBorder(),
-                                onTap: widget.onAjouterPanier,
+                                onTap: widget.article.disponible
+                                    ? widget.onAjouterPanier
+                                    : null,
                                 child: const Padding(
                                   padding: EdgeInsets.all(8),
                                   child: Icon(
