@@ -1,6 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import '../models/article.dart';
 import '../models/mode_prix.dart';
 import '../models/tarif.dart';
+import '../services/catalogue_repository.dart';
 import '../widgets/decorative_background.dart';
 import 'catalogue_screen.dart';
 
@@ -16,6 +20,37 @@ class TarifSelectionScreen extends StatefulWidget {
 class _TarifSelectionScreenState extends State<TarifSelectionScreen> {
   ModePrix _modePrix = ModePrix.detail;
 
+  List<ArticleAvecTarif> _articlesPromo = [];
+  List<ArticleAvecTarif> _articlesNouveaute = [];
+  StreamSubscription<List<ArticleAvecTarif>>? _promoSub;
+  StreamSubscription<List<ArticleAvecTarif>>? _nouveauteSub;
+
+  @override
+  void initState() {
+    super.initState();
+    // Mélange les deux catalogues (Aquajex + Les Cinq Frères) : seul l'écran
+    // d'accueil montre les deux marques ensemble.
+    _promoSub =
+        CatalogueRepository.streamArticlesParStatut(StatutArticle.promo)
+            .listen((articles) {
+      if (!mounted) return;
+      setState(() => _articlesPromo = articles);
+    }, onError: (_) {});
+    _nouveauteSub =
+        CatalogueRepository.streamArticlesParStatut(StatutArticle.nouveaute)
+            .listen((articles) {
+      if (!mounted) return;
+      setState(() => _articlesNouveaute = articles);
+    }, onError: (_) {});
+  }
+
+  @override
+  void dispose() {
+    _promoSub?.cancel();
+    _nouveauteSub?.cancel();
+    super.dispose();
+  }
+
   Future<void> _choisirModePrix() async {
     final choix = await showModalBottomSheet<ModePrix>(
       context: context,
@@ -27,13 +62,14 @@ class _TarifSelectionScreenState extends State<TarifSelectionScreen> {
     }
   }
 
-  void _ouvrirCatalogue(Tarif tarif) {
+  void _ouvrirCatalogue(Tarif tarif, {StatutArticle? filtreStatut}) {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => CatalogueScreen(
           tarif: tarif,
           modePrix: _modePrix,
           isAdmin: widget.isAdmin,
+          filtreStatutInitial: filtreStatut,
         ),
       ),
     );
@@ -96,7 +132,69 @@ class _TarifSelectionScreenState extends State<TarifSelectionScreen> {
                         letterSpacing: 0.3,
                       ),
                     ),
-                    const SizedBox(height: 48),
+                    const SizedBox(height: 36),
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 952),
+                      child: LayoutBuilder(
+                        builder: (context, constraints) {
+                          final promoBanniere = _articlesPromo.isEmpty
+                              ? null
+                              : _BanniereStatut(
+                                  statut: StatutArticle.promo,
+                                  titre: 'NOS ARTICLES EN PROMO',
+                                  sousTitre:
+                                      'Qualité • Prix avantageux • Stocks limités',
+                                  bouton: 'Découvrir',
+                                  article: _articlesPromo.first,
+                                  onTap: () => _ouvrirCatalogue(
+                                    _articlesPromo.first.tarif,
+                                    filtreStatut: StatutArticle.promo,
+                                  ),
+                                );
+                          final nouveauteBanniere = _articlesNouveaute.isEmpty
+                              ? null
+                              : _BanniereStatut(
+                                  statut: StatutArticle.nouveaute,
+                                  titre: 'NOUVEAUTÉS',
+                                  sousTitre:
+                                      'Découvrez nos derniers arrivages',
+                                  bouton: 'Voir les nouveautés',
+                                  article: _articlesNouveaute.first,
+                                  onTap: () => _ouvrirCatalogue(
+                                    _articlesNouveaute.first.tarif,
+                                    filtreStatut: StatutArticle.nouveaute,
+                                  ),
+                                );
+                          if (promoBanniere == null &&
+                              nouveauteBanniere == null) {
+                            return const SizedBox.shrink();
+                          }
+                          final isWide = constraints.maxWidth > 700;
+                          final banniere = [
+                            ?promoBanniere,
+                            ?nouveauteBanniere,
+                          ];
+                          if (banniere.length == 1) return banniere.first;
+                          if (isWide) {
+                            return Row(
+                              children: [
+                                Expanded(child: banniere[0]),
+                                const SizedBox(width: 20),
+                                Expanded(child: banniere[1]),
+                              ],
+                            );
+                          }
+                          return Column(
+                            children: [
+                              banniere[0],
+                              const SizedBox(height: 16),
+                              banniere[1],
+                            ],
+                          );
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 36),
                     LayoutBuilder(
                       builder: (context, constraints) {
                         final isWide = constraints.maxWidth > 700;
@@ -129,6 +227,40 @@ class _TarifSelectionScreenState extends State<TarifSelectionScreen> {
                         );
                       },
                     ),
+                    if (_articlesPromo.isNotEmpty) ...[
+                      const SizedBox(height: 32),
+                      ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 952),
+                        child: _RangeeArticles(
+                          titre: 'Nos articles en promo',
+                          icone: Icons.local_offer_outlined,
+                          accent: StatutArticle.promo.degradeBandeau!,
+                          articles: _articlesPromo,
+                          modePrix: _modePrix,
+                          onTapArticle: (a) => _ouvrirCatalogue(
+                            a.tarif,
+                            filtreStatut: StatutArticle.promo,
+                          ),
+                        ),
+                      ),
+                    ],
+                    if (_articlesNouveaute.isNotEmpty) ...[
+                      const SizedBox(height: 28),
+                      ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 952),
+                        child: _RangeeArticles(
+                          titre: 'Nouveautés',
+                          icone: Icons.auto_awesome_outlined,
+                          accent: StatutArticle.nouveaute.degradeBandeau!,
+                          articles: _articlesNouveaute,
+                          modePrix: _modePrix,
+                          onTapArticle: (a) => _ouvrirCatalogue(
+                            a.tarif,
+                            filtreStatut: StatutArticle.nouveaute,
+                          ),
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: 24),
                   ],
                 ),
@@ -486,6 +618,376 @@ class _TarifCardState extends State<_TarifCard> {
                 ],
               ),
             ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Bandeau vitrine pour un statut (promo ou nouveauté), avec un fond sombre
+/// teinté de la couleur du statut et le premier article correspondant en
+/// vedette — inspiré des bannières promotionnelles classiques d'e-commerce.
+class _BanniereStatut extends StatelessWidget {
+  final StatutArticle statut;
+  final String titre;
+  final String sousTitre;
+  final String bouton;
+  final ArticleAvecTarif article;
+  final VoidCallback onTap;
+
+  const _BanniereStatut({
+    required this.statut,
+    required this.titre,
+    required this.sousTitre,
+    required this.bouton,
+    required this.article,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final accent = statut.degradeBandeau!;
+    final fond = [
+      Color.lerp(const Color(0xFF0E141D), accent.first, 0.30)!,
+      Color.lerp(const Color(0xFF0E141D), accent.last, 0.46)!,
+    ];
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(22),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          child: Container(
+            constraints: const BoxConstraints(minHeight: 172),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: fond,
+              ),
+            ),
+            child: Stack(
+              children: [
+                Positioned(
+                  right: -34,
+                  top: -34,
+                  child: Container(
+                    width: 190,
+                    height: 190,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: RadialGradient(
+                        colors: [
+                          Colors.white.withValues(alpha: 0.08),
+                          Colors.white.withValues(alpha: 0.0),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(22, 22, 16, 22),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 10, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.14),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(statut.icone,
+                                      size: 12, color: Colors.white),
+                                  const SizedBox(width: 5),
+                                  Text(
+                                    statut == StatutArticle.promo
+                                        ? 'EN CE MOMENT'
+                                        : 'FRAÎCHEMENT ARRIVÉ',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 9.5,
+                                      fontWeight: FontWeight.w700,
+                                      letterSpacing: 0.8,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              titre,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 20,
+                                fontWeight: FontWeight.w800,
+                                height: 1.1,
+                                letterSpacing: 0.2,
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              sousTitre,
+                              style: TextStyle(
+                                color: Colors.white.withValues(alpha: 0.75),
+                                fontSize: 12,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 16, vertical: 10),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(24),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    bouton,
+                                    style: TextStyle(
+                                      color: accent.last,
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 12.5,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Icon(Icons.arrow_forward,
+                                      size: 14, color: accent.last),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Container(
+                        width: 104,
+                        height: 104,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: RadialGradient(
+                            colors: [
+                              Colors.white.withValues(alpha: 0.18),
+                              Colors.white.withValues(alpha: 0.0),
+                            ],
+                          ),
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(18),
+                          child: SizedBox(
+                            width: 80,
+                            height: 80,
+                            child: article.article.imageBytes != null
+                                ? Image.memory(article.article.imageBytes!,
+                                    fit: BoxFit.cover)
+                                : Container(
+                                    color: Colors.white.withValues(alpha: 0.12),
+                                    child: Icon(
+                                      statut.icone,
+                                      color:
+                                          Colors.white.withValues(alpha: 0.6),
+                                      size: 28,
+                                    ),
+                                  ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Rangée horizontale défilable d'articles d'un statut donné (promo ou
+/// nouveauté), mélangeant les deux catalogues.
+class _RangeeArticles extends StatelessWidget {
+  final String titre;
+  final IconData icone;
+  final List<Color> accent;
+  final List<ArticleAvecTarif> articles;
+  final ModePrix modePrix;
+  final ValueChanged<ArticleAvecTarif> onTapArticle;
+
+  const _RangeeArticles({
+    required this.titre,
+    required this.icone,
+    required this.accent,
+    required this.articles,
+    required this.modePrix,
+    required this.onTapArticle,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(icone, size: 16, color: accent.last),
+            const SizedBox(width: 8),
+            Text(
+              titre,
+              style: const TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w800,
+                color: Color(0xFF1B3B5F),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        SizedBox(
+          height: 172,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: articles.length,
+            separatorBuilder: (context, index) => const SizedBox(width: 12),
+            itemBuilder: (context, index) => _CarteRangee(
+              data: articles[index],
+              accent: accent,
+              modePrix: modePrix,
+              onTap: () => onTapArticle(articles[index]),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _CarteRangee extends StatelessWidget {
+  final ArticleAvecTarif data;
+  final List<Color> accent;
+  final ModePrix modePrix;
+  final VoidCallback onTap;
+
+  const _CarteRangee({
+    required this.data,
+    required this.accent,
+    required this.modePrix,
+    required this.onTap,
+  });
+
+  String _formaterPrix(double prix) {
+    final parts = prix.toStringAsFixed(3).split('.');
+    final chiffres = parts[0];
+    final buffer = StringBuffer();
+    for (int i = 0; i < chiffres.length; i++) {
+      if (i > 0 && (chiffres.length - i) % 3 == 0) buffer.write(' ');
+      buffer.write(chiffres[i]);
+    }
+    return '${buffer.toString()},${parts[1]}';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final article = data.article;
+    final prix =
+        modePrix == ModePrix.detail ? article.prixDetail : article.prixGros;
+
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: onTap,
+        child: Container(
+          width: 132,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    article.imageBytes != null
+                        ? Image.memory(article.imageBytes!, fit: BoxFit.cover)
+                        : Container(
+                            color: const Color(0xFFF3F5F8),
+                            alignment: Alignment.center,
+                            child: Icon(
+                              Icons.inventory_2_outlined,
+                              size: 24,
+                              color: accent.last.withValues(alpha: 0.3),
+                            ),
+                          ),
+                    Positioned(
+                      left: 6,
+                      top: 6,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(colors: accent),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          data.tarif.nom,
+                          style: const TextStyle(
+                            fontSize: 7.5,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(8, 6, 8, 8),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      article.designation,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF1B3B5F),
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      '${_formaterPrix(prix)} DT',
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w800,
+                        color: accent.last,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
         ),
       ),
