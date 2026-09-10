@@ -10,11 +10,17 @@ service cloud.firestore {
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
 
-    // Chaque utilisateur ne peut lire que sa propre fiche (rôle) ; les
-    // comptes sont créés/gérés depuis la console Firebase, jamais par l'app.
+    // Chaque utilisateur peut lire sa propre fiche (rôle) ; l'admin peut
+    // aussi lire toutes les fiches pour afficher la liste des commerciaux.
+    // La création d'un compte commercial se fait depuis l'app (par l'admin,
+    // via un compte Firebase Auth secondaire) : seul l'admin peut créer une
+    // fiche, et uniquement avec le rôle "commercial" (jamais "admin", pour
+    // empêcher toute élévation de privilège). Modification/suppression
+    // restent réservées à la console Firebase.
     match /users/{userId} {
-      allow read: if estConnecte() && request.auth.uid == userId;
-      allow write: if false;
+      allow read: if estConnecte() && (request.auth.uid == userId || estAdmin());
+      allow create: if estAdmin() && request.resource.data.role == 'commercial';
+      allow update, delete: if false;
     }
 
     // Catalogue partagé : tout utilisateur connecté peut consulter,

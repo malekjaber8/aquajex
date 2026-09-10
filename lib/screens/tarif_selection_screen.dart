@@ -10,6 +10,7 @@ import '../widgets/decorative_background.dart';
 import '../widgets/sidebar_nav.dart';
 import '../widgets/statut_articles_view.dart';
 import 'catalogue_screen.dart';
+import 'gestion_commerciaux_screen.dart';
 
 const _navItems = [
   SidebarItem(icon: Icons.grid_view_rounded, label: 'Catalogue'),
@@ -76,6 +77,12 @@ class _TarifSelectionScreenState extends State<TarifSelectionScreen> {
     if (choix != null) {
       setState(() => _modePrix = choix);
     }
+  }
+
+  void _ouvrirGestionCommerciaux() {
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const GestionCommerciauxScreen()));
   }
 
   void _ouvrirCatalogue(Tarif tarif) {
@@ -294,9 +301,15 @@ class _TarifSelectionScreenState extends State<TarifSelectionScreen> {
             Positioned(
               top: 16,
               right: 16,
-              child: _ModePrixBadge(
-                modePrix: _modePrix,
-                onTap: _choisirModePrix,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  if (widget.isAdmin) ...[
+                    _AdminActionBadge(onTap: _ouvrirGestionCommerciaux),
+                    const SizedBox(height: 10),
+                  ],
+                  _ModePrixBadge(modePrix: _modePrix, onTap: _choisirModePrix),
+                ],
               ),
             ),
           ],
@@ -337,6 +350,51 @@ class _TarifSelectionScreenState extends State<TarifSelectionScreen> {
               : null,
         );
       },
+    );
+  }
+}
+
+class _AdminActionBadge extends StatelessWidget {
+  final VoidCallback onTap;
+
+  const _AdminActionBadge({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(20),
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.55),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: Colors.black.withValues(alpha: 0.06)),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.admin_panel_settings_outlined,
+                size: 15,
+                color: Colors.black.withValues(alpha: 0.35),
+              ),
+              const SizedBox(width: 6),
+              Text(
+                'Commerciaux',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black.withValues(alpha: 0.45),
+                  letterSpacing: 0.2,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
