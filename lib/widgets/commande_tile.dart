@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../models/commande.dart';
 
 class CommandeTile extends StatelessWidget {
@@ -64,8 +65,11 @@ class CommandeTile extends StatelessWidget {
                     color: accent.last.withValues(alpha: 0.12),
                   ),
                   alignment: Alignment.center,
-                  child: Icon(Icons.receipt_long_outlined,
-                      color: accent.last, size: 20),
+                  child: Icon(
+                    Icons.receipt_long_outlined,
+                    color: accent.last,
+                    size: 20,
+                  ),
                 ),
                 const SizedBox(width: 14),
                 Expanded(
@@ -94,7 +98,7 @@ class CommandeTile extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  '${_formatMontant(commande.total)} DT',
+                  '${_formatMontant(commande.totalTtc)} DT',
                   style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w800,

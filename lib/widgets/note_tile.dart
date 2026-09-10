@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../models/note.dart';
 
 class NoteTile extends StatefulWidget {
@@ -26,8 +27,18 @@ class _NoteTileState extends State<NoteTile> {
 
   String _formaterDate(DateTime d) {
     const mois = [
-      'janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin',
-      'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.',
+      'janv.',
+      'févr.',
+      'mars',
+      'avr.',
+      'mai',
+      'juin',
+      'juil.',
+      'août',
+      'sept.',
+      'oct.',
+      'nov.',
+      'déc.',
     ];
     return '${d.day} ${mois[d.month - 1]} ${d.year}';
   }
@@ -116,7 +127,9 @@ class _NoteTileState extends State<NoteTile> {
                             if (n.clientNom != null)
                               Container(
                                 padding: const EdgeInsets.symmetric(
-                                    horizontal: 8, vertical: 2),
+                                  horizontal: 8,
+                                  vertical: 2,
+                                ),
                                 decoration: BoxDecoration(
                                   color: accent.last.withValues(alpha: 0.10),
                                   borderRadius: BorderRadius.circular(20),
@@ -133,12 +146,15 @@ class _NoteTileState extends State<NoteTile> {
                             if (n.dateRappel != null)
                               Container(
                                 padding: const EdgeInsets.symmetric(
-                                    horizontal: 8, vertical: 2),
+                                  horizontal: 8,
+                                  vertical: 2,
+                                ),
                                 decoration: BoxDecoration(
-                                  color: (rappelPasse
-                                          ? Colors.orange
-                                          : Colors.teal)
-                                      .withValues(alpha: 0.12),
+                                  color:
+                                      (rappelPasse
+                                              ? Colors.orange
+                                              : Colors.teal)
+                                          .withValues(alpha: 0.12),
                                   borderRadius: BorderRadius.circular(20),
                                 ),
                                 child: Row(

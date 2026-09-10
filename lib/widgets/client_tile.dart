@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../models/client.dart';
 
 class ClientTile extends StatefulWidget {
@@ -99,9 +100,10 @@ class _ClientTileState extends State<ClientTile> {
                           Padding(
                             padding: const EdgeInsets.only(top: 2),
                             child: Text(
-                              [c.nomSociete, c.telephone]
-                                  .where((e) => e != null)
-                                  .join(' · '),
+                              [
+                                c.nomSociete,
+                                c.telephone,
+                              ].where((e) => e != null).join(' · '),
                               style: TextStyle(
                                 fontSize: 12.5,
                                 color: Colors.black.withValues(alpha: 0.45),

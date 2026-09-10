@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../../models/client.dart';
 import '../../models/tarif.dart';
 import '../../widgets/client_tile.dart';
@@ -28,8 +29,7 @@ class ClientsSection extends StatelessWidget {
       return SectionPlaceholder(
         icon: Icons.people_outline,
         titre: 'Aucun client pour le moment',
-        sousTitre:
-            'Créez une fiche client pour préparer vos devis\net garder un historique de vos visites.',
+        sousTitre: 'Créez une fiche client pour préparer vos devis\net garder un historique de vos visites.',
         accent: accent,
         actionLabel: 'Créer un client',
         onAction: onAjouter,

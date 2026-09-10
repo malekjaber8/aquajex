@@ -21,6 +21,7 @@ Future<bool?> afficherEditionCommande(
     String clientNom,
     List<LigneCommande> lignes,
     String? note,
+    double remisePourcent,
   )
   onEnregistrer,
 }) {
@@ -52,6 +53,7 @@ class _CommandeEditSheet extends StatefulWidget {
     String clientNom,
     List<LigneCommande> lignes,
     String? note,
+    double remisePourcent,
   )
   onEnregistrer;
 
@@ -72,6 +74,11 @@ class _CommandeEditSheet extends StatefulWidget {
 class _CommandeEditSheetState extends State<_CommandeEditSheet> {
   final List<LigneCommande> _lignes = [];
   late final _noteCtrl = TextEditingController(text: widget.commande.note);
+  late final _remiseCtrl = TextEditingController(
+    text: widget.commande.remisePourcent == 0
+        ? ''
+        : _formatNombre(widget.commande.remisePourcent),
+  );
   late String _clientId = widget.commande.clientId;
   late String _clientNom = widget.commande.clientNom;
   bool _enCours = false;
@@ -85,10 +92,22 @@ class _CommandeEditSheetState extends State<_CommandeEditSheet> {
   @override
   void dispose() {
     _noteCtrl.dispose();
+    _remiseCtrl.dispose();
     super.dispose();
   }
 
+  static String _formatNombre(double n) =>
+      n == n.roundToDouble() ? n.toStringAsFixed(0) : n.toString();
+
+  double get _remisePourcent =>
+      double.tryParse(_remiseCtrl.text.trim().replaceAll(',', '.')) ?? 0;
+
   double get _total => _lignes.fold(0, (s, l) => s + l.total);
+
+  double get _remiseMontant => _total * (_remisePourcent / 100);
+  double get _totalHtNet => _total - _remiseMontant;
+  double get _tva => _totalHtNet * tauxTvaFacture;
+  double get _totalTtc => _totalHtNet + _tva + timbreFiscalFacture;
 
   String _formatMontant(double montant) {
     final parts = montant.toStringAsFixed(3).split('.');
@@ -100,6 +119,30 @@ class _CommandeEditSheetState extends State<_CommandeEditSheet> {
     }
     return '${buffer.toString()},${parts[1]}';
   }
+
+  Widget _ligneTotal(String label, String valeur) => Padding(
+    padding: const EdgeInsets.only(bottom: 4),
+    child: Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 12.5,
+            color: Colors.black.withValues(alpha: 0.5),
+          ),
+        ),
+        Text(
+          valeur,
+          style: TextStyle(
+            fontSize: 12.5,
+            fontWeight: FontWeight.w600,
+            color: Colors.black.withValues(alpha: 0.65),
+          ),
+        ),
+      ],
+    ),
+  );
 
   void _modifierQuantite(int index, int delta) {
     setState(() {
@@ -162,6 +205,9 @@ class _CommandeEditSheetState extends State<_CommandeEditSheet> {
             designation: article.designation,
             prixUnitaire: prix,
             quantite: 1,
+            codeArticle: article.codeArticle,
+            codeBarre: article.codeBarre,
+            colisage: article.colisage,
           ),
         );
       }
@@ -182,6 +228,7 @@ class _CommandeEditSheetState extends State<_CommandeEditSheet> {
       _clientNom,
       _lignes,
       note.isEmpty ? null : note,
+      _remisePourcent,
     );
     if (!mounted) return;
     Navigator.of(context).pop(true);
@@ -377,19 +424,48 @@ class _CommandeEditSheetState extends State<_CommandeEditSheet> {
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 4, 20, 4),
-              child: TextField(
-                controller: _noteCtrl,
-                maxLines: 2,
-                decoration: InputDecoration(
-                  hintText: 'Note (facultative)',
-                  filled: true,
-                  fillColor: const Color(0xFFF3F5F8),
-                  contentPadding: const EdgeInsets.all(12),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _noteCtrl,
+                      maxLines: 2,
+                      decoration: InputDecoration(
+                        hintText: 'Note (facultative)',
+                        filled: true,
+                        fillColor: const Color(0xFFF3F5F8),
+                        contentPadding: const EdgeInsets.all(12),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                    ),
                   ),
-                ),
+                  const SizedBox(width: 10),
+                  SizedBox(
+                    width: 100,
+                    child: TextField(
+                      controller: _remiseCtrl,
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
+                      onChanged: (_) => setState(() {}),
+                      decoration: InputDecoration(
+                        hintText: '0',
+                        labelText: 'Remise %',
+                        filled: true,
+                        fillColor: const Color(0xFFF3F5F8),
+                        contentPadding: const EdgeInsets.all(12),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
             Container(
@@ -404,15 +480,27 @@ class _CommandeEditSheetState extends State<_CommandeEditSheet> {
                 top: false,
                 child: Column(
                   children: [
+                    if (_remisePourcent > 0) ...[
+                      _ligneTotal('Total HT', '${_formatMontant(_total)} DT'),
+                      _ligneTotal(
+                        'Remise (${_formatMontant(_remisePourcent)}%)',
+                        '- ${_formatMontant(_remiseMontant)} DT',
+                      ),
+                      _ligneTotal(
+                        'TVA (${(tauxTvaFacture * 100).toStringAsFixed(0)}%)',
+                        '${_formatMontant(_tva)} DT',
+                      ),
+                      const SizedBox(height: 4),
+                    ],
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         const Text(
-                          'Total',
+                          'Total TTC',
                           style: TextStyle(fontSize: 14, color: Colors.black54),
                         ),
                         Text(
-                          '${_formatMontant(_total)} DT',
+                          '${_formatMontant(_totalTtc)} DT',
                           style: TextStyle(
                             fontSize: 22,
                             fontWeight: FontWeight.w800,

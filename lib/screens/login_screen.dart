@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../services/auth_service.dart';
 import '../widgets/decorative_background.dart';
 
@@ -29,7 +30,9 @@ class _LoginScreenState extends State<LoginScreen> {
     final nom = _nomController.text.trim();
     final motDePasse = _motDePasseController.text;
     if (nom.isEmpty || motDePasse.isEmpty) {
-      setState(() => _erreur = 'Renseigne ton nom d\'utilisateur et ton mot de passe.');
+      setState(
+        () => _erreur = 'Renseigne ton nom d\'utilisateur et ton mot de passe.',
+      );
       return;
     }
     setState(() {
@@ -83,8 +86,11 @@ class _LoginScreenState extends State<LoginScreen> {
                             shape: BoxShape.circle,
                             gradient: const LinearGradient(colors: _accent),
                           ),
-                          child: const Icon(Icons.storefront_outlined,
-                              color: Colors.white, size: 30),
+                          child: const Icon(
+                            Icons.storefront_outlined,
+                            color: Colors.white,
+                            size: 30,
+                          ),
                         ),
                       ),
                       const SizedBox(height: 20),
@@ -114,7 +120,8 @@ class _LoginScreenState extends State<LoginScreen> {
                           labelText: 'Nom d\'utilisateur',
                           prefixIcon: const Icon(Icons.person_outline),
                           border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(14)),
+                            borderRadius: BorderRadius.circular(14),
+                          ),
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -127,14 +134,18 @@ class _LoginScreenState extends State<LoginScreen> {
                           labelText: 'Mot de passe',
                           prefixIcon: const Icon(Icons.lock_outline),
                           suffixIcon: IconButton(
-                            icon: Icon(_motDePasseVisible
-                                ? Icons.visibility_off_outlined
-                                : Icons.visibility_outlined),
+                            icon: Icon(
+                              _motDePasseVisible
+                                  ? Icons.visibility_off_outlined
+                                  : Icons.visibility_outlined,
+                            ),
                             onPressed: () => setState(
-                                () => _motDePasseVisible = !_motDePasseVisible),
+                              () => _motDePasseVisible = !_motDePasseVisible,
+                            ),
                           ),
                           border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(14)),
+                            borderRadius: BorderRadius.circular(14),
+                          ),
                         ),
                       ),
                       if (_erreur != null) ...[
@@ -143,7 +154,9 @@ class _LoginScreenState extends State<LoginScreen> {
                           _erreur!,
                           textAlign: TextAlign.center,
                           style: const TextStyle(
-                              color: Colors.red, fontSize: 13.5),
+                            color: Colors.red,
+                            fontSize: 13.5,
+                          ),
                         ),
                       ],
                       const SizedBox(height: 24),
@@ -153,7 +166,8 @@ class _LoginScreenState extends State<LoginScreen> {
                           style: FilledButton.styleFrom(
                             backgroundColor: _accent.last,
                             shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(14)),
+                              borderRadius: BorderRadius.circular(14),
+                            ),
                           ),
                           onPressed: _connexionEnCours ? null : _connecter,
                           child: _connexionEnCours
@@ -168,8 +182,9 @@ class _LoginScreenState extends State<LoginScreen> {
                               : const Text(
                                   'Se connecter',
                                   style: TextStyle(
-                                      fontSize: 15.5,
-                                      fontWeight: FontWeight.w700),
+                                    fontSize: 15.5,
+                                    fontWeight: FontWeight.w700,
+                                  ),
                                 ),
                         ),
                       ),

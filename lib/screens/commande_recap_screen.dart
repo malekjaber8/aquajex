@@ -16,7 +16,8 @@ class CommandeRecapScreen extends StatefulWidget {
   final List<LigneCommande> lignes;
   final Tarif tarif;
   final ModePrix modePrix;
-  final Future<Commande> Function(String? note) onConfirmer;
+  final Future<Commande> Function(String? note, double remisePourcent)
+  onConfirmer;
   final ValueChanged<Commande> onModifier;
 
   const CommandeRecapScreen({
@@ -35,15 +36,25 @@ class CommandeRecapScreen extends StatefulWidget {
 
 class _CommandeRecapScreenState extends State<CommandeRecapScreen> {
   final _noteCtrl = TextEditingController();
+  final _remiseCtrl = TextEditingController();
   bool _enCours = false;
 
   @override
   void dispose() {
     _noteCtrl.dispose();
+    _remiseCtrl.dispose();
     super.dispose();
   }
 
-  double get _total => widget.lignes.fold(0, (s, l) => s + l.total);
+  double get _totalHt => widget.lignes.fold(0, (s, l) => s + l.total);
+
+  double get _remisePourcent =>
+      double.tryParse(_remiseCtrl.text.trim().replaceAll(',', '.')) ?? 0;
+
+  double get _remiseMontant => _totalHt * (_remisePourcent / 100);
+  double get _totalHtNet => _totalHt - _remiseMontant;
+  double get _tva => _totalHtNet * tauxTvaFacture;
+  double get _totalTtc => _totalHtNet + _tva + timbreFiscalFacture;
 
   String _formatMontant(double montant) {
     final parts = montant.toStringAsFixed(3).split('.');
@@ -56,11 +67,38 @@ class _CommandeRecapScreenState extends State<CommandeRecapScreen> {
     return '${buffer.toString()},${parts[1]}';
   }
 
+  Widget _ligneTotal(String label, double valeur) => Padding(
+    padding: const EdgeInsets.only(bottom: 4),
+    child: Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 12.5,
+            color: Colors.black.withValues(alpha: 0.5),
+          ),
+        ),
+        Text(
+          '${valeur < 0 ? '- ' : ''}${_formatMontant(valeur.abs())} DT',
+          style: TextStyle(
+            fontSize: 12.5,
+            fontWeight: FontWeight.w600,
+            color: Colors.black.withValues(alpha: 0.65),
+          ),
+        ),
+      ],
+    ),
+  );
+
   Future<void> _confirmer() async {
     setState(() => _enCours = true);
     final note = _noteCtrl.text.trim();
     try {
-      final commande = await widget.onConfirmer(note.isEmpty ? null : note);
+      final commande = await widget.onConfirmer(
+        note.isEmpty ? null : note,
+        _remisePourcent,
+      );
       if (!mounted) return;
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
@@ -233,28 +271,98 @@ class _CommandeRecapScreenState extends State<CommandeRecapScreen> {
                                     16,
                                     6,
                                     16,
-                                    10,
+                                    12,
                                   ),
-                                  child: Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
+                                  child: Column(
                                     children: [
-                                      const Text(
-                                        'Total',
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                          color: Colors.black54,
+                                      _ligneTotal('Total HT', _totalHt),
+                                      if (_remisePourcent > 0)
+                                        _ligneTotal(
+                                          'Remise (${_formatMontant(_remisePourcent)}%)',
+                                          -_remiseMontant,
                                         ),
+                                      _ligneTotal(
+                                        'TVA (${(tauxTvaFacture * 100).toStringAsFixed(0)}%)',
+                                        _tva,
                                       ),
-                                      Text(
-                                        '${_formatMontant(_total)} DT',
-                                        style: TextStyle(
-                                          fontSize: 20,
-                                          fontWeight: FontWeight.w800,
-                                          color: accent.last,
-                                        ),
+                                      _ligneTotal(
+                                        'Timbre fiscal',
+                                        timbreFiscalFacture,
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          const Text(
+                                            'Total TTC',
+                                            style: TextStyle(
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w700,
+                                              color: Color(0xFF1B3B5F),
+                                            ),
+                                          ),
+                                          Text(
+                                            '${_formatMontant(_totalTtc)} DT',
+                                            style: TextStyle(
+                                              fontSize: 20,
+                                              fontWeight: FontWeight.w800,
+                                              color: accent.last,
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          Container(
+                            padding: const EdgeInsets.all(14),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Icon(
+                                      Icons.percent,
+                                      size: 18,
+                                      color: accent.last,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    const Text(
+                                      'Remise (facultative)',
+                                      style: TextStyle(
+                                        fontSize: 13.5,
+                                        fontWeight: FontWeight.w700,
+                                        color: Color(0xFF1B3B5F),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 10),
+                                TextField(
+                                  controller: _remiseCtrl,
+                                  keyboardType:
+                                      const TextInputType.numberWithOptions(
+                                        decimal: true,
+                                      ),
+                                  onChanged: (_) => setState(() {}),
+                                  decoration: InputDecoration(
+                                    hintText: 'Pourcentage de remise, ex. 5',
+                                    filled: true,
+                                    fillColor: const Color(0xFFF3F5F8),
+                                    contentPadding: const EdgeInsets.all(12),
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: BorderSide.none,
+                                    ),
                                   ),
                                 ),
                               ],

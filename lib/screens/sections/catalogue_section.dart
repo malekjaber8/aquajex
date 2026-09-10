@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../../models/article.dart';
 import '../../models/mode_prix.dart';
 import '../../models/tarif.dart';
@@ -62,16 +63,17 @@ class CatalogueSection extends StatelessWidget {
   /// carte par ligne pour une meilleure présentation au client, mais sans
   /// dépasser [largeurCarteMax] pour ne pas devenir démesurée.
   ({int colonnes, double ratio, double largeurCarteMax}) _grilleArticles(
-      double largeur) {
+    double largeur,
+  ) {
     final colonnes = largeur > 1200
         ? 5
         : largeur > 900
-            ? 4
-            : largeur > 700
-                ? 3
-                : largeur > 480
-                    ? 2
-                    : 1;
+        ? 4
+        : largeur > 700
+        ? 3
+        : largeur > 480
+        ? 2
+        : 1;
     const padding = 24.0;
     const espacement = 20.0;
     final largeurCellule =
@@ -140,8 +142,8 @@ class CatalogueSection extends StatelessWidget {
           child: filtreActif
               ? _buildArticlesFiltres(context)
               : (familleSelectionnee == null
-                  ? _buildFamilles(context)
-                  : _buildArticles(context)),
+                    ? _buildFamilles(context)
+                    : _buildArticles(context)),
         ),
       ],
     );
@@ -193,8 +195,9 @@ class CatalogueSection extends StatelessWidget {
                   final article = resultats[index];
                   return Center(
                     child: ConstrainedBox(
-                      constraints:
-                          BoxConstraints(maxWidth: grille.largeurCarteMax),
+                      constraints: BoxConstraints(
+                        maxWidth: grille.largeurCarteMax,
+                      ),
                       child: ArticleCard(
                         article: article,
                         modePrix: modePrix,
@@ -241,10 +244,10 @@ class CatalogueSection extends StatelessWidget {
         final crossAxisCount = width > 1200
             ? 5
             : width > 900
-                ? 4
-                : width > 600
-                    ? 3
-                    : 2;
+            ? 4
+            : width > 600
+            ? 3
+            : 2;
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -302,8 +305,11 @@ class CatalogueSection extends StatelessWidget {
                 children: [
                   IconButton(
                     onPressed: () => onFamilleSelectionnee(null),
-                    icon: const Icon(Icons.arrow_back,
-                        color: Color(0xFF1B3B5F), size: 20),
+                    icon: const Icon(
+                      Icons.arrow_back,
+                      color: Color(0xFF1B3B5F),
+                      size: 20,
+                    ),
                   ),
                   Text(
                     familleSelectionnee!,
@@ -332,43 +338,47 @@ class CatalogueSection extends StatelessWidget {
                             ? 'Aucun article dans cette famille.\nUtilisez le bouton "+" pour en ajouter.'
                             : 'Aucun article dans cette famille.',
                         textAlign: TextAlign.center,
-                        style:
-                            TextStyle(color: Colors.black.withValues(alpha: 0.45)),
+                        style: TextStyle(
+                          color: Colors.black.withValues(alpha: 0.45),
+                        ),
                       ),
                     )
                   : GridView.builder(
-                padding: const EdgeInsets.fromLTRB(24, 8, 24, 100),
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: grille.colonnes,
-                  mainAxisSpacing: 20,
-                  crossAxisSpacing: 20,
-                  childAspectRatio: grille.ratio,
-                ),
-                itemCount: articlesFiltres.length,
-                itemBuilder: (context, index) {
-                  final article = articlesFiltres[index];
-                  return Center(
-                    child: ConstrainedBox(
-                      constraints:
-                          BoxConstraints(maxWidth: grille.largeurCarteMax),
-                      child: ArticleCard(
-                        article: article,
-                        modePrix: modePrix,
-                        accent: accent,
-                        onTap: () => afficherFicheArticle(
-                          context,
-                          article: article,
-                          modePrix: modePrix,
-                          accent: accent,
-                        ),
-                        onEdit: isAdmin ? () => onEdit(article) : null,
-                        onDelete: isAdmin ? () => onDelete(article) : null,
-                        onAjouterPanier: () => onAjouterPanier(article),
+                      padding: const EdgeInsets.fromLTRB(24, 8, 24, 100),
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: grille.colonnes,
+                        mainAxisSpacing: 20,
+                        crossAxisSpacing: 20,
+                        childAspectRatio: grille.ratio,
                       ),
+                      itemCount: articlesFiltres.length,
+                      itemBuilder: (context, index) {
+                        final article = articlesFiltres[index];
+                        return Center(
+                          child: ConstrainedBox(
+                            constraints: BoxConstraints(
+                              maxWidth: grille.largeurCarteMax,
+                            ),
+                            child: ArticleCard(
+                              article: article,
+                              modePrix: modePrix,
+                              accent: accent,
+                              onTap: () => afficherFicheArticle(
+                                context,
+                                article: article,
+                                modePrix: modePrix,
+                                accent: accent,
+                              ),
+                              onEdit: isAdmin ? () => onEdit(article) : null,
+                              onDelete: isAdmin
+                                  ? () => onDelete(article)
+                                  : null,
+                              onAjouterPanier: () => onAjouterPanier(article),
+                            ),
+                          ),
+                        );
+                      },
                     ),
-                  );
-                },
-              ),
             ),
           ],
         );
@@ -393,8 +403,9 @@ class _BarreRecherche extends StatefulWidget {
 }
 
 class _BarreRechercheState extends State<_BarreRecherche> {
-  late final TextEditingController _controller =
-      TextEditingController(text: widget.valeur);
+  late final TextEditingController _controller = TextEditingController(
+    text: widget.valeur,
+  );
 
   @override
   void didUpdateWidget(covariant _BarreRecherche oldWidget) {
@@ -444,8 +455,10 @@ class _BarreRechercheState extends State<_BarreRecherche> {
                   onPressed: () => widget.onChanged(''),
                 ),
           border: InputBorder.none,
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 14,
+          ),
         ),
       ),
     );
@@ -471,22 +484,33 @@ class _FiltreStatutBar extends StatelessWidget {
         children: [
           _puce(context, null, 'Tous', Icons.grid_view_rounded, null),
           const SizedBox(width: 8),
-          _puce(context, StatutArticle.promo, 'Promo',
-              StatutArticle.promo.icone, StatutArticle.promo.degradeBandeau),
+          _puce(
+            context,
+            StatutArticle.promo,
+            'Promo',
+            StatutArticle.promo.icone,
+            StatutArticle.promo.degradeBandeau,
+          ),
           const SizedBox(width: 8),
           _puce(
-              context,
-              StatutArticle.nouveaute,
-              'Nouveauté',
-              StatutArticle.nouveaute.icone,
-              StatutArticle.nouveaute.degradeBandeau),
+            context,
+            StatutArticle.nouveaute,
+            'Nouveauté',
+            StatutArticle.nouveaute.icone,
+            StatutArticle.nouveaute.degradeBandeau,
+          ),
         ],
       ),
     );
   }
 
-  Widget _puce(BuildContext context, StatutArticle? statut, String libelle,
-      IconData icone, List<Color>? degrade) {
+  Widget _puce(
+    BuildContext context,
+    StatutArticle? statut,
+    String libelle,
+    IconData icone,
+    List<Color>? degrade,
+  ) {
     final selectionne = valeur == statut;
     final couleur = degrade?.last ?? accent.last;
     return Material(
@@ -511,16 +535,18 @@ class _FiltreStatutBar extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icone,
-                  size: 15, color: selectionne ? Colors.white : couleur),
+              Icon(
+                icone,
+                size: 15,
+                color: selectionne ? Colors.white : couleur,
+              ),
               const SizedBox(width: 6),
               Text(
                 libelle,
                 style: TextStyle(
                   fontSize: 12.5,
                   fontWeight: FontWeight.w700,
-                  color:
-                      selectionne ? Colors.white : const Color(0xFF1B3B5F),
+                  color: selectionne ? Colors.white : const Color(0xFF1B3B5F),
                 ),
               ),
             ],

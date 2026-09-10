@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../models/article.dart';
 import '../models/mode_prix.dart';
 
@@ -57,7 +58,11 @@ class _ArticleCardState extends State<ArticleCard> {
         curve: Curves.easeOut,
         transform: Matrix4.identity()
           ..scaleByDouble(
-              _hovering ? 1.015 : 1.0, _hovering ? 1.015 : 1.0, 1.0, 1.0),
+            _hovering ? 1.015 : 1.0,
+            _hovering ? 1.015 : 1.0,
+            1.0,
+            1.0,
+          ),
         transformAlignment: Alignment.center,
         decoration: BoxDecoration(
           color: Colors.white,
@@ -153,7 +158,8 @@ class _ArticleCardState extends State<ArticleCard> {
                                 icon: Icons.edit_outlined,
                                 onTap: widget.onEdit,
                               ),
-                            if (widget.onEdit != null && widget.onDelete != null)
+                            if (widget.onEdit != null &&
+                                widget.onDelete != null)
                               const SizedBox(width: 6),
                             if (widget.onDelete != null)
                               _MiniIconButton(
@@ -173,7 +179,9 @@ class _ArticleCardState extends State<ArticleCard> {
                     children: [
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 3),
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
                         decoration: BoxDecoration(
                           color: accent.last.withValues(alpha: 0.10),
                           borderRadius: BorderRadius.circular(20),

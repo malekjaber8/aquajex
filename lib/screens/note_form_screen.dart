@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../models/client.dart';
 import '../models/note.dart';
 import '../widgets/decorative_background.dart';
@@ -65,7 +66,8 @@ class _NoteFormScreenState extends State<NoteFormScreen> {
   void _enregistrer() {
     if (!_formKey.currentState!.validate()) return;
     final note = Note(
-      id: widget.noteExistante?.id ??
+      id:
+          widget.noteExistante?.id ??
           DateTime.now().millisecondsSinceEpoch.toString(),
       contenu: _contenuCtrl.text.trim(),
       clientId: _clientLie?.id,
@@ -81,8 +83,7 @@ class _NoteFormScreenState extends State<NoteFormScreen> {
       labelText: label,
       filled: true,
       fillColor: Colors.white,
-      contentPadding:
-          const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
         borderSide: BorderSide(color: Colors.black.withValues(alpha: 0.08)),
@@ -117,8 +118,10 @@ class _NoteFormScreenState extends State<NoteFormScreen> {
                   children: [
                     IconButton(
                       onPressed: () => Navigator.of(context).pop(),
-                      icon: const Icon(Icons.arrow_back,
-                          color: Color(0xFF1B3B5F)),
+                      icon: const Icon(
+                        Icons.arrow_back,
+                        color: Color(0xFF1B3B5F),
+                      ),
                     ),
                     Text(
                       _modification ? 'Modifier la note' : 'Nouvelle note',
@@ -146,7 +149,8 @@ class _NoteFormScreenState extends State<NoteFormScreen> {
                             minLines: 4,
                             maxLines: 8,
                             decoration: _decorationChamp(
-                                'Remarque ou rappel pour votre prochaine visite'),
+                              'Remarque ou rappel pour votre prochaine visite',
+                            ),
                             validator: (v) => (v == null || v.trim().isEmpty)
                                 ? 'Champ requis'
                                 : null,
@@ -201,19 +205,23 @@ class _NoteFormScreenState extends State<NoteFormScreen> {
                             onTap: _choisirDateRappel,
                             child: Container(
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 16, vertical: 14),
+                                horizontal: 16,
+                                vertical: 14,
+                              ),
                               decoration: BoxDecoration(
                                 color: Colors.white,
                                 borderRadius: BorderRadius.circular(14),
                                 border: Border.all(
-                                  color:
-                                      Colors.black.withValues(alpha: 0.08),
+                                  color: Colors.black.withValues(alpha: 0.08),
                                 ),
                               ),
                               child: Row(
                                 children: [
-                                  Icon(Icons.event_outlined,
-                                      size: 19, color: accent.last),
+                                  Icon(
+                                    Icons.event_outlined,
+                                    size: 19,
+                                    color: accent.last,
+                                  ),
                                   const SizedBox(width: 10),
                                   Text(
                                     _dateRappel != null
@@ -223,8 +231,7 @@ class _NoteFormScreenState extends State<NoteFormScreen> {
                                       fontSize: 14.5,
                                       color: _dateRappel != null
                                           ? const Color(0xFF1B3B5F)
-                                          : Colors.black
-                                              .withValues(alpha: 0.4),
+                                          : Colors.black.withValues(alpha: 0.4),
                                     ),
                                   ),
                                   const Spacer(),
@@ -233,7 +240,9 @@ class _NoteFormScreenState extends State<NoteFormScreen> {
                                       onPressed: () =>
                                           setState(() => _dateRappel = null),
                                       icon: const Icon(Icons.close, size: 18),
-                                      color: Colors.black.withValues(alpha: 0.4),
+                                      color: Colors.black.withValues(
+                                        alpha: 0.4,
+                                      ),
                                     ),
                                 ],
                               ),

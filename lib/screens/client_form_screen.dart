@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../models/client.dart';
 import '../widgets/decorative_background.dart';
 
@@ -59,7 +60,8 @@ class _ClientFormScreenState extends State<ClientFormScreen> {
   void _enregistrer() {
     if (!_formKey.currentState!.validate()) return;
     final client = Client(
-      id: widget.clientExistant?.id ??
+      id:
+          widget.clientExistant?.id ??
           DateTime.now().millisecondsSinceEpoch.toString(),
       nom: _nomCtrl.text.trim(),
       prenom: _prenomCtrl.text.trim(),
@@ -88,8 +90,10 @@ class _ClientFormScreenState extends State<ClientFormScreen> {
                   children: [
                     IconButton(
                       onPressed: () => Navigator.of(context).pop(),
-                      icon: const Icon(Icons.arrow_back,
-                          color: Color(0xFF1B3B5F)),
+                      icon: const Icon(
+                        Icons.arrow_back,
+                        color: Color(0xFF1B3B5F),
+                      ),
                     ),
                     Text(
                       _modification ? 'Modifier le client' : 'Nouveau client',
@@ -231,8 +235,7 @@ class _ClientFormScreenState extends State<ClientFormScreen> {
       labelText: label,
       filled: true,
       fillColor: Colors.white,
-      contentPadding:
-          const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
         borderSide: BorderSide(color: Colors.black.withValues(alpha: 0.08)),

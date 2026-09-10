@@ -1,6 +1,8 @@
 import 'dart:typed_data';
+
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+
 import '../models/article.dart';
 import '../widgets/decorative_background.dart';
 
@@ -47,12 +49,13 @@ class _ArticleFormScreenState extends State<ArticleFormScreen> {
     _codeArticleCtrl = TextEditingController(text: a?.codeArticle ?? '');
     _codeBarreCtrl = TextEditingController(text: a?.codeBarre ?? '');
     _tailleCtrl = TextEditingController(text: a?.taille ?? '');
-    _colisageCtrl =
-        TextEditingController(text: a?.colisage?.toString() ?? '');
-    _prixDetailCtrl =
-        TextEditingController(text: a?.prixDetail.toStringAsFixed(3) ?? '');
-    _prixGrosCtrl =
-        TextEditingController(text: a?.prixGros.toStringAsFixed(3) ?? '');
+    _colisageCtrl = TextEditingController(text: a?.colisage?.toString() ?? '');
+    _prixDetailCtrl = TextEditingController(
+      text: a?.prixDetail.toStringAsFixed(3) ?? '',
+    );
+    _prixGrosCtrl = TextEditingController(
+      text: a?.prixGros.toStringAsFixed(3) ?? '',
+    );
     _familleChoisie = a?.categorie ?? widget.familleInitiale;
     _imageBytes = a?.imageBytes;
     _statut = a?.statut ?? StatutArticle.normal;
@@ -86,14 +89,15 @@ class _ArticleFormScreenState extends State<ArticleFormScreen> {
 
     final famille = _familleChoisie;
     if (famille == null || famille.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Choisissez une famille')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Choisissez une famille')));
       return;
     }
 
     final article = Article(
-      id: widget.articleExistant?.id ??
+      id:
+          widget.articleExistant?.id ??
           DateTime.now().millisecondsSinceEpoch.toString(),
       designation: _designationCtrl.text.trim(),
       categorie: famille,
@@ -128,8 +132,10 @@ class _ArticleFormScreenState extends State<ArticleFormScreen> {
                   children: [
                     IconButton(
                       onPressed: () => Navigator.of(context).pop(),
-                      icon: const Icon(Icons.arrow_back,
-                          color: Color(0xFF1B3B5F)),
+                      icon: const Icon(
+                        Icons.arrow_back,
+                        color: Color(0xFF1B3B5F),
+                      ),
                     ),
                     Text(
                       _modification ? 'Modifier l\'article' : 'Nouvel article',
@@ -324,8 +330,11 @@ class _ArticleFormScreenState extends State<ArticleFormScreen> {
             : Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.add_photo_alternate_outlined,
-                      size: 34, color: accent.last.withValues(alpha: 0.6)),
+                  Icon(
+                    Icons.add_photo_alternate_outlined,
+                    size: 34,
+                    color: accent.last.withValues(alpha: 0.6),
+                  ),
                   const SizedBox(height: 8),
                   Text(
                     'Ajouter une photo',
@@ -447,8 +456,7 @@ class _ArticleFormScreenState extends State<ArticleFormScreen> {
       suffixIcon: suffixe,
       filled: true,
       fillColor: Colors.white,
-      contentPadding:
-          const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
         borderSide: BorderSide(color: Colors.black.withValues(alpha: 0.08)),
@@ -473,8 +481,9 @@ class _ArticleFormScreenState extends State<ArticleFormScreen> {
   }) {
     return TextFormField(
       controller: controller,
-      keyboardType:
-          clavierNumerique ? const TextInputType.numberWithOptions(decimal: true) : TextInputType.text,
+      keyboardType: clavierNumerique
+          ? const TextInputType.numberWithOptions(decimal: true)
+          : TextInputType.text,
       decoration: _decorationChamp(label, suffixe: suffixe),
       validator: requis
           ? (v) => (v == null || v.trim().isEmpty) ? 'Champ requis' : null

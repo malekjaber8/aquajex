@@ -36,7 +36,11 @@ class _FamilleCardState extends State<FamilleCard> {
         curve: Curves.easeOut,
         transform: Matrix4.identity()
           ..scaleByDouble(
-              _hovering ? 1.02 : 1.0, _hovering ? 1.02 : 1.0, 1.0, 1.0),
+            _hovering ? 1.02 : 1.0,
+            _hovering ? 1.02 : 1.0,
+            1.0,
+            1.0,
+          ),
         transformAlignment: Alignment.center,
         decoration: BoxDecoration(
           color: Colors.white,
@@ -88,7 +92,9 @@ class _FamilleCardState extends State<FamilleCard> {
                 Positioned.fill(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(
-                        vertical: 26, horizontal: 16),
+                      vertical: 26,
+                      horizontal: 16,
+                    ),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.center,
@@ -115,7 +121,9 @@ class _FamilleCardState extends State<FamilleCard> {
                         const SizedBox(height: 10),
                         Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 4),
+                            horizontal: 12,
+                            vertical: 4,
+                          ),
                           decoration: BoxDecoration(
                             color: accent.last.withValues(alpha: 0.10),
                             borderRadius: BorderRadius.circular(20),

@@ -414,6 +414,9 @@ class _CatalogueScreenState extends State<CatalogueScreen> {
             designation: article.designation,
             prixUnitaire: prix,
             quantite: 1,
+            codeArticle: article.codeArticle,
+            codeBarre: article.codeBarre,
+            colisage: article.colisage,
           ),
         );
       }
@@ -445,7 +448,7 @@ class _CatalogueScreenState extends State<CatalogueScreen> {
           tarif: widget.tarif,
           modePrix: widget.modePrix,
           onModifier: _modifierCommande,
-          onConfirmer: (note) async {
+          onConfirmer: (note, remisePourcent) async {
             final commande = Commande(
               id: DateTime.now().millisecondsSinceEpoch.toString(),
               clientId: client.id,
@@ -454,6 +457,7 @@ class _CatalogueScreenState extends State<CatalogueScreen> {
               modePrix: widget.modePrix,
               lignes: List.of(_panier),
               note: note,
+              remisePourcent: remisePourcent,
             );
             await _gestionRepo.ajouterCommande(commande);
             if (mounted) {
@@ -480,13 +484,14 @@ class _CatalogueScreenState extends State<CatalogueScreen> {
       articlesDisponibles: _articles,
       clientsActuels: () => _clients,
       onNouveauClient: _ajouterClient,
-      onEnregistrer: (clientId, clientNom, lignes, note) async {
+      onEnregistrer: (clientId, clientNom, lignes, note, remisePourcent) async {
         final misAJour = commande.copyWith(
           clientId: clientId,
           clientNom: clientNom,
           lignes: lignes,
           note: note,
           effacerNote: note == null,
+          remisePourcent: remisePourcent,
         );
         await _gestionRepo.modifierCommande(misAJour);
         setState(() {

@@ -114,6 +114,7 @@ class GestionRepository {
     'mode_prix': c.modePrix.name,
     'lignes': jsonEncode(c.lignes.map((l) => l.versJson()).toList()),
     'note': c.note,
+    'remise_pourcent': c.remisePourcent,
   };
 
   Commande _versCommande(Map<String, Object?> r) => Commande(
@@ -126,6 +127,7 @@ class GestionRepository {
         .map((j) => LigneCommande.depuisJson(j as Map<String, dynamic>))
         .toList(),
     note: r['note'] as String?,
+    remisePourcent: (r['remise_pourcent'] as num?)?.toDouble() ?? 0,
   );
 
   // --- Notes ---
@@ -211,6 +213,7 @@ class GestionRepository {
               'modePrix': c.modePrix.name,
               'lignes': c.lignes.map((l) => l.versJson()).toList(),
               'note': c.note,
+              'remisePourcent': c.remisePourcent,
             },
           )
           .toList(),
@@ -249,6 +252,7 @@ class GestionRepository {
           'mode_prix': m['modePrix'],
           'lignes': jsonEncode(m['lignes']),
           'note': m['note'],
+          'remise_pourcent': m['remisePourcent'] ?? 0,
         });
       }
     });

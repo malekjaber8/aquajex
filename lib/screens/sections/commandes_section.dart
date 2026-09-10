@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../../models/client.dart';
 import '../../models/commande.dart';
 import '../../models/tarif.dart';
@@ -37,8 +38,7 @@ class CommandesSection extends StatelessWidget {
       return SectionPlaceholder(
         icon: Icons.request_quote_outlined,
         titre: 'Aucune commande pour le moment',
-        sousTitre:
-            'Ajoutez des articles au panier depuis le catalogue\net assignez-les à un client pour créer une commande.',
+        sousTitre: 'Ajoutez des articles au panier depuis le catalogue\net assignez-les à un client pour créer une commande.',
         accent: accent,
       );
     }

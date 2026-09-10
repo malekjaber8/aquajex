@@ -70,7 +70,9 @@ class SectionPlaceholder extends StatelessWidget {
                   onTap: onAction,
                   child: Padding(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 24, vertical: 14),
+                      horizontal: 24,
+                      vertical: 14,
+                    ),
                     child: Text(
                       actionLabel!,
                       style: const TextStyle(

@@ -81,7 +81,7 @@ class DatabaseService {
 
     return openDatabase(
       chemin,
-      version: 4,
+      version: 5,
       onCreate: (db, version) async {
         await _creerTablesCatalogue(db);
         await _creerTablesGestion(db);
@@ -96,6 +96,11 @@ class DatabaseService {
         }
         if (ancienneVersion < 4) {
           await db.execute('ALTER TABLE commandes ADD COLUMN note TEXT');
+        }
+        if (ancienneVersion < 5) {
+          await db.execute(
+            'ALTER TABLE commandes ADD COLUMN remise_pourcent REAL NOT NULL DEFAULT 0',
+          );
         }
       },
     );
@@ -150,7 +155,8 @@ class DatabaseService {
         date TEXT NOT NULL,
         mode_prix TEXT NOT NULL,
         lignes TEXT NOT NULL,
-        note TEXT
+        note TEXT,
+        remise_pourcent REAL NOT NULL DEFAULT 0
       )
     ''');
   }

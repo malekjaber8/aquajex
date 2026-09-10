@@ -7,6 +7,16 @@ import 'package:pdf/widgets.dart' as pw;
 import '../models/client.dart';
 import '../models/commande.dart';
 import '../models/tarif.dart';
+import 'montant_lettres.dart';
+
+// Coordonnées légales de la société, identiques sur toutes les factures
+// (Aquajex et Les Cinq Frères sont deux gammes de la même société).
+const _raisonSociale = 'STE AQUAJEX 5F';
+const _activite = 'VENTE PRODUITS DIVERS';
+const _adresseSociete = 'ROUTE DE TENIOUR KM 12 - 3041 SFAX - TUNISIE';
+const _tvaSociete = 'TVA : 1850797 MAM 000';
+const _rcSociete = 'RC.: C 081538 2024';
+const _telSociete = 'Tél. : 29 94 04 91';
 
 String _formatMontantPdf(double montant) {
   final parts = montant.toStringAsFixed(3).split('.');
@@ -16,14 +26,16 @@ String _formatMontantPdf(double montant) {
     if (i > 0 && (chiffres.length - i) % 3 == 0) buffer.write(' ');
     buffer.write(chiffres[i]);
   }
-  return '${buffer.toString()},${parts[1]} DT';
+  return '${buffer.toString()},${parts[1]}';
 }
 
 String _formatDatePdf(DateTime d) =>
     '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year}';
 
-/// Construit le PDF de la facture pour une commande, avec le logo de la
-/// marque et les informations complètes du client.
+/// Construit le PDF de la facture proforma pour une commande, dans le style
+/// des factures officielles de la société : logo + coordonnées légales,
+/// tableau détaillé (référence, code barre, colisage, HT/remise/TVA/TTC),
+/// totaux et montant en toutes lettres.
 Future<Uint8List> genererFacturePdf({
   required Commande commande,
   required Client? client,
@@ -36,82 +48,109 @@ Future<Uint8List> genererFacturePdf({
 
   final accent = PdfColor.fromInt(tarif.accentColor.toARGB32());
   const encre = PdfColor.fromInt(0xFF1B3B5F);
+  final remisePourcent = commande.remisePourcent;
 
   document.addPage(
     pw.Page(
       pageFormat: PdfPageFormat.a4,
-      margin: const pw.EdgeInsets.all(36),
+      margin: const pw.EdgeInsets.all(32),
       build: (context) {
         return pw.Column(
           crossAxisAlignment: pw.CrossAxisAlignment.start,
           children: [
-            // En-tête : logo + marque à gauche, "FACTURE" + date/N° à droite.
+            // En-tête : logo à gauche, coordonnées légales à droite.
             pw.Row(
               crossAxisAlignment: pw.CrossAxisAlignment.start,
               children: [
-                pw.Container(height: 54, width: 54, child: pw.Image(logo)),
-                pw.SizedBox(width: 14),
-                pw.Column(
-                  crossAxisAlignment: pw.CrossAxisAlignment.start,
-                  children: [
-                    pw.Text(
-                      tarif.nom,
-                      style: pw.TextStyle(
-                        fontSize: 18,
-                        fontWeight: pw.FontWeight.bold,
-                        color: encre,
-                      ),
-                    ),
-                    pw.Text(
-                      'Catalogue professionnel',
-                      style: const pw.TextStyle(
-                        fontSize: 9,
-                        color: PdfColors.grey600,
-                      ),
-                    ),
-                  ],
-                ),
+                pw.Container(height: 50, width: 50, child: pw.Image(logo)),
                 pw.Spacer(),
                 pw.Column(
                   crossAxisAlignment: pw.CrossAxisAlignment.end,
                   children: [
                     pw.Text(
-                      'FACTURE PROFORMA',
+                      _raisonSociale,
                       style: pw.TextStyle(
-                        fontSize: 16,
+                        fontSize: 15,
                         fontWeight: pw.FontWeight.bold,
-                        color: accent,
+                        color: encre,
                       ),
                     ),
-                    pw.SizedBox(height: 4),
                     pw.Text(
-                      'N° ${commande.id}',
-                      style: const pw.TextStyle(fontSize: 9),
+                      _activite,
+                      style: const pw.TextStyle(
+                        fontSize: 8,
+                        color: PdfColors.grey600,
+                      ),
+                    ),
+                    pw.SizedBox(height: 3),
+                    pw.Text(
+                      _adresseSociete,
+                      style: const pw.TextStyle(fontSize: 8),
                     ),
                     pw.Text(
-                      _formatDatePdf(commande.date),
-                      style: const pw.TextStyle(fontSize: 9),
+                      '$_tvaSociete   $_rcSociete',
+                      style: const pw.TextStyle(fontSize: 8),
+                    ),
+                    pw.Text(
+                      _telSociete,
+                      style: const pw.TextStyle(fontSize: 8),
                     ),
                   ],
                 ),
               ],
             ),
-            pw.SizedBox(height: 18),
-            pw.Divider(color: PdfColors.grey400),
             pw.SizedBox(height: 14),
+            pw.Divider(color: PdfColors.grey400),
+            pw.SizedBox(height: 12),
 
-            // Informations client.
-            pw.Container(
-              width: double.infinity,
-              padding: const pw.EdgeInsets.all(12),
-              decoration: pw.BoxDecoration(
-                color: PdfColors.grey100,
-                borderRadius: pw.BorderRadius.circular(8),
-              ),
-              child: pw.Row(
-                crossAxisAlignment: pw.CrossAxisAlignment.start,
-                children: [
-                  pw.Expanded(
+            // Facture (N°, date) + informations client, côte à côte.
+            pw.Row(
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              children: [
+                pw.Expanded(
+                  child: pw.Container(
+                    padding: const pw.EdgeInsets.all(10),
+                    decoration: pw.BoxDecoration(
+                      color: PdfColors.grey100,
+                      borderRadius: pw.BorderRadius.circular(8),
+                    ),
+                    child: pw.Column(
+                      crossAxisAlignment: pw.CrossAxisAlignment.start,
+                      children: [
+                        pw.Text(
+                          'FACTURE PROFORMA',
+                          style: pw.TextStyle(
+                            fontSize: 13,
+                            fontWeight: pw.FontWeight.bold,
+                            color: accent,
+                          ),
+                        ),
+                        pw.SizedBox(height: 4),
+                        pw.Text(
+                          'N° ${commande.id}',
+                          style: const pw.TextStyle(fontSize: 9),
+                        ),
+                        pw.Text(
+                          _formatDatePdf(commande.date),
+                          style: const pw.TextStyle(fontSize: 9),
+                        ),
+                        pw.SizedBox(height: 2),
+                        pw.Text(
+                          'Mode de prix : ${commande.modePrix.libelle}',
+                          style: const pw.TextStyle(fontSize: 9),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                pw.SizedBox(width: 12),
+                pw.Expanded(
+                  child: pw.Container(
+                    padding: const pw.EdgeInsets.all(10),
+                    decoration: pw.BoxDecoration(
+                      color: PdfColors.grey100,
+                      borderRadius: pw.BorderRadius.circular(8),
+                    ),
                     child: pw.Column(
                       crossAxisAlignment: pw.CrossAxisAlignment.start,
                       children: [
@@ -135,72 +174,64 @@ Future<Uint8List> genererFacturePdf({
                         if (client?.nomSociete != null)
                           pw.Text(
                             client!.nomSociete!,
-                            style: const pw.TextStyle(fontSize: 10),
+                            style: const pw.TextStyle(fontSize: 9),
                           ),
                         if (client?.telephone != null)
                           pw.Text(
                             'Tél : ${client!.telephone}',
-                            style: const pw.TextStyle(fontSize: 10),
+                            style: const pw.TextStyle(fontSize: 9),
                           ),
                         if (client?.adresse != null)
                           pw.Text(
                             client!.adresse!,
-                            style: const pw.TextStyle(fontSize: 10),
+                            style: const pw.TextStyle(fontSize: 9),
                           ),
-                      ],
-                    ),
-                  ),
-                  pw.Expanded(
-                    child: pw.Column(
-                      crossAxisAlignment: pw.CrossAxisAlignment.start,
-                      children: [
-                        pw.Text(
-                          'INFORMATIONS',
-                          style: pw.TextStyle(
-                            fontSize: 9,
-                            fontWeight: pw.FontWeight.bold,
-                            color: PdfColors.grey600,
-                          ),
-                        ),
-                        pw.SizedBox(height: 4),
                         if (client?.matriculeFiscal != null)
                           pw.Text(
                             'Matricule fiscal : ${client!.matriculeFiscal}',
-                            style: const pw.TextStyle(fontSize: 10),
+                            style: const pw.TextStyle(fontSize: 9),
                           ),
                         if (client?.cin != null)
                           pw.Text(
                             'CIN : ${client!.cin}',
-                            style: const pw.TextStyle(fontSize: 10),
+                            style: const pw.TextStyle(fontSize: 9),
                           ),
-                        pw.Text(
-                          'Mode de prix : ${commande.modePrix.libelle}',
-                          style: const pw.TextStyle(fontSize: 10),
-                        ),
                       ],
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-            pw.SizedBox(height: 20),
+            pw.SizedBox(height: 16),
 
             // Tableau des articles.
             pw.Table(
               columnWidths: const {
-                0: pw.FlexColumnWidth(3.1),
-                1: pw.FlexColumnWidth(0.8),
-                2: pw.FlexColumnWidth(1),
-                3: pw.FlexColumnWidth(1),
+                0: pw.FlexColumnWidth(1.1),
+                1: pw.FlexColumnWidth(1.4),
+                2: pw.FlexColumnWidth(2.5),
+                3: pw.FlexColumnWidth(0.6),
+                4: pw.FlexColumnWidth(0.6),
+                5: pw.FlexColumnWidth(0.9),
+                6: pw.FlexColumnWidth(0.8),
+                7: pw.FlexColumnWidth(0.9),
+                8: pw.FlexColumnWidth(0.6),
+                9: pw.FlexColumnWidth(0.9),
               },
               children: [
                 pw.TableRow(
                   decoration: pw.BoxDecoration(color: accent),
                   children: [
+                    _celluleEntete('Référence'),
+                    _celluleEntete('Code Barre'),
                     _celluleEntete('Désignation'),
-                    _celluleEntete('Qté', droite: false),
-                    _celluleEntete('Prix U.'),
-                    _celluleEntete('Total'),
+                    _celluleEntete('Col.'),
+                    _celluleEntete('Qté'),
+                    _celluleEntete('P.U. HT'),
+                    _celluleEntete('Remise'),
+                    _celluleEntete('Mnt H.T'),
+                    _celluleEntete('TVA'),
+                    _celluleEntete('P.U. TTC'),
                   ],
                 ),
                 for (final ligne in commande.lignes)
@@ -211,47 +242,29 @@ Future<Uint8List> genererFacturePdf({
                       ),
                     ),
                     children: [
-                      pw.Padding(
-                        padding: const pw.EdgeInsets.symmetric(
-                          vertical: 8,
-                          horizontal: 6,
-                        ),
-                        child: pw.Text(
-                          ligne.designation,
-                          style: const pw.TextStyle(fontSize: 10),
-                        ),
+                      _celluleCorps(ligne.codeArticle ?? '-'),
+                      _celluleCorps(ligne.codeBarre ?? '-'),
+                      _celluleCorps(ligne.designation),
+                      _celluleCorps(
+                        ligne.colisage != null ? '${ligne.colisage}' : '-',
                       ),
-                      pw.Padding(
-                        padding: const pw.EdgeInsets.symmetric(
-                          vertical: 8,
-                          horizontal: 6,
+                      _celluleCorps('${ligne.quantite}'),
+                      _celluleCorps(_formatMontantPdf(ligne.prixUnitaire)),
+                      _celluleCorps('${remisePourcent.toStringAsFixed(0)}%'),
+                      _celluleCorps(
+                        _formatMontantPdf(
+                          ligne.total * (1 - remisePourcent / 100),
                         ),
-                        child: pw.Text(
-                          '${ligne.quantite}',
-                          style: const pw.TextStyle(fontSize: 10),
-                        ),
+                        gras: true,
                       ),
-                      pw.Padding(
-                        padding: const pw.EdgeInsets.symmetric(
-                          vertical: 8,
-                          horizontal: 6,
-                        ),
-                        child: pw.Text(
-                          _formatMontantPdf(ligne.prixUnitaire),
-                          style: const pw.TextStyle(fontSize: 10),
-                        ),
+                      _celluleCorps(
+                        '${(tauxTvaFacture * 100).toStringAsFixed(0)}%',
                       ),
-                      pw.Padding(
-                        padding: const pw.EdgeInsets.symmetric(
-                          vertical: 8,
-                          horizontal: 6,
-                        ),
-                        child: pw.Text(
-                          _formatMontantPdf(ligne.total),
-                          style: pw.TextStyle(
-                            fontSize: 10,
-                            fontWeight: pw.FontWeight.bold,
-                          ),
+                      _celluleCorps(
+                        _formatMontantPdf(
+                          ligne.prixUnitaire *
+                              (1 - remisePourcent / 100) *
+                              (1 + tauxTvaFacture),
                         ),
                       ),
                     ],
@@ -260,43 +273,77 @@ Future<Uint8List> genererFacturePdf({
             ),
             pw.SizedBox(height: 16),
 
-            // Total.
+            // Totaux.
             pw.Row(
               mainAxisAlignment: pw.MainAxisAlignment.end,
               children: [
                 pw.Container(
-                  padding: const pw.EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 10,
-                  ),
+                  width: 220,
+                  padding: const pw.EdgeInsets.all(12),
                   decoration: pw.BoxDecoration(
                     color: PdfColors.grey100,
                     borderRadius: pw.BorderRadius.circular(8),
                   ),
-                  child: pw.Row(
+                  child: pw.Column(
+                    crossAxisAlignment: pw.CrossAxisAlignment.start,
                     children: [
-                      pw.Text(
-                        'TOTAL   ',
-                        style: const pw.TextStyle(
-                          fontSize: 11,
-                          color: PdfColors.grey700,
+                      _ligneTotalPdf('TOTAL HT', commande.totalHt),
+                      if (remisePourcent > 0)
+                        _ligneTotalPdf(
+                          'REMISE (${remisePourcent.toStringAsFixed(0)}%)',
+                          -commande.remiseMontant,
                         ),
-                      ),
-                      pw.Text(
-                        _formatMontantPdf(commande.total),
-                        style: pw.TextStyle(
-                          fontSize: 16,
-                          fontWeight: pw.FontWeight.bold,
-                          color: accent,
-                        ),
+                      _ligneTotalPdf('TOTAL HT (NET)', commande.totalHtNet),
+                      pw.SizedBox(height: 4),
+                      _ligneTotalPdf('T.V.A.', commande.montantTva),
+                      _ligneTotalPdf('TIMBRE FISCAL', timbreFiscalFacture),
+                      pw.SizedBox(height: 6),
+                      pw.Divider(color: PdfColors.grey400),
+                      pw.Row(
+                        mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                        children: [
+                          pw.Text(
+                            'TOTAL T.T.C.',
+                            style: pw.TextStyle(
+                              fontSize: 11,
+                              fontWeight: pw.FontWeight.bold,
+                              color: encre,
+                            ),
+                          ),
+                          pw.Text(
+                            '${_formatMontantPdf(commande.totalTtc)} DT',
+                            style: pw.TextStyle(
+                              fontSize: 14,
+                              fontWeight: pw.FontWeight.bold,
+                              color: accent,
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
                 ),
               ],
             ),
+            pw.SizedBox(height: 14),
+
+            // Montant en toutes lettres.
+            pw.Text(
+              'ARRETEE LA PRESENTE A LA SOMME DE :',
+              style: pw.TextStyle(
+                fontSize: 8.5,
+                fontWeight: pw.FontWeight.bold,
+                color: PdfColors.grey700,
+              ),
+            ),
+            pw.SizedBox(height: 2),
+            pw.Text(
+              montantEnLettres(commande.totalTtc),
+              style: const pw.TextStyle(fontSize: 9),
+            ),
+
             if (commande.note != null && commande.note!.isNotEmpty) ...[
-              pw.SizedBox(height: 16),
+              pw.SizedBox(height: 14),
               pw.Container(
                 width: double.infinity,
                 padding: const pw.EdgeInsets.all(10),
@@ -324,13 +371,55 @@ Future<Uint8List> genererFacturePdf({
                 ),
               ),
             ],
+
             pw.Spacer(),
+            pw.Row(
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              children: [
+                pw.Expanded(
+                  child: pw.Container(
+                    height: 70,
+                    decoration: pw.BoxDecoration(
+                      border: pw.Border.all(color: PdfColors.grey400),
+                      borderRadius: pw.BorderRadius.circular(6),
+                    ),
+                    padding: const pw.EdgeInsets.all(6),
+                    child: pw.Text(
+                      'CACHET & SIGNATURE',
+                      style: const pw.TextStyle(
+                        fontSize: 8,
+                        color: PdfColors.grey600,
+                      ),
+                    ),
+                  ),
+                ),
+                pw.SizedBox(width: 16),
+                pw.Expanded(
+                  child: pw.Container(
+                    height: 70,
+                    decoration: pw.BoxDecoration(
+                      border: pw.Border.all(color: PdfColors.grey400),
+                      borderRadius: pw.BorderRadius.circular(6),
+                    ),
+                    padding: const pw.EdgeInsets.all(6),
+                    child: pw.Text(
+                      'CACHET & SIGNATURE CLIENT',
+                      style: const pw.TextStyle(
+                        fontSize: 8,
+                        color: PdfColors.grey600,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            pw.SizedBox(height: 10),
             pw.Divider(color: PdfColors.grey300),
             pw.Center(
               child: pw.Text(
-                'Merci de votre confiance.',
+                'Document proforma — sans valeur fiscale — Merci de votre confiance.',
                 style: const pw.TextStyle(
-                  fontSize: 9,
+                  fontSize: 8.5,
                   color: PdfColors.grey500,
                 ),
               ),
@@ -344,16 +433,46 @@ Future<Uint8List> genererFacturePdf({
   return document.save();
 }
 
-pw.Widget _celluleEntete(String texte, {bool droite = true}) {
+pw.Widget _celluleEntete(String texte) {
   return pw.Padding(
-    padding: const pw.EdgeInsets.symmetric(vertical: 8, horizontal: 6),
+    padding: const pw.EdgeInsets.symmetric(vertical: 7, horizontal: 4),
     child: pw.Text(
       texte,
       style: pw.TextStyle(
-        fontSize: 10,
+        fontSize: 7.5,
         fontWeight: pw.FontWeight.bold,
         color: PdfColors.white,
       ),
     ),
   );
 }
+
+pw.Widget _celluleCorps(String texte, {bool gras = false}) {
+  return pw.Padding(
+    padding: const pw.EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+    child: pw.Text(
+      texte,
+      style: pw.TextStyle(
+        fontSize: 7.5,
+        fontWeight: gras ? pw.FontWeight.bold : pw.FontWeight.normal,
+      ),
+    ),
+  );
+}
+
+pw.Widget _ligneTotalPdf(String label, double valeur) => pw.Padding(
+  padding: const pw.EdgeInsets.only(bottom: 3),
+  child: pw.Row(
+    mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+    children: [
+      pw.Text(
+        label,
+        style: const pw.TextStyle(fontSize: 8.5, color: PdfColors.grey700),
+      ),
+      pw.Text(
+        '${valeur < 0 ? '- ' : ''}${_formatMontantPdf(valeur.abs())}',
+        style: const pw.TextStyle(fontSize: 8.5),
+      ),
+    ],
+  ),
+);

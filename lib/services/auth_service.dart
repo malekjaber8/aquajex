@@ -30,10 +30,14 @@ class AuthService {
   }
 
   static Future<void> deconnecter() async {
-    debugPrint('[Auth] deconnecter() appelé, currentUser=${_auth.currentUser?.email}');
+    debugPrint(
+      '[Auth] deconnecter() appelé, currentUser=${_auth.currentUser?.email}',
+    );
     try {
       await _auth.signOut();
-      debugPrint('[Auth] signOut() terminé, currentUser=${_auth.currentUser?.email}');
+      debugPrint(
+        '[Auth] signOut() terminé, currentUser=${_auth.currentUser?.email}',
+      );
     } catch (e, st) {
       debugPrint('[Auth] signOut() a échoué: $e\n$st');
       rethrow;
@@ -41,8 +45,10 @@ class AuthService {
   }
 
   static Future<RoleUtilisateur> recupererRole(String uid) async {
-    final doc =
-        await FirebaseFirestore.instance.collection('users').doc(uid).get();
+    final doc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(uid)
+        .get();
     final role = doc.data()?['role'] as String?;
     return role == 'admin' ? RoleUtilisateur.admin : RoleUtilisateur.commercial;
   }

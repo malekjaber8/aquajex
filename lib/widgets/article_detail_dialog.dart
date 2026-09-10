@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../models/article.dart';
 import '../models/mode_prix.dart';
 
@@ -109,7 +110,9 @@ class _ArticleDetailCard extends StatelessWidget {
                   children: [
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 4),
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: accent.last.withValues(alpha: 0.10),
                         borderRadius: BorderRadius.circular(20),
@@ -147,8 +150,9 @@ class _ArticleDetailCard extends StatelessWidget {
                             for (int i = 0; i < infos.length; i++) ...[
                               if (i > 0)
                                 Padding(
-                                  padding:
-                                      const EdgeInsets.symmetric(vertical: 8),
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 8,
+                                  ),
                                   child: Divider(
                                     height: 1,
                                     color: Colors.black.withValues(alpha: 0.06),
@@ -162,7 +166,9 @@ class _ArticleDetailCard extends StatelessWidget {
                                     infos[i].$1,
                                     style: TextStyle(
                                       fontSize: 13,
-                                      color: Colors.black.withValues(alpha: 0.5),
+                                      color: Colors.black.withValues(
+                                        alpha: 0.5,
+                                      ),
                                     ),
                                   ),
                                   Text(

@@ -43,10 +43,7 @@ class DecorativeBackground extends StatelessWidget {
               ],
             ),
           ),
-          CustomPaint(
-            painter: _ArcPainter(),
-            child: const SizedBox.expand(),
-          ),
+          CustomPaint(painter: _ArcPainter(), child: const SizedBox.expand()),
           child,
         ],
       ),
@@ -96,14 +93,16 @@ class _ArcPainter extends CustomPainter {
     final paintTeal = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.4
-      ..shader = const LinearGradient(
-        colors: [Color(0x552CA6A4), Color(0x001B3B5F)],
-      ).createShader(Rect.fromLTWH(
-        size.width * 0.6,
-        size.height * 0.55,
-        size.width * 0.4,
-        size.height * 0.45,
-      ));
+      ..shader =
+          const LinearGradient(colors: [Color(0x552CA6A4), Color(0x001B3B5F)])
+              .createShader(
+                Rect.fromLTWH(
+                  size.width * 0.6,
+                  size.height * 0.55,
+                  size.width * 0.4,
+                  size.height * 0.45,
+                ),
+              );
 
     final bottomRightPath = Path()
       ..moveTo(size.width + 40, size.height * 0.72)
