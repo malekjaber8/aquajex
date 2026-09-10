@@ -16,25 +16,25 @@ class LigneCommande {
   double get total => prixUnitaire * quantite;
 
   LigneCommande copyWith({int? quantite}) => LigneCommande(
-        articleId: articleId,
-        designation: designation,
-        prixUnitaire: prixUnitaire,
-        quantite: quantite ?? this.quantite,
-      );
+    articleId: articleId,
+    designation: designation,
+    prixUnitaire: prixUnitaire,
+    quantite: quantite ?? this.quantite,
+  );
 
   Map<String, dynamic> versJson() => {
-        'articleId': articleId,
-        'designation': designation,
-        'prixUnitaire': prixUnitaire,
-        'quantite': quantite,
-      };
+    'articleId': articleId,
+    'designation': designation,
+    'prixUnitaire': prixUnitaire,
+    'quantite': quantite,
+  };
 
   factory LigneCommande.depuisJson(Map<String, dynamic> j) => LigneCommande(
-        articleId: j['articleId'] as String,
-        designation: j['designation'] as String,
-        prixUnitaire: (j['prixUnitaire'] as num).toDouble(),
-        quantite: j['quantite'] as int,
-      );
+    articleId: j['articleId'] as String,
+    designation: j['designation'] as String,
+    prixUnitaire: (j['prixUnitaire'] as num).toDouble(),
+    quantite: j['quantite'] as int,
+  );
 }
 
 class Commande {
@@ -44,6 +44,7 @@ class Commande {
   final DateTime date;
   final ModePrix modePrix;
   final List<LigneCommande> lignes;
+  final String? note;
 
   const Commande({
     required this.id,
@@ -52,6 +53,7 @@ class Commande {
     required this.date,
     required this.modePrix,
     required this.lignes,
+    this.note,
   });
 
   double get total => lignes.fold(0, (s, l) => s + l.total);
@@ -62,13 +64,15 @@ class Commande {
     String? clientId,
     String? clientNom,
     List<LigneCommande>? lignes,
-  }) =>
-      Commande(
-        id: id,
-        clientId: clientId ?? this.clientId,
-        clientNom: clientNom ?? this.clientNom,
-        date: date,
-        modePrix: modePrix,
-        lignes: lignes ?? this.lignes,
-      );
+    String? note,
+    bool effacerNote = false,
+  }) => Commande(
+    id: id,
+    clientId: clientId ?? this.clientId,
+    clientNom: clientNom ?? this.clientNom,
+    date: date,
+    modePrix: modePrix,
+    lignes: lignes ?? this.lignes,
+    note: effacerNote ? null : (note ?? this.note),
+  );
 }

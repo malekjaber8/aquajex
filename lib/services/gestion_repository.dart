@@ -36,8 +36,12 @@ class GestionRepository {
 
   Future<void> modifierClient(Client client) async {
     final db = await DatabaseService.instance.database;
-    await db.update('clients', _versLigneClient(client),
-        where: 'id = ?', whereArgs: [client.id]);
+    await db.update(
+      'clients',
+      _versLigneClient(client),
+      where: 'id = ?',
+      whereArgs: [client.id],
+    );
   }
 
   Future<void> supprimerClient(String id) async {
@@ -46,27 +50,27 @@ class GestionRepository {
   }
 
   Map<String, Object?> _versLigneClient(Client c) => {
-        'id': c.id,
-        'tarif': _tarifKey,
-        'nom': c.nom,
-        'prenom': c.prenom,
-        'nom_societe': c.nomSociete,
-        'telephone': c.telephone,
-        'adresse': c.adresse,
-        'matricule_fiscal': c.matriculeFiscal,
-        'cin': c.cin,
-      };
+    'id': c.id,
+    'tarif': _tarifKey,
+    'nom': c.nom,
+    'prenom': c.prenom,
+    'nom_societe': c.nomSociete,
+    'telephone': c.telephone,
+    'adresse': c.adresse,
+    'matricule_fiscal': c.matriculeFiscal,
+    'cin': c.cin,
+  };
 
   Client _versClient(Map<String, Object?> r) => Client(
-        id: r['id'] as String,
-        nom: r['nom'] as String,
-        prenom: r['prenom'] as String,
-        nomSociete: r['nom_societe'] as String?,
-        telephone: r['telephone'] as String?,
-        adresse: r['adresse'] as String?,
-        matriculeFiscal: r['matricule_fiscal'] as String?,
-        cin: r['cin'] as String?,
-      );
+    id: r['id'] as String,
+    nom: r['nom'] as String,
+    prenom: r['prenom'] as String,
+    nomSociete: r['nom_societe'] as String?,
+    telephone: r['telephone'] as String?,
+    adresse: r['adresse'] as String?,
+    matriculeFiscal: r['matricule_fiscal'] as String?,
+    cin: r['cin'] as String?,
+  );
 
   // --- Commandes ---
 
@@ -88,8 +92,12 @@ class GestionRepository {
 
   Future<void> modifierCommande(Commande commande) async {
     final db = await DatabaseService.instance.database;
-    await db.update('commandes', _versLigneCommande(commande),
-        where: 'id = ?', whereArgs: [commande.id]);
+    await db.update(
+      'commandes',
+      _versLigneCommande(commande),
+      where: 'id = ?',
+      whereArgs: [commande.id],
+    );
   }
 
   Future<void> supprimerCommande(String id) async {
@@ -98,25 +106,27 @@ class GestionRepository {
   }
 
   Map<String, Object?> _versLigneCommande(Commande c) => {
-        'id': c.id,
-        'tarif': _tarifKey,
-        'client_id': c.clientId,
-        'client_nom': c.clientNom,
-        'date': c.date.toIso8601String(),
-        'mode_prix': c.modePrix.name,
-        'lignes': jsonEncode(c.lignes.map((l) => l.versJson()).toList()),
-      };
+    'id': c.id,
+    'tarif': _tarifKey,
+    'client_id': c.clientId,
+    'client_nom': c.clientNom,
+    'date': c.date.toIso8601String(),
+    'mode_prix': c.modePrix.name,
+    'lignes': jsonEncode(c.lignes.map((l) => l.versJson()).toList()),
+    'note': c.note,
+  };
 
   Commande _versCommande(Map<String, Object?> r) => Commande(
-        id: r['id'] as String,
-        clientId: r['client_id'] as String,
-        clientNom: r['client_nom'] as String,
-        date: DateTime.parse(r['date'] as String),
-        modePrix: ModePrix.values.byName(r['mode_prix'] as String),
-        lignes: (jsonDecode(r['lignes'] as String) as List)
-            .map((j) => LigneCommande.depuisJson(j as Map<String, dynamic>))
-            .toList(),
-      );
+    id: r['id'] as String,
+    clientId: r['client_id'] as String,
+    clientNom: r['client_nom'] as String,
+    date: DateTime.parse(r['date'] as String),
+    modePrix: ModePrix.values.byName(r['mode_prix'] as String),
+    lignes: (jsonDecode(r['lignes'] as String) as List)
+        .map((j) => LigneCommande.depuisJson(j as Map<String, dynamic>))
+        .toList(),
+    note: r['note'] as String?,
+  );
 
   // --- Notes ---
 
@@ -138,8 +148,12 @@ class GestionRepository {
 
   Future<void> modifierNote(Note note) async {
     final db = await DatabaseService.instance.database;
-    await db.update('notes', _versLigneNote(note),
-        where: 'id = ?', whereArgs: [note.id]);
+    await db.update(
+      'notes',
+      _versLigneNote(note),
+      where: 'id = ?',
+      whereArgs: [note.id],
+    );
   }
 
   Future<void> supprimerNote(String id) async {
@@ -148,25 +162,25 @@ class GestionRepository {
   }
 
   Map<String, Object?> _versLigneNote(Note n) => {
-        'id': n.id,
-        'tarif': _tarifKey,
-        'contenu': n.contenu,
-        'client_id': n.clientId,
-        'client_nom': n.clientNom,
-        'date': n.date.toIso8601String(),
-        'date_rappel': n.dateRappel?.toIso8601String(),
-      };
+    'id': n.id,
+    'tarif': _tarifKey,
+    'contenu': n.contenu,
+    'client_id': n.clientId,
+    'client_nom': n.clientNom,
+    'date': n.date.toIso8601String(),
+    'date_rappel': n.dateRappel?.toIso8601String(),
+  };
 
   Note _versNote(Map<String, Object?> r) => Note(
-        id: r['id'] as String,
-        contenu: r['contenu'] as String,
-        clientId: r['client_id'] as String?,
-        clientNom: r['client_nom'] as String?,
-        date: DateTime.parse(r['date'] as String),
-        dateRappel: r['date_rappel'] != null
-            ? DateTime.parse(r['date_rappel'] as String)
-            : null,
-      );
+    id: r['id'] as String,
+    contenu: r['contenu'] as String,
+    clientId: r['client_id'] as String?,
+    clientNom: r['client_nom'] as String?,
+    date: DateTime.parse(r['date'] as String),
+    dateRappel: r['date_rappel'] != null
+        ? DateTime.parse(r['date_rappel'] as String)
+        : null,
+  );
 
   /// Exporte clients + commandes de ce tarif en structure sérialisable JSON.
   Future<Map<String, dynamic>> exporterDonnees() async {
@@ -174,26 +188,31 @@ class GestionRepository {
     final commandes = await getCommandes();
     return {
       'clients': clients
-          .map((c) => {
-                'id': c.id,
-                'nom': c.nom,
-                'prenom': c.prenom,
-                'nomSociete': c.nomSociete,
-                'telephone': c.telephone,
-                'adresse': c.adresse,
-                'matriculeFiscal': c.matriculeFiscal,
-                'cin': c.cin,
-              })
+          .map(
+            (c) => {
+              'id': c.id,
+              'nom': c.nom,
+              'prenom': c.prenom,
+              'nomSociete': c.nomSociete,
+              'telephone': c.telephone,
+              'adresse': c.adresse,
+              'matriculeFiscal': c.matriculeFiscal,
+              'cin': c.cin,
+            },
+          )
           .toList(),
       'commandes': commandes
-          .map((c) => {
-                'id': c.id,
-                'clientId': c.clientId,
-                'clientNom': c.clientNom,
-                'date': c.date.toIso8601String(),
-                'modePrix': c.modePrix.name,
-                'lignes': c.lignes.map((l) => l.versJson()).toList(),
-              })
+          .map(
+            (c) => {
+              'id': c.id,
+              'clientId': c.clientId,
+              'clientNom': c.clientNom,
+              'date': c.date.toIso8601String(),
+              'modePrix': c.modePrix.name,
+              'lignes': c.lignes.map((l) => l.versJson()).toList(),
+              'note': c.note,
+            },
+          )
           .toList(),
     };
   }
@@ -229,6 +248,7 @@ class GestionRepository {
           'date': m['date'],
           'mode_prix': m['modePrix'],
           'lignes': jsonEncode(m['lignes']),
+          'note': m['note'],
         });
       }
     });

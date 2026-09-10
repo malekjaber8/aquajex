@@ -81,7 +81,7 @@ class DatabaseService {
 
     return openDatabase(
       chemin,
-      version: 3,
+      version: 4,
       onCreate: (db, version) async {
         await _creerTablesCatalogue(db);
         await _creerTablesGestion(db);
@@ -93,6 +93,9 @@ class DatabaseService {
         }
         if (ancienneVersion < 3) {
           await _creerTableNotes(db);
+        }
+        if (ancienneVersion < 4) {
+          await db.execute('ALTER TABLE commandes ADD COLUMN note TEXT');
         }
       },
     );
@@ -146,7 +149,8 @@ class DatabaseService {
         client_nom TEXT NOT NULL,
         date TEXT NOT NULL,
         mode_prix TEXT NOT NULL,
-        lignes TEXT NOT NULL
+        lignes TEXT NOT NULL,
+        note TEXT
       )
     ''');
   }

@@ -1,18 +1,19 @@
 import 'package:flutter/material.dart';
+
 import '../models/client.dart';
 import '../models/commande.dart';
 
-/// Affiche le panier en cours. Retourne true si une commande a été
-/// créée (le panier a alors été vidé par [onValiderCommande]).
-Future<bool?> afficherPanier(
+/// Affiche le panier en cours. Retourne le client choisi si l'utilisateur a
+/// demandé à passer à l'étape suivante (récapitulatif) — le panier n'est pas
+/// vidé ici, la commande n'est créée qu'après confirmation du récapitulatif.
+Future<Client?> afficherPanier(
   BuildContext context, {
   required List<LigneCommande> lignes,
   required List<Color> accent,
   required Future<Client?> Function() onNouveauClient,
   required List<Client> Function() clientsActuels,
-  required Future<void> Function(Client client) onValiderCommande,
 }) {
-  return showModalBottomSheet<bool>(
+  return showModalBottomSheet<Client>(
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
@@ -21,7 +22,6 @@ Future<bool?> afficherPanier(
       accent: accent,
       onNouveauClient: onNouveauClient,
       clientsActuels: clientsActuels,
-      onValiderCommande: onValiderCommande,
     ),
   );
 }
@@ -31,14 +31,12 @@ class _PanierSheet extends StatefulWidget {
   final List<Color> accent;
   final Future<Client?> Function() onNouveauClient;
   final List<Client> Function() clientsActuels;
-  final Future<void> Function(Client client) onValiderCommande;
 
   const _PanierSheet({
     required this.lignes,
     required this.accent,
     required this.onNouveauClient,
     required this.clientsActuels,
-    required this.onValiderCommande,
   });
 
   @override
@@ -46,8 +44,6 @@ class _PanierSheet extends StatefulWidget {
 }
 
 class _PanierSheetState extends State<_PanierSheet> {
-  bool _enCours = false;
-
   double get _total => widget.lignes.fold(0, (s, l) => s + l.total);
 
   String _formatMontant(double montant) {
@@ -90,11 +86,7 @@ class _PanierSheetState extends State<_PanierSheet> {
       ),
     );
     if (client == null || !mounted) return;
-
-    setState(() => _enCours = true);
-    await widget.onValiderCommande(client);
-    if (!mounted) return;
-    Navigator.of(context).pop(true);
+    Navigator.of(context).pop(client);
   }
 
   @override
@@ -125,8 +117,10 @@ class _PanierSheetState extends State<_PanierSheet> {
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
               child: Row(
                 children: [
-                  const Icon(Icons.shopping_cart_outlined,
-                      color: Color(0xFF1B3B5F)),
+                  const Icon(
+                    Icons.shopping_cart_outlined,
+                    color: Color(0xFF1B3B5F),
+                  ),
                   const SizedBox(width: 10),
                   const Text(
                     'Panier',
@@ -138,7 +132,7 @@ class _PanierSheetState extends State<_PanierSheet> {
                   ),
                   const Spacer(),
                   IconButton(
-                    onPressed: () => Navigator.of(context).pop(false),
+                    onPressed: () => Navigator.of(context).pop(),
                     icon: const Icon(Icons.close),
                   ),
                 ],
@@ -150,7 +144,9 @@ class _PanierSheetState extends State<_PanierSheet> {
                       child: Text(
                         'Le panier est vide.\nAjoutez des articles depuis le catalogue.',
                         textAlign: TextAlign.center,
-                        style: TextStyle(color: Colors.black.withValues(alpha: 0.45)),
+                        style: TextStyle(
+                          color: Colors.black.withValues(alpha: 0.45),
+                        ),
                       ),
                     )
                   : ListView.builder(
@@ -182,7 +178,9 @@ class _PanierSheetState extends State<_PanierSheet> {
                                       '${_formatMontant(ligne.prixUnitaire)} DT / unité',
                                       style: TextStyle(
                                         fontSize: 12,
-                                        color: Colors.black.withValues(alpha: 0.45),
+                                        color: Colors.black.withValues(
+                                          alpha: 0.45,
+                                        ),
                                       ),
                                     ),
                                   ],
@@ -224,7 +222,9 @@ class _PanierSheetState extends State<_PanierSheet> {
                 decoration: BoxDecoration(
                   color: const Color(0xFFF7F8FA),
                   border: Border(
-                    top: BorderSide(color: Colors.black.withValues(alpha: 0.06)),
+                    top: BorderSide(
+                      color: Colors.black.withValues(alpha: 0.06),
+                    ),
                   ),
                 ),
                 child: SafeArea(
@@ -263,28 +263,18 @@ class _PanierSheetState extends State<_PanierSheet> {
                             color: Colors.transparent,
                             child: InkWell(
                               borderRadius: BorderRadius.circular(30),
-                              onTap: _enCours ? null : _assignerClient,
-                              child: Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 15),
-                                child: _enCours
-                                    ? const SizedBox(
-                                        height: 18,
-                                        width: 18,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                          color: Colors.white,
-                                        ),
-                                      )
-                                    : const Text(
-                                        'Assigner à un client',
-                                        textAlign: TextAlign.center,
-                                        style: TextStyle(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.w700,
-                                          fontSize: 15,
-                                        ),
-                                      ),
+                              onTap: _assignerClient,
+                              child: const Padding(
+                                padding: EdgeInsets.symmetric(vertical: 15),
+                                child: Text(
+                                  'Assigner à un client',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 15,
+                                  ),
+                                ),
                               ),
                             ),
                           ),
@@ -480,7 +470,9 @@ class _ClientPickerSheetState extends State<_ClientPickerSheet> {
                   ? Center(
                       child: Text(
                         'Aucun client trouvé',
-                        style: TextStyle(color: Colors.black.withValues(alpha: 0.4)),
+                        style: TextStyle(
+                          color: Colors.black.withValues(alpha: 0.4),
+                        ),
                       ),
                     )
                   : ListView.builder(
@@ -492,7 +484,9 @@ class _ClientPickerSheetState extends State<_ClientPickerSheet> {
                         return ListTile(
                           contentPadding: EdgeInsets.zero,
                           leading: CircleAvatar(
-                            backgroundColor: accent.last.withValues(alpha: 0.15),
+                            backgroundColor: accent.last.withValues(
+                              alpha: 0.15,
+                            ),
                             foregroundColor: accent.last,
                             child: Text(
                               client.prenom.isNotEmpty

@@ -57,9 +57,8 @@ class _FactureScreenState extends State<FactureScreen> {
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Échec de l\'impression : $e')),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Échec de l\'impression : $e')));
     } finally {
       if (mounted) setState(() => _impressionEnCours = false);
     }
@@ -76,18 +75,20 @@ class _FactureScreenState extends State<FactureScreen> {
       if (!mounted) return;
       await Share.shareXFiles(
         [
-          XFile.fromData(octets,
-              name: 'facture_${widget.commande.id}.pdf',
-              mimeType: 'application/pdf'),
+          XFile.fromData(
+            octets,
+            name: 'facture_${widget.commande.id}.pdf',
+            mimeType: 'application/pdf',
+          ),
         ],
-        text: 'Facture ${widget.commande.clientNom} — '
+        text:
+            'Facture ${widget.commande.clientNom} — '
             '${_formatMontant(widget.commande.total)} DT',
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Échec du partage : $e')),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Échec du partage : $e')));
     } finally {
       if (mounted) setState(() => _enCours = false);
     }
@@ -111,8 +112,10 @@ class _FactureScreenState extends State<FactureScreen> {
                   children: [
                     IconButton(
                       onPressed: () => Navigator.of(context).pop(),
-                      icon: const Icon(Icons.arrow_back,
-                          color: Color(0xFF1B3B5F)),
+                      icon: const Icon(
+                        Icons.arrow_back,
+                        color: Color(0xFF1B3B5F),
+                      ),
                     ),
                     const Expanded(
                       child: Text(
@@ -130,8 +133,10 @@ class _FactureScreenState extends State<FactureScreen> {
                           Navigator.of(context).pop();
                           widget.onModifier!();
                         },
-                        icon: const Icon(Icons.edit_outlined,
-                            color: Color(0xFF1B3B5F)),
+                        icon: const Icon(
+                          Icons.edit_outlined,
+                          color: Color(0xFF1B3B5F),
+                        ),
                         tooltip: 'Modifier',
                       ),
                     IconButton(
@@ -142,8 +147,10 @@ class _FactureScreenState extends State<FactureScreen> {
                               height: 18,
                               child: CircularProgressIndicator(strokeWidth: 2),
                             )
-                          : const Icon(Icons.print_outlined,
-                              color: Color(0xFF1B3B5F)),
+                          : const Icon(
+                              Icons.print_outlined,
+                              color: Color(0xFF1B3B5F),
+                            ),
                       tooltip: 'Imprimer',
                     ),
                     IconButton(
@@ -154,8 +161,10 @@ class _FactureScreenState extends State<FactureScreen> {
                               height: 18,
                               child: CircularProgressIndicator(strokeWidth: 2),
                             )
-                          : const Icon(Icons.ios_share,
-                              color: Color(0xFF1B3B5F)),
+                          : const Icon(
+                              Icons.ios_share,
+                              color: Color(0xFF1B3B5F),
+                            ),
                       tooltip: 'Enregistrer / Partager (WhatsApp…)',
                     ),
                   ],
@@ -198,8 +207,7 @@ class _FactureScreenState extends State<FactureScreen> {
                                 ),
                                 const SizedBox(width: 14),
                                 Column(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.start,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
                                       widget.tarif.nom,
@@ -213,8 +221,9 @@ class _FactureScreenState extends State<FactureScreen> {
                                       'Catalogue professionnel',
                                       style: TextStyle(
                                         fontSize: 11,
-                                        color: Colors.black
-                                            .withValues(alpha: 0.45),
+                                        color: Colors.black.withValues(
+                                          alpha: 0.45,
+                                        ),
                                       ),
                                     ),
                                   ],
@@ -228,9 +237,9 @@ class _FactureScreenState extends State<FactureScreen> {
                                           LinearGradient(colors: accent)
                                               .createShader(bounds),
                                       child: const Text(
-                                        'FACTURE',
+                                        'FACTURE PROFORMA',
                                         style: TextStyle(
-                                          fontSize: 19,
+                                          fontSize: 17,
                                           fontWeight: FontWeight.w800,
                                           color: Colors.white,
                                           letterSpacing: 0.5,
@@ -238,16 +247,24 @@ class _FactureScreenState extends State<FactureScreen> {
                                       ),
                                     ),
                                     const SizedBox(height: 4),
-                                    Text('N° ${commande.id}',
-                                        style: TextStyle(
-                                            fontSize: 11.5,
-                                            color: Colors.black
-                                                .withValues(alpha: 0.5))),
-                                    Text(_formatDate(commande.date),
-                                        style: TextStyle(
-                                            fontSize: 11.5,
-                                            color: Colors.black
-                                                .withValues(alpha: 0.5))),
+                                    Text(
+                                      'N° ${commande.id}',
+                                      style: TextStyle(
+                                        fontSize: 11.5,
+                                        color: Colors.black.withValues(
+                                          alpha: 0.5,
+                                        ),
+                                      ),
+                                    ),
+                                    Text(
+                                      _formatDate(commande.date),
+                                      style: TextStyle(
+                                        fontSize: 11.5,
+                                        color: Colors.black.withValues(
+                                          alpha: 0.5,
+                                        ),
+                                      ),
+                                    ),
                                   ],
                                 ),
                               ],
@@ -283,7 +300,9 @@ class _FactureScreenState extends State<FactureScreen> {
                                         if (client?.nomSociete != null)
                                           _texteInfo(client!.nomSociete!),
                                         if (client?.telephone != null)
-                                          _texteInfo('Tél : ${client!.telephone}'),
+                                          _texteInfo(
+                                            'Tél : ${client!.telephone}',
+                                          ),
                                         if (client?.adresse != null)
                                           _texteInfo(client!.adresse!),
                                       ],
@@ -298,11 +317,13 @@ class _FactureScreenState extends State<FactureScreen> {
                                         const SizedBox(height: 4),
                                         if (client?.matriculeFiscal != null)
                                           _texteInfo(
-                                              'Matricule fiscal : ${client!.matriculeFiscal}'),
+                                            'Matricule fiscal : ${client!.matriculeFiscal}',
+                                          ),
                                         if (client?.cin != null)
                                           _texteInfo('CIN : ${client!.cin}'),
                                         _texteInfo(
-                                            'Mode de prix : ${commande.modePrix.libelle}'),
+                                          'Mode de prix : ${commande.modePrix.libelle}',
+                                        ),
                                       ],
                                     ),
                                   ),
@@ -312,7 +333,9 @@ class _FactureScreenState extends State<FactureScreen> {
                             const SizedBox(height: 24),
                             Container(
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 12, vertical: 10),
+                                horizontal: 12,
+                                vertical: 10,
+                              ),
                               decoration: BoxDecoration(
                                 gradient: LinearGradient(colors: accent),
                                 borderRadius: BorderRadius.circular(8),
@@ -321,8 +344,10 @@ class _FactureScreenState extends State<FactureScreen> {
                                 children: [
                                   Expanded(
                                     flex: 5,
-                                    child: Text('Désignation',
-                                        style: _styleEntete),
+                                    child: Text(
+                                      'Désignation',
+                                      style: _styleEntete,
+                                    ),
                                   ),
                                   Expanded(
                                     flex: 2,
@@ -330,15 +355,19 @@ class _FactureScreenState extends State<FactureScreen> {
                                   ),
                                   Expanded(
                                     flex: 3,
-                                    child: Text('Prix U.',
-                                        textAlign: TextAlign.right,
-                                        style: _styleEntete),
+                                    child: Text(
+                                      'Prix U.',
+                                      textAlign: TextAlign.right,
+                                      style: _styleEntete,
+                                    ),
                                   ),
                                   Expanded(
                                     flex: 3,
-                                    child: Text('Total',
-                                        textAlign: TextAlign.right,
-                                        style: _styleEntete),
+                                    child: Text(
+                                      'Total',
+                                      textAlign: TextAlign.right,
+                                      style: _styleEntete,
+                                    ),
                                   ),
                                 ],
                               ),
@@ -346,12 +375,16 @@ class _FactureScreenState extends State<FactureScreen> {
                             for (final ligne in commande.lignes)
                               Container(
                                 padding: const EdgeInsets.symmetric(
-                                    horizontal: 12, vertical: 10),
+                                  horizontal: 12,
+                                  vertical: 10,
+                                ),
                                 decoration: BoxDecoration(
                                   border: Border(
                                     bottom: BorderSide(
-                                        color: Colors.black
-                                            .withValues(alpha: 0.06)),
+                                      color: Colors.black.withValues(
+                                        alpha: 0.06,
+                                      ),
+                                    ),
                                   ),
                                 ),
                                 child: Row(
@@ -368,10 +401,13 @@ class _FactureScreenState extends State<FactureScreen> {
                                     ),
                                     Expanded(
                                       flex: 2,
-                                      child: Text('${ligne.quantite}',
-                                          style: const TextStyle(
-                                              fontSize: 13,
-                                              color: Color(0xFF1B3B5F))),
+                                      child: Text(
+                                        '${ligne.quantite}',
+                                        style: const TextStyle(
+                                          fontSize: 13,
+                                          color: Color(0xFF1B3B5F),
+                                        ),
+                                      ),
                                     ),
                                     Expanded(
                                       flex: 3,
@@ -379,8 +415,9 @@ class _FactureScreenState extends State<FactureScreen> {
                                         '${_formatMontant(ligne.prixUnitaire)} DT',
                                         textAlign: TextAlign.right,
                                         style: const TextStyle(
-                                            fontSize: 13,
-                                            color: Color(0xFF1B3B5F)),
+                                          fontSize: 13,
+                                          color: Color(0xFF1B3B5F),
+                                        ),
                                       ),
                                     ),
                                     Expanded(
@@ -403,7 +440,9 @@ class _FactureScreenState extends State<FactureScreen> {
                               alignment: Alignment.centerRight,
                               child: Container(
                                 padding: const EdgeInsets.symmetric(
-                                    horizontal: 18, vertical: 12),
+                                  horizontal: 18,
+                                  vertical: 12,
+                                ),
                                 decoration: BoxDecoration(
                                   color: const Color(0xFFF7F8FA),
                                   borderRadius: BorderRadius.circular(10),
@@ -411,11 +450,15 @@ class _FactureScreenState extends State<FactureScreen> {
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    Text('TOTAL   ',
-                                        style: TextStyle(
-                                            fontSize: 13,
-                                            color: Colors.black
-                                                .withValues(alpha: 0.5))),
+                                    Text(
+                                      'TOTAL   ',
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        color: Colors.black.withValues(
+                                          alpha: 0.5,
+                                        ),
+                                      ),
+                                    ),
                                     Text(
                                       '${_formatMontant(commande.total)} DT',
                                       style: TextStyle(
@@ -428,8 +471,38 @@ class _FactureScreenState extends State<FactureScreen> {
                                 ),
                               ),
                             ),
+                            if (commande.note != null &&
+                                commande.note!.isNotEmpty) ...[
+                              const SizedBox(height: 16),
+                              Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.all(14),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFF7F8FA),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    _labelPetit('NOTE'),
+                                    const SizedBox(height: 6),
+                                    Text(
+                                      commande.note!,
+                                      style: TextStyle(
+                                        fontSize: 12.5,
+                                        color: Colors.black.withValues(
+                                          alpha: 0.65,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
                             const SizedBox(height: 20),
-                            Divider(color: Colors.black.withValues(alpha: 0.08)),
+                            Divider(
+                              color: Colors.black.withValues(alpha: 0.08),
+                            ),
                             const SizedBox(height: 8),
                             Center(
                               child: Text(
@@ -456,25 +529,25 @@ class _FactureScreenState extends State<FactureScreen> {
   }
 
   Widget _labelPetit(String texte) => Text(
-        texte,
-        style: TextStyle(
-          fontSize: 10.5,
-          fontWeight: FontWeight.w700,
-          letterSpacing: 0.4,
-          color: Colors.black.withValues(alpha: 0.4),
-        ),
-      );
+    texte,
+    style: TextStyle(
+      fontSize: 10.5,
+      fontWeight: FontWeight.w700,
+      letterSpacing: 0.4,
+      color: Colors.black.withValues(alpha: 0.4),
+    ),
+  );
 
   Widget _texteInfo(String texte) => Padding(
-        padding: const EdgeInsets.only(top: 2),
-        child: Text(
-          texte,
-          style: TextStyle(
-            fontSize: 12,
-            color: Colors.black.withValues(alpha: 0.65),
-          ),
-        ),
-      );
+    padding: const EdgeInsets.only(top: 2),
+    child: Text(
+      texte,
+      style: TextStyle(
+        fontSize: 12,
+        color: Colors.black.withValues(alpha: 0.65),
+      ),
+    ),
+  );
 }
 
 const _styleEntete = TextStyle(

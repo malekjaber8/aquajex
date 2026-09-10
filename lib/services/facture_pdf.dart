@@ -76,18 +76,22 @@ Future<Uint8List> genererFacturePdf({
                   crossAxisAlignment: pw.CrossAxisAlignment.end,
                   children: [
                     pw.Text(
-                      'FACTURE',
+                      'FACTURE PROFORMA',
                       style: pw.TextStyle(
-                        fontSize: 18,
+                        fontSize: 16,
                         fontWeight: pw.FontWeight.bold,
                         color: accent,
                       ),
                     ),
                     pw.SizedBox(height: 4),
-                    pw.Text('N° ${commande.id}',
-                        style: const pw.TextStyle(fontSize: 9)),
-                    pw.Text(_formatDatePdf(commande.date),
-                        style: const pw.TextStyle(fontSize: 9)),
+                    pw.Text(
+                      'N° ${commande.id}',
+                      style: const pw.TextStyle(fontSize: 9),
+                    ),
+                    pw.Text(
+                      _formatDatePdf(commande.date),
+                      style: const pw.TextStyle(fontSize: 9),
+                    ),
                   ],
                 ),
               ],
@@ -111,26 +115,38 @@ Future<Uint8List> genererFacturePdf({
                     child: pw.Column(
                       crossAxisAlignment: pw.CrossAxisAlignment.start,
                       children: [
-                        pw.Text('CLIENT',
-                            style: pw.TextStyle(
-                                fontSize: 9,
-                                fontWeight: pw.FontWeight.bold,
-                                color: PdfColors.grey600)),
+                        pw.Text(
+                          'CLIENT',
+                          style: pw.TextStyle(
+                            fontSize: 9,
+                            fontWeight: pw.FontWeight.bold,
+                            color: PdfColors.grey600,
+                          ),
+                        ),
                         pw.SizedBox(height: 4),
-                        pw.Text(commande.clientNom,
-                            style: pw.TextStyle(
-                                fontSize: 12,
-                                fontWeight: pw.FontWeight.bold,
-                                color: encre)),
+                        pw.Text(
+                          commande.clientNom,
+                          style: pw.TextStyle(
+                            fontSize: 12,
+                            fontWeight: pw.FontWeight.bold,
+                            color: encre,
+                          ),
+                        ),
                         if (client?.nomSociete != null)
-                          pw.Text(client!.nomSociete!,
-                              style: const pw.TextStyle(fontSize: 10)),
+                          pw.Text(
+                            client!.nomSociete!,
+                            style: const pw.TextStyle(fontSize: 10),
+                          ),
                         if (client?.telephone != null)
-                          pw.Text('Tél : ${client!.telephone}',
-                              style: const pw.TextStyle(fontSize: 10)),
+                          pw.Text(
+                            'Tél : ${client!.telephone}',
+                            style: const pw.TextStyle(fontSize: 10),
+                          ),
                         if (client?.adresse != null)
-                          pw.Text(client!.adresse!,
-                              style: const pw.TextStyle(fontSize: 10)),
+                          pw.Text(
+                            client!.adresse!,
+                            style: const pw.TextStyle(fontSize: 10),
+                          ),
                       ],
                     ),
                   ),
@@ -138,22 +154,29 @@ Future<Uint8List> genererFacturePdf({
                     child: pw.Column(
                       crossAxisAlignment: pw.CrossAxisAlignment.start,
                       children: [
-                        pw.Text('INFORMATIONS',
-                            style: pw.TextStyle(
-                                fontSize: 9,
-                                fontWeight: pw.FontWeight.bold,
-                                color: PdfColors.grey600)),
+                        pw.Text(
+                          'INFORMATIONS',
+                          style: pw.TextStyle(
+                            fontSize: 9,
+                            fontWeight: pw.FontWeight.bold,
+                            color: PdfColors.grey600,
+                          ),
+                        ),
                         pw.SizedBox(height: 4),
                         if (client?.matriculeFiscal != null)
                           pw.Text(
-                              'Matricule fiscal : ${client!.matriculeFiscal}',
-                              style: const pw.TextStyle(fontSize: 10)),
+                            'Matricule fiscal : ${client!.matriculeFiscal}',
+                            style: const pw.TextStyle(fontSize: 10),
+                          ),
                         if (client?.cin != null)
-                          pw.Text('CIN : ${client!.cin}',
-                              style: const pw.TextStyle(fontSize: 10)),
+                          pw.Text(
+                            'CIN : ${client!.cin}',
+                            style: const pw.TextStyle(fontSize: 10),
+                          ),
                         pw.Text(
-                            'Mode de prix : ${commande.modePrix.libelle}',
-                            style: const pw.TextStyle(fontSize: 10)),
+                          'Mode de prix : ${commande.modePrix.libelle}',
+                          style: const pw.TextStyle(fontSize: 10),
+                        ),
                       ],
                     ),
                   ),
@@ -190,28 +213,46 @@ Future<Uint8List> genererFacturePdf({
                     children: [
                       pw.Padding(
                         padding: const pw.EdgeInsets.symmetric(
-                            vertical: 8, horizontal: 6),
-                        child: pw.Text(ligne.designation,
-                            style: const pw.TextStyle(fontSize: 10)),
+                          vertical: 8,
+                          horizontal: 6,
+                        ),
+                        child: pw.Text(
+                          ligne.designation,
+                          style: const pw.TextStyle(fontSize: 10),
+                        ),
                       ),
                       pw.Padding(
                         padding: const pw.EdgeInsets.symmetric(
-                            vertical: 8, horizontal: 6),
-                        child: pw.Text('${ligne.quantite}',
-                            style: const pw.TextStyle(fontSize: 10)),
+                          vertical: 8,
+                          horizontal: 6,
+                        ),
+                        child: pw.Text(
+                          '${ligne.quantite}',
+                          style: const pw.TextStyle(fontSize: 10),
+                        ),
                       ),
                       pw.Padding(
                         padding: const pw.EdgeInsets.symmetric(
-                            vertical: 8, horizontal: 6),
-                        child: pw.Text(_formatMontantPdf(ligne.prixUnitaire),
-                            style: const pw.TextStyle(fontSize: 10)),
+                          vertical: 8,
+                          horizontal: 6,
+                        ),
+                        child: pw.Text(
+                          _formatMontantPdf(ligne.prixUnitaire),
+                          style: const pw.TextStyle(fontSize: 10),
+                        ),
                       ),
                       pw.Padding(
                         padding: const pw.EdgeInsets.symmetric(
-                            vertical: 8, horizontal: 6),
-                        child: pw.Text(_formatMontantPdf(ligne.total),
-                            style: pw.TextStyle(
-                                fontSize: 10, fontWeight: pw.FontWeight.bold)),
+                          vertical: 8,
+                          horizontal: 6,
+                        ),
+                        child: pw.Text(
+                          _formatMontantPdf(ligne.total),
+                          style: pw.TextStyle(
+                            fontSize: 10,
+                            fontWeight: pw.FontWeight.bold,
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -225,16 +266,22 @@ Future<Uint8List> genererFacturePdf({
               children: [
                 pw.Container(
                   padding: const pw.EdgeInsets.symmetric(
-                      horizontal: 16, vertical: 10),
+                    horizontal: 16,
+                    vertical: 10,
+                  ),
                   decoration: pw.BoxDecoration(
                     color: PdfColors.grey100,
                     borderRadius: pw.BorderRadius.circular(8),
                   ),
                   child: pw.Row(
                     children: [
-                      pw.Text('TOTAL   ',
-                          style: const pw.TextStyle(
-                              fontSize: 11, color: PdfColors.grey700)),
+                      pw.Text(
+                        'TOTAL   ',
+                        style: const pw.TextStyle(
+                          fontSize: 11,
+                          color: PdfColors.grey700,
+                        ),
+                      ),
                       pw.Text(
                         _formatMontantPdf(commande.total),
                         style: pw.TextStyle(
@@ -248,13 +295,44 @@ Future<Uint8List> genererFacturePdf({
                 ),
               ],
             ),
+            if (commande.note != null && commande.note!.isNotEmpty) ...[
+              pw.SizedBox(height: 16),
+              pw.Container(
+                width: double.infinity,
+                padding: const pw.EdgeInsets.all(10),
+                decoration: pw.BoxDecoration(
+                  color: PdfColors.grey100,
+                  borderRadius: pw.BorderRadius.circular(8),
+                ),
+                child: pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.start,
+                  children: [
+                    pw.Text(
+                      'NOTE',
+                      style: pw.TextStyle(
+                        fontSize: 9,
+                        fontWeight: pw.FontWeight.bold,
+                        color: PdfColors.grey600,
+                      ),
+                    ),
+                    pw.SizedBox(height: 4),
+                    pw.Text(
+                      commande.note!,
+                      style: const pw.TextStyle(fontSize: 10),
+                    ),
+                  ],
+                ),
+              ),
+            ],
             pw.Spacer(),
             pw.Divider(color: PdfColors.grey300),
             pw.Center(
               child: pw.Text(
                 'Merci de votre confiance.',
                 style: const pw.TextStyle(
-                    fontSize: 9, color: PdfColors.grey500),
+                  fontSize: 9,
+                  color: PdfColors.grey500,
+                ),
               ),
             ),
           ],

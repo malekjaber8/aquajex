@@ -18,6 +18,7 @@ import '../widgets/sidebar_nav.dart';
 import '../widgets/statut_articles_view.dart';
 import 'article_form_screen.dart';
 import 'client_form_screen.dart';
+import 'commande_recap_screen.dart';
 import 'note_form_screen.dart';
 import 'sections/catalogue_section.dart';
 import 'sections/clients_section.dart';
@@ -424,25 +425,47 @@ class _CatalogueScreenState extends State<CatalogueScreen> {
 
   Future<void> _ouvrirPanier() async {
     final accent = widget.tarif.accentGradient;
-    await afficherPanier(
+    final client = await afficherPanier(
       context,
       lignes: _panier,
       accent: accent,
       onNouveauClient: _ajouterClient,
       clientsActuels: () => _clients,
-      onValiderCommande: (client) async {
-        final commande = Commande(
-          id: DateTime.now().millisecondsSinceEpoch.toString(),
-          clientId: client.id,
-          clientNom: client.nomComplet,
-          date: DateTime.now(),
-          modePrix: widget.modePrix,
+    );
+    if (client == null || !mounted) return;
+
+    // Le récapitulatif (avec sa note facultative) s'affiche avant que la
+    // commande ne soit réellement créée : le panier n'est vidé qu'après
+    // confirmation, pour ne rien perdre si l'utilisateur revient en arrière.
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => CommandeRecapScreen(
+          client: client,
           lignes: List.of(_panier),
-        );
-        await _gestionRepo.ajouterCommande(commande);
-        _commandes = [commande, ..._commandes];
-        _panier.clear();
-      },
+          tarif: widget.tarif,
+          modePrix: widget.modePrix,
+          onModifier: _modifierCommande,
+          onConfirmer: (note) async {
+            final commande = Commande(
+              id: DateTime.now().millisecondsSinceEpoch.toString(),
+              clientId: client.id,
+              clientNom: client.nomComplet,
+              date: DateTime.now(),
+              modePrix: widget.modePrix,
+              lignes: List.of(_panier),
+              note: note,
+            );
+            await _gestionRepo.ajouterCommande(commande);
+            if (mounted) {
+              setState(() {
+                _commandes = [commande, ..._commandes];
+                _panier.clear();
+              });
+            }
+            return commande;
+          },
+        ),
+      ),
     );
     if (mounted) setState(() {});
   }
@@ -457,11 +480,13 @@ class _CatalogueScreenState extends State<CatalogueScreen> {
       articlesDisponibles: _articles,
       clientsActuels: () => _clients,
       onNouveauClient: _ajouterClient,
-      onEnregistrer: (clientId, clientNom, lignes) async {
+      onEnregistrer: (clientId, clientNom, lignes, note) async {
         final misAJour = commande.copyWith(
           clientId: clientId,
           clientNom: clientNom,
           lignes: lignes,
+          note: note,
+          effacerNote: note == null,
         );
         await _gestionRepo.modifierCommande(misAJour);
         setState(() {

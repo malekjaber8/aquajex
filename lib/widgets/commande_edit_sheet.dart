@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../models/article.dart';
 import '../models/client.dart';
 import '../models/commande.dart';
@@ -16,8 +17,12 @@ Future<bool?> afficherEditionCommande(
   required List<Client> Function() clientsActuels,
   required Future<Client?> Function() onNouveauClient,
   required Future<void> Function(
-          String clientId, String clientNom, List<LigneCommande> lignes)
-      onEnregistrer,
+    String clientId,
+    String clientNom,
+    List<LigneCommande> lignes,
+    String? note,
+  )
+  onEnregistrer,
 }) {
   return showModalBottomSheet<bool>(
     context: context,
@@ -43,8 +48,12 @@ class _CommandeEditSheet extends StatefulWidget {
   final List<Client> Function() clientsActuels;
   final Future<Client?> Function() onNouveauClient;
   final Future<void> Function(
-          String clientId, String clientNom, List<LigneCommande> lignes)
-      onEnregistrer;
+    String clientId,
+    String clientNom,
+    List<LigneCommande> lignes,
+    String? note,
+  )
+  onEnregistrer;
 
   const _CommandeEditSheet({
     required this.commande,
@@ -62,6 +71,7 @@ class _CommandeEditSheet extends StatefulWidget {
 
 class _CommandeEditSheetState extends State<_CommandeEditSheet> {
   final List<LigneCommande> _lignes = [];
+  late final _noteCtrl = TextEditingController(text: widget.commande.note);
   late String _clientId = widget.commande.clientId;
   late String _clientNom = widget.commande.clientNom;
   bool _enCours = false;
@@ -70,6 +80,12 @@ class _CommandeEditSheetState extends State<_CommandeEditSheet> {
   void initState() {
     super.initState();
     _lignes.addAll(widget.commande.lignes);
+  }
+
+  @override
+  void dispose() {
+    _noteCtrl.dispose();
+    super.dispose();
   }
 
   double get _total => _lignes.fold(0, (s, l) => s + l.total);
@@ -136,15 +152,18 @@ class _CommandeEditSheetState extends State<_CommandeEditSheet> {
     setState(() {
       final index = _lignes.indexWhere((l) => l.articleId == article.id);
       if (index != -1) {
-        _lignes[index] =
-            _lignes[index].copyWith(quantite: _lignes[index].quantite + 1);
+        _lignes[index] = _lignes[index].copyWith(
+          quantite: _lignes[index].quantite + 1,
+        );
       } else {
-        _lignes.add(LigneCommande(
-          articleId: article.id,
-          designation: article.designation,
-          prixUnitaire: prix,
-          quantite: 1,
-        ));
+        _lignes.add(
+          LigneCommande(
+            articleId: article.id,
+            designation: article.designation,
+            prixUnitaire: prix,
+            quantite: 1,
+          ),
+        );
       }
     });
   }
@@ -157,7 +176,13 @@ class _CommandeEditSheetState extends State<_CommandeEditSheet> {
       return;
     }
     setState(() => _enCours = true);
-    await widget.onEnregistrer(_clientId, _clientNom, _lignes);
+    final note = _noteCtrl.text.trim();
+    await widget.onEnregistrer(
+      _clientId,
+      _clientNom,
+      _lignes,
+      note.isEmpty ? null : note,
+    );
     if (!mounted) return;
     Navigator.of(context).pop(true);
   }
@@ -211,8 +236,10 @@ class _CommandeEditSheetState extends State<_CommandeEditSheet> {
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
               child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 10,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFFF3F5F8),
                   borderRadius: BorderRadius.circular(14),
@@ -277,7 +304,8 @@ class _CommandeEditSheetState extends State<_CommandeEditSheet> {
                       child: Text(
                         'Aucun article dans cette commande.',
                         style: TextStyle(
-                            color: Colors.black.withValues(alpha: 0.45)),
+                          color: Colors.black.withValues(alpha: 0.45),
+                        ),
                       ),
                     )
                   : ListView.builder(
@@ -309,8 +337,9 @@ class _CommandeEditSheetState extends State<_CommandeEditSheet> {
                                       '${_formatMontant(ligne.prixUnitaire)} DT / unité',
                                       style: TextStyle(
                                         fontSize: 12,
-                                        color: Colors.black
-                                            .withValues(alpha: 0.45),
+                                        color: Colors.black.withValues(
+                                          alpha: 0.45,
+                                        ),
                                       ),
                                     ),
                                   ],
@@ -346,8 +375,25 @@ class _CommandeEditSheetState extends State<_CommandeEditSheet> {
                       },
                     ),
             ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 4, 20, 4),
+              child: TextField(
+                controller: _noteCtrl,
+                maxLines: 2,
+                decoration: InputDecoration(
+                  hintText: 'Note (facultative)',
+                  filled: true,
+                  fillColor: const Color(0xFFF3F5F8),
+                  contentPadding: const EdgeInsets.all(12),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+              ),
+            ),
             Container(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
               decoration: BoxDecoration(
                 color: const Color(0xFFF7F8FA),
                 border: Border(
@@ -389,8 +435,7 @@ class _CommandeEditSheetState extends State<_CommandeEditSheet> {
                             borderRadius: BorderRadius.circular(30),
                             onTap: _enCours ? null : _enregistrer,
                             child: Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(vertical: 15),
+                              padding: const EdgeInsets.symmetric(vertical: 15),
                               child: _enCours
                                   ? const SizedBox(
                                       height: 18,
@@ -604,8 +649,9 @@ class _ClientPickerSheetState extends State<_ClientPickerSheet> {
                   ? Center(
                       child: Text(
                         'Aucun client trouvé',
-                        style:
-                            TextStyle(color: Colors.black.withValues(alpha: 0.4)),
+                        style: TextStyle(
+                          color: Colors.black.withValues(alpha: 0.4),
+                        ),
                       ),
                     )
                   : ListView.builder(
@@ -617,8 +663,9 @@ class _ClientPickerSheetState extends State<_ClientPickerSheet> {
                         return ListTile(
                           contentPadding: EdgeInsets.zero,
                           leading: CircleAvatar(
-                            backgroundColor:
-                                accent.last.withValues(alpha: 0.15),
+                            backgroundColor: accent.last.withValues(
+                              alpha: 0.15,
+                            ),
                             foregroundColor: accent.last,
                             child: Text(
                               client.prenom.isNotEmpty
@@ -741,8 +788,9 @@ class _ArticlePickerSheetState extends State<_ArticlePickerSheet> {
                   ? Center(
                       child: Text(
                         'Aucun article trouvé',
-                        style:
-                            TextStyle(color: Colors.black.withValues(alpha: 0.4)),
+                        style: TextStyle(
+                          color: Colors.black.withValues(alpha: 0.4),
+                        ),
                       ),
                     )
                   : ListView.builder(
@@ -754,10 +802,14 @@ class _ArticlePickerSheetState extends State<_ArticlePickerSheet> {
                         return ListTile(
                           contentPadding: EdgeInsets.zero,
                           leading: CircleAvatar(
-                            backgroundColor: accent.last.withValues(alpha: 0.15),
+                            backgroundColor: accent.last.withValues(
+                              alpha: 0.15,
+                            ),
                             foregroundColor: accent.last,
-                            child: const Icon(Icons.inventory_2_outlined,
-                                size: 18),
+                            child: const Icon(
+                              Icons.inventory_2_outlined,
+                              size: 18,
+                            ),
                           ),
                           title: Text(
                             article.designation,
