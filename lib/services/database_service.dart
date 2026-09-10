@@ -95,21 +95,47 @@ class DatabaseService {
           await _creerTableNotes(db);
         }
         if (ancienneVersion < 4) {
-          await db.execute('ALTER TABLE commandes ADD COLUMN note TEXT');
+          await _ajouterColonneSiAbsente(db, 'commandes', 'note', 'TEXT');
         }
         if (ancienneVersion < 5) {
-          await db.execute(
-            'ALTER TABLE commandes ADD COLUMN remise_pourcent REAL NOT NULL DEFAULT 0',
+          await _ajouterColonneSiAbsente(
+            db,
+            'commandes',
+            'remise_pourcent',
+            'REAL NOT NULL DEFAULT 0',
           );
         }
         if (ancienneVersion < 6) {
-          await db.execute(
-            "ALTER TABLE clients ADD COLUMN type TEXT NOT NULL DEFAULT 'particulier'",
+          await _ajouterColonneSiAbsente(
+            db,
+            'clients',
+            'type',
+            "TEXT NOT NULL DEFAULT 'particulier'",
           );
-          await db.execute('ALTER TABLE clients ADD COLUMN responsable TEXT');
+          await _ajouterColonneSiAbsente(db, 'clients', 'responsable', 'TEXT');
         }
       },
     );
+  }
+
+  /// Ajoute une colonne seulement si elle n'existe pas déjà — une migration
+  /// `ALTER TABLE ADD COLUMN` non protégée plante si elle est rejouée sur
+  /// une base où la colonne a déjà été ajoutée (ex : app fermée en plein
+  /// milieu d'une mise à jour précédente, avant que la nouvelle version de
+  /// la base ne soit enregistrée).
+  Future<void> _ajouterColonneSiAbsente(
+    Database db,
+    String table,
+    String colonne,
+    String definitionColonne,
+  ) async {
+    final infos = await db.rawQuery('PRAGMA table_info($table)');
+    final existeDeja = infos.any((c) => c['name'] == colonne);
+    if (!existeDeja) {
+      await db.execute(
+        'ALTER TABLE $table ADD COLUMN $colonne $definitionColonne',
+      );
+    }
   }
 
   Future<void> _creerTablesCatalogue(Database db) async {

@@ -54,6 +54,7 @@ class _CatalogueScreenState extends State<CatalogueScreen> {
   bool _chargementGestion = true;
   bool _chargementFamilles = true;
   bool _chargementArticles = true;
+  String? _erreurGestion;
   bool get _chargement =>
       _chargementGestion || _chargementFamilles || _chargementArticles;
   List<Article> _articles = [];
@@ -153,16 +154,36 @@ class _CatalogueScreenState extends State<CatalogueScreen> {
   }
 
   Future<void> _chargerGestion() async {
-    final clients = await _gestionRepo.getClients();
-    final commandes = await _gestionRepo.getCommandes();
-    final notes = await _gestionRepo.getNotes();
-    if (!mounted) return;
+    try {
+      final clients = await _gestionRepo.getClients();
+      final commandes = await _gestionRepo.getCommandes();
+      final notes = await _gestionRepo.getNotes();
+      if (!mounted) return;
+      setState(() {
+        _clients = clients;
+        _commandes = commandes;
+        _notes = notes;
+        _chargementGestion = false;
+        _erreurGestion = null;
+      });
+    } catch (e) {
+      // Sans ce filet, une erreur ici (ex : base locale plus récente que ce
+      // que cette version de l'app sait ouvrir) laissait l'écran bloqué sur
+      // le rond de chargement indéfiniment, sans aucun message.
+      if (!mounted) return;
+      setState(() {
+        _chargementGestion = false;
+        _erreurGestion = e.toString();
+      });
+    }
+  }
+
+  void _reessayerChargerGestion() {
     setState(() {
-      _clients = clients;
-      _commandes = commandes;
-      _notes = notes;
-      _chargementGestion = false;
+      _chargementGestion = true;
+      _erreurGestion = null;
     });
+    _chargerGestion();
   }
 
   // --- Familles ---
@@ -626,6 +647,42 @@ class _CatalogueScreenState extends State<CatalogueScreen> {
     final Widget body;
     if (_chargement) {
       body = Center(child: CircularProgressIndicator(color: accent.last));
+    } else if (_erreurGestion != null) {
+      body = Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.error_outline,
+                size: 40,
+                color: Colors.red.withValues(alpha: 0.6),
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                'Impossible de charger les clients/commandes/notes.',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                _erreurGestion!,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 11,
+                  color: Colors.black.withValues(alpha: 0.45),
+                ),
+              ),
+              const SizedBox(height: 16),
+              FilledButton(
+                onPressed: _reessayerChargerGestion,
+                child: const Text('Réessayer'),
+              ),
+            ],
+          ),
+        ),
+      );
     } else {
       switch (_selectedIndex) {
         case _indexPromotion:
