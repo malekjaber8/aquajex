@@ -177,6 +177,7 @@ class _CatalogueScreenState extends State<CatalogueScreen> {
         content: TextField(
           controller: controller,
           autofocus: true,
+          textCapitalization: TextCapitalization.words,
           decoration: const InputDecoration(
             labelText: 'Nom de la famille',
             border: OutlineInputBorder(),
@@ -198,9 +199,22 @@ class _CatalogueScreenState extends State<CatalogueScreen> {
     );
   }
 
+  /// Met une majuscule au début de chaque mot, sans toucher au reste (pour
+  /// ne pas casser un sigle déjà en capitales, ex. "PET") — évite qu'un nom
+  /// de famille tapé en minuscules s'affiche ainsi dans toute l'app.
+  String _capitaliserMots(String texte) {
+    return texte
+        .split(' ')
+        .map(
+          (mot) => mot.isEmpty ? mot : mot[0].toUpperCase() + mot.substring(1),
+        )
+        .join(' ');
+  }
+
   Future<void> _ajouterFamille() async {
-    final nom = await _demanderNomFamille();
-    if (nom == null || nom.isEmpty) return;
+    final saisie = await _demanderNomFamille();
+    if (saisie == null || saisie.isEmpty) return;
+    final nom = _capitaliserMots(saisie);
     final existeDeja = _familles.any(
       (f) => f.toLowerCase() == nom.toLowerCase(),
     );
@@ -214,8 +228,10 @@ class _CatalogueScreenState extends State<CatalogueScreen> {
   }
 
   Future<void> _modifierFamille(String ancienNom) async {
-    final nom = await _demanderNomFamille(nomInitial: ancienNom);
-    if (nom == null || nom.isEmpty || nom == ancienNom) return;
+    final saisie = await _demanderNomFamille(nomInitial: ancienNom);
+    if (saisie == null || saisie.isEmpty || saisie == ancienNom) return;
+    final nom = _capitaliserMots(saisie);
+    if (nom == ancienNom) return;
     final existeDeja = _familles.any(
       (f) => f.toLowerCase() == nom.toLowerCase() && f != ancienNom,
     );

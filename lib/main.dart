@@ -1,6 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+
 import 'firebase_options.dart';
 import 'screens/login_screen.dart';
 import 'screens/tarif_selection_screen.dart';
@@ -24,6 +26,7 @@ class AquajexApp extends StatelessWidget {
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF1B3B5F)),
         scaffoldBackgroundColor: const Color(0xFFF4F6F9),
+        textTheme: GoogleFonts.poppinsTextTheme(),
       ),
       home: const AuthGate(),
     );
