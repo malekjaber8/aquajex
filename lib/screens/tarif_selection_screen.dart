@@ -222,14 +222,16 @@ class _TarifSelectionScreenState extends State<TarifSelectionScreen> {
                               if (banniere.length == 1) {
                                 contenu = banniere.first;
                               } else if (isWide) {
-                                contenu = Row(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.stretch,
-                                  children: [
-                                    Expanded(child: banniere[0]),
-                                    const SizedBox(width: 20),
-                                    Expanded(child: banniere[1]),
-                                  ],
+                                contenu = IntrinsicHeight(
+                                  child: Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.stretch,
+                                    children: [
+                                      Expanded(child: banniere[0]),
+                                      const SizedBox(width: 20),
+                                      Expanded(child: banniere[1]),
+                                    ],
+                                  ),
                                 );
                               } else {
                                 contenu = Column(
