@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:printing/printing.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../models/client.dart';
@@ -27,6 +28,7 @@ class FactureScreen extends StatefulWidget {
 
 class _FactureScreenState extends State<FactureScreen> {
   bool _enCours = false;
+  bool _impressionEnCours = false;
 
   String _formatMontant(double montant) {
     final parts = montant.toStringAsFixed(3).split('.');
@@ -41,6 +43,27 @@ class _FactureScreenState extends State<FactureScreen> {
 
   String _formatDate(DateTime d) =>
       '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year}';
+
+  Future<void> _imprimer() async {
+    setState(() => _impressionEnCours = true);
+    try {
+      await Printing.layoutPdf(
+        name: 'facture_${widget.commande.id}.pdf',
+        onLayout: (_) => genererFacturePdf(
+          commande: widget.commande,
+          client: widget.client,
+          tarif: widget.tarif,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Échec de l\'impression : $e')),
+      );
+    } finally {
+      if (mounted) setState(() => _impressionEnCours = false);
+    }
+  }
 
   Future<void> _partager() async {
     setState(() => _enCours = true);
@@ -111,6 +134,18 @@ class _FactureScreenState extends State<FactureScreen> {
                             color: Color(0xFF1B3B5F)),
                         tooltip: 'Modifier',
                       ),
+                    IconButton(
+                      onPressed: _impressionEnCours ? null : _imprimer,
+                      icon: _impressionEnCours
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.print_outlined,
+                              color: Color(0xFF1B3B5F)),
+                      tooltip: 'Imprimer',
+                    ),
                     IconButton(
                       onPressed: _enCours ? null : _partager,
                       icon: _enCours
