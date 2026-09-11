@@ -354,17 +354,16 @@ class _TarifSelectionScreenState extends State<TarifSelectionScreen> {
                     ],
                   ),
           ),
+          // Clients/Commandes/Notes nécessitent d'avoir choisi un tarif :
+          // pas d'intérêt à les afficher (grisés) dans la barre basse, ça
+          // ne fait qu'encombrer — contrairement au menu latéral desktop,
+          // où ils servent d'indice visuel sur les rubriques à venir.
           bottomNavigationBar: mobile
               ? BottomNav(
-                  items: _navItems,
+                  items: _navItems.sublist(0, 4),
                   selectedIndex: _selectedIndex,
                   onSelect: (i) => setState(() => _selectedIndex = i),
                   accent: _accentNeutre,
-                  enabled: (i) =>
-                      i == _indexCatalogue ||
-                      i == _indexPromotion ||
-                      i == _indexNouveaute ||
-                      i == _indexStock,
                 )
               : null,
         );
