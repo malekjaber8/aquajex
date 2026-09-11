@@ -182,521 +182,689 @@ class _FactureScreenState extends State<FactureScreen> {
                 ),
               ),
               Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
-                  child: Center(
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 820),
-                      child: Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.fromLTRB(28, 28, 28, 24),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(6),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.12),
-                              blurRadius: 24,
-                              offset: const Offset(0, 12),
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // En-tête : logo à gauche, coordonnées légales à droite.
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                SizedBox(
-                                  height: 64,
-                                  width: 110,
-                                  child: Image.asset(
-                                    widget.tarif.logoAsset,
-                                    fit: BoxFit.contain,
-                                    alignment: Alignment.centerLeft,
-                                  ),
-                                ),
-                                const Spacer(),
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.end,
-                                  children: [
-                                    const Text(
-                                      _raisonSociale,
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w800,
-                                        color: Color(0xFF1B3B5F),
-                                      ),
-                                    ),
-                                    Text(
-                                      _activite,
-                                      style: TextStyle(
-                                        fontSize: 10,
-                                        color: Colors.black.withValues(
-                                          alpha: 0.45,
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    _texteInfoDroite(_adresseSociete),
-                                    _texteInfoDroite(
-                                      '$_tvaSociete   $_rcSociete',
-                                    ),
-                                    _texteInfoDroite(_telSociete),
-                                  ],
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final etroit = constraints.maxWidth < 480;
+                    return SingleChildScrollView(
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+                      child: Center(
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 820),
+                          child: Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.fromLTRB(28, 28, 28, 24),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(6),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.12),
+                                  blurRadius: 24,
+                                  offset: const Offset(0, 12),
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 18),
-                            Divider(color: Colors.black.withValues(alpha: 0.1)),
-                            const SizedBox(height: 14),
-
-                            // Facture (N°, date) + client, côte à côte.
-                            LayoutBuilder(
-                              builder: (context, constraints) {
-                                final etroit = constraints.maxWidth < 480;
-                                final blocFacture = Container(
-                                  width: double.infinity,
-                                  padding: const EdgeInsets.all(14),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFFF7F8FA),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Column(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // En-tête : logo + coordonnées légales — côte à
+                                // côte sur écran large, empilés (logo au-dessus,
+                                // texte aligné à gauche) sur mobile pour que rien
+                                // ne se compresse ni ne se coupe.
+                                if (etroit)
+                                  Column(
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
-                                      ShaderMask(
-                                        shaderCallback: (bounds) =>
-                                            LinearGradient(colors: accent)
-                                                .createShader(bounds),
-                                        child: const Text(
-                                          'FACTURE PROFORMA',
-                                          style: TextStyle(
-                                            fontSize: 15,
-                                            fontWeight: FontWeight.w800,
-                                            color: Colors.white,
-                                            letterSpacing: 0.4,
-                                          ),
+                                      SizedBox(
+                                        height: 56,
+                                        width: 96,
+                                        child: Image.asset(
+                                          widget.tarif.logoAsset,
+                                          fit: BoxFit.contain,
+                                          alignment: Alignment.centerLeft,
                                         ),
                                       ),
-                                      const SizedBox(height: 6),
-                                      _texteInfo('N° ${commande.id}'),
-                                      _texteInfo(_formatDate(commande.date)),
-                                      const SizedBox(height: 2),
-                                      _texteInfo(
-                                        'Mode de prix : ${commande.modePrix.libelle}',
-                                      ),
-                                    ],
-                                  ),
-                                );
-                                final blocClient = Container(
-                                  width: double.infinity,
-                                  padding: const EdgeInsets.all(14),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFFF7F8FA),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      _labelPetit('CLIENT'),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        commande.clientNom,
-                                        style: const TextStyle(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w700,
+                                      const SizedBox(height: 10),
+                                      const Text(
+                                        _raisonSociale,
+                                        style: TextStyle(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w800,
                                           color: Color(0xFF1B3B5F),
                                         ),
                                       ),
-                                      if (client?.estSociete == true &&
-                                          client?.responsable != null)
-                                        _texteInfo(
-                                          'Responsable : ${client!.responsable}',
+                                      Text(
+                                        _activite,
+                                        style: TextStyle(
+                                          fontSize: 10.5,
+                                          color: Colors.black.withValues(
+                                            alpha: 0.45,
+                                          ),
                                         ),
-                                      if (client?.telephone != null)
-                                        _texteInfo(
-                                          'Tél : ${client!.telephone}',
+                                      ),
+                                      const SizedBox(height: 4),
+                                      _texteInfoGauche(_adresseSociete),
+                                      _texteInfoGauche(_tvaSociete),
+                                      _texteInfoGauche(_rcSociete),
+                                      _texteInfoGauche(_telSociete),
+                                    ],
+                                  )
+                                else
+                                  Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      SizedBox(
+                                        height: 64,
+                                        width: 110,
+                                        child: Image.asset(
+                                          widget.tarif.logoAsset,
+                                          fit: BoxFit.contain,
+                                          alignment: Alignment.centerLeft,
                                         ),
-                                      if (client?.adresse != null)
-                                        _texteInfo(client!.adresse!),
-                                      if (client?.matriculeFiscal != null)
-                                        _texteInfo(
-                                          'Matricule fiscal : ${client!.matriculeFiscal}',
-                                        ),
-                                      if (client?.cin != null)
-                                        _texteInfo('CIN : ${client!.cin}'),
+                                      ),
+                                      const Spacer(),
+                                      Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.end,
+                                        children: [
+                                          const Text(
+                                            _raisonSociale,
+                                            style: TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.w800,
+                                              color: Color(0xFF1B3B5F),
+                                            ),
+                                          ),
+                                          Text(
+                                            _activite,
+                                            style: TextStyle(
+                                              fontSize: 10,
+                                              color: Colors.black.withValues(
+                                                alpha: 0.45,
+                                              ),
+                                            ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          _texteInfoDroite(_adresseSociete),
+                                          _texteInfoDroite(
+                                            '$_tvaSociete   $_rcSociete',
+                                          ),
+                                          _texteInfoDroite(_telSociete),
+                                        ],
+                                      ),
                                     ],
                                   ),
-                                );
-                                if (etroit) {
-                                  return Column(
-                                    children: [
-                                      blocFacture,
-                                      const SizedBox(height: 12),
-                                      blocClient,
-                                    ],
-                                  );
-                                }
-                                return Row(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Expanded(child: blocFacture),
-                                    const SizedBox(width: 12),
-                                    Expanded(child: blocClient),
-                                  ],
-                                );
-                              },
-                            ),
-                            const SizedBox(height: 20),
+                                const SizedBox(height: 18),
+                                Divider(
+                                  color: Colors.black.withValues(alpha: 0.1),
+                                ),
+                                const SizedBox(height: 14),
 
-                            // Tableau des articles, scrollable horizontalement
-                            // (référence, code barre, colisage, HT/remise/TVA/TTC).
-                            SingleChildScrollView(
-                              scrollDirection: Axis.horizontal,
-                              child: SizedBox(
-                                width: 760,
-                                child: Column(
-                                  children: [
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 10,
-                                        vertical: 9,
-                                      ),
+                                // Facture (N°, date) + client, côte à côte.
+                                LayoutBuilder(
+                                  builder: (context, constraints) {
+                                    final etroit = constraints.maxWidth < 480;
+                                    final blocFacture = Container(
+                                      width: double.infinity,
+                                      padding: const EdgeInsets.all(14),
                                       decoration: BoxDecoration(
-                                        gradient: LinearGradient(
-                                          colors: accent,
-                                        ),
-                                        borderRadius: BorderRadius.circular(8),
+                                        color: const Color(0xFFF7F8FA),
+                                        borderRadius: BorderRadius.circular(12),
                                       ),
-                                      child: const Row(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
-                                          _Cellule(
-                                            flex: 11,
-                                            texte: 'Référence',
-                                            style: _styleEntete,
+                                          ShaderMask(
+                                            shaderCallback: (bounds) =>
+                                                LinearGradient(colors: accent)
+                                                    .createShader(bounds),
+                                            child: const Text(
+                                              'FACTURE PROFORMA',
+                                              style: TextStyle(
+                                                fontSize: 15,
+                                                fontWeight: FontWeight.w800,
+                                                color: Colors.white,
+                                                letterSpacing: 0.4,
+                                              ),
+                                            ),
                                           ),
-                                          _Cellule(
-                                            flex: 14,
-                                            texte: 'Code Barre',
-                                            style: _styleEntete,
+                                          const SizedBox(height: 6),
+                                          _texteInfo('N° ${commande.id}'),
+                                          _texteInfo(
+                                            _formatDate(commande.date),
                                           ),
-                                          _Cellule(
-                                            flex: 24,
-                                            texte: 'Désignation',
-                                            style: _styleEntete,
-                                          ),
-                                          _Cellule(
-                                            flex: 6,
-                                            texte: 'Col.',
-                                            style: _styleEntete,
-                                          ),
-                                          _Cellule(
-                                            flex: 6,
-                                            texte: 'Qté',
-                                            style: _styleEntete,
-                                          ),
-                                          _Cellule(
-                                            flex: 9,
-                                            texte: 'P.U. HT',
-                                            style: _styleEntete,
-                                            droite: true,
-                                          ),
-                                          _Cellule(
-                                            flex: 8,
-                                            texte: 'Remise',
-                                            style: _styleEntete,
-                                            droite: true,
-                                          ),
-                                          _Cellule(
-                                            flex: 9,
-                                            texte: 'Mnt H.T',
-                                            style: _styleEntete,
-                                            droite: true,
-                                          ),
-                                          _Cellule(
-                                            flex: 6,
-                                            texte: 'TVA',
-                                            style: _styleEntete,
-                                            droite: true,
-                                          ),
-                                          _Cellule(
-                                            flex: 9,
-                                            texte: 'P.U. TTC',
-                                            style: _styleEntete,
-                                            droite: true,
+                                          const SizedBox(height: 2),
+                                          _texteInfo(
+                                            'Mode de prix : ${commande.modePrix.libelle}',
                                           ),
                                         ],
                                       ),
-                                    ),
-                                    for (final ligne in commande.lignes)
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 10,
-                                          vertical: 9,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          border: Border(
-                                            bottom: BorderSide(
-                                              color: Colors.black.withValues(
-                                                alpha: 0.06,
-                                              ),
+                                    );
+                                    final blocClient = Container(
+                                      width: double.infinity,
+                                      padding: const EdgeInsets.all(14),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFFF7F8FA),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          _labelPetit('CLIENT'),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            commande.clientNom,
+                                            style: const TextStyle(
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w700,
+                                              color: Color(0xFF1B3B5F),
                                             ),
                                           ),
+                                          if (client?.estSociete == true &&
+                                              client?.responsable != null)
+                                            _texteInfo(
+                                              'Responsable : ${client!.responsable}',
+                                            ),
+                                          if (client?.telephone != null)
+                                            _texteInfo(
+                                              'Tél : ${client!.telephone}',
+                                            ),
+                                          if (client?.adresse != null)
+                                            _texteInfo(client!.adresse!),
+                                          if (client?.matriculeFiscal != null)
+                                            _texteInfo(
+                                              'Matricule fiscal : ${client!.matriculeFiscal}',
+                                            ),
+                                          if (client?.cin != null)
+                                            _texteInfo('CIN : ${client!.cin}'),
+                                        ],
+                                      ),
+                                    );
+                                    if (etroit) {
+                                      return Column(
+                                        children: [
+                                          blocFacture,
+                                          const SizedBox(height: 12),
+                                          blocClient,
+                                        ],
+                                      );
+                                    }
+                                    return Row(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Expanded(child: blocFacture),
+                                        const SizedBox(width: 12),
+                                        Expanded(child: blocClient),
+                                      ],
+                                    );
+                                  },
+                                ),
+                                const SizedBox(height: 20),
+
+                                // Tableau des articles. Sur mobile, un tableau
+                                // large défilant horizontalement laisserait la
+                                // plupart des colonnes hors écran — on affiche
+                                // plutôt une carte empilée par article, tout
+                                // reste visible sans glisser latéralement.
+                                if (etroit)
+                                  Column(
+                                    children: [
+                                      for (final ligne in commande.lignes)
+                                        Container(
+                                          margin: const EdgeInsets.only(
+                                            bottom: 10,
+                                          ),
+                                          padding: const EdgeInsets.all(12),
+                                          decoration: BoxDecoration(
+                                            color: const Color(0xFFF7F8FA),
+                                            borderRadius: BorderRadius.circular(
+                                              10,
+                                            ),
+                                          ),
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                ligne.designation,
+                                                style: const TextStyle(
+                                                  fontSize: 13,
+                                                  fontWeight: FontWeight.w700,
+                                                  color: Color(0xFF1B3B5F),
+                                                ),
+                                              ),
+                                              const SizedBox(height: 4),
+                                              Text(
+                                                'Réf : ${ligne.codeArticle ?? '-'}   ·   '
+                                                'CB : ${ligne.codeBarre ?? '-'}'
+                                                '${ligne.colisage != null ? '   ·   Colisage : ${ligne.colisage}' : ''}',
+                                                style: TextStyle(
+                                                  fontSize: 10.5,
+                                                  color: Colors.black
+                                                      .withValues(alpha: 0.5),
+                                                ),
+                                              ),
+                                              const SizedBox(height: 8),
+                                              Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment
+                                                        .spaceBetween,
+                                                children: [
+                                                  Text(
+                                                    '${ligne.quantite} × ${_formatMontant(ligne.prixUnitaire)} DT HT'
+                                                    '${remisePourcent > 0 ? '  ·  -${remisePourcent.toStringAsFixed(0)}%' : ''}',
+                                                    style: TextStyle(
+                                                      fontSize: 11.5,
+                                                      color: Colors.black
+                                                          .withValues(
+                                                            alpha: 0.6,
+                                                          ),
+                                                    ),
+                                                  ),
+                                                  Text(
+                                                    'TVA ${(tauxTvaFacture * 100).toStringAsFixed(0)}%',
+                                                    style: TextStyle(
+                                                      fontSize: 11.5,
+                                                      color: Colors.black
+                                                          .withValues(
+                                                            alpha: 0.6,
+                                                          ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                              const SizedBox(height: 4),
+                                              Align(
+                                                alignment:
+                                                    Alignment.centerRight,
+                                                child: Text(
+                                                  '${_formatMontant(ligne.prixUnitaire * (1 - remisePourcent / 100) * (1 + tauxTvaFacture))} DT TTC',
+                                                  style: TextStyle(
+                                                    fontSize: 13,
+                                                    fontWeight: FontWeight.w800,
+                                                    color: accent.last,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
                                         ),
-                                        child: Row(
+                                    ],
+                                  )
+                                else
+                                  SingleChildScrollView(
+                                    scrollDirection: Axis.horizontal,
+                                    child: SizedBox(
+                                      width: 760,
+                                      child: Column(
+                                        children: [
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 10,
+                                              vertical: 9,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              gradient: LinearGradient(
+                                                colors: accent,
+                                              ),
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                            ),
+                                            child: const Row(
+                                              children: [
+                                                _Cellule(
+                                                  flex: 11,
+                                                  texte: 'Référence',
+                                                  style: _styleEntete,
+                                                ),
+                                                _Cellule(
+                                                  flex: 14,
+                                                  texte: 'Code Barre',
+                                                  style: _styleEntete,
+                                                ),
+                                                _Cellule(
+                                                  flex: 24,
+                                                  texte: 'Désignation',
+                                                  style: _styleEntete,
+                                                ),
+                                                _Cellule(
+                                                  flex: 6,
+                                                  texte: 'Col.',
+                                                  style: _styleEntete,
+                                                ),
+                                                _Cellule(
+                                                  flex: 6,
+                                                  texte: 'Qté',
+                                                  style: _styleEntete,
+                                                ),
+                                                _Cellule(
+                                                  flex: 9,
+                                                  texte: 'P.U. HT',
+                                                  style: _styleEntete,
+                                                  droite: true,
+                                                ),
+                                                _Cellule(
+                                                  flex: 8,
+                                                  texte: 'Remise',
+                                                  style: _styleEntete,
+                                                  droite: true,
+                                                ),
+                                                _Cellule(
+                                                  flex: 9,
+                                                  texte: 'Mnt H.T',
+                                                  style: _styleEntete,
+                                                  droite: true,
+                                                ),
+                                                _Cellule(
+                                                  flex: 6,
+                                                  texte: 'TVA',
+                                                  style: _styleEntete,
+                                                  droite: true,
+                                                ),
+                                                _Cellule(
+                                                  flex: 9,
+                                                  texte: 'P.U. TTC',
+                                                  style: _styleEntete,
+                                                  droite: true,
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                          for (final ligne in commande.lignes)
+                                            Container(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 10,
+                                                    vertical: 9,
+                                                  ),
+                                              decoration: BoxDecoration(
+                                                border: Border(
+                                                  bottom: BorderSide(
+                                                    color: Colors.black
+                                                        .withValues(
+                                                          alpha: 0.06,
+                                                        ),
+                                                  ),
+                                                ),
+                                              ),
+                                              child: Row(
+                                                children: [
+                                                  _Cellule(
+                                                    flex: 11,
+                                                    texte:
+                                                        ligne.codeArticle ??
+                                                        '-',
+                                                  ),
+                                                  _Cellule(
+                                                    flex: 14,
+                                                    texte:
+                                                        ligne.codeBarre ?? '-',
+                                                  ),
+                                                  _Cellule(
+                                                    flex: 24,
+                                                    texte: ligne.designation,
+                                                  ),
+                                                  _Cellule(
+                                                    flex: 6,
+                                                    texte:
+                                                        ligne.colisage != null
+                                                        ? '${ligne.colisage}'
+                                                        : '-',
+                                                  ),
+                                                  _Cellule(
+                                                    flex: 6,
+                                                    texte: '${ligne.quantite}',
+                                                  ),
+                                                  _Cellule(
+                                                    flex: 9,
+                                                    texte: _formatMontant(
+                                                      ligne.prixUnitaire,
+                                                    ),
+                                                    droite: true,
+                                                  ),
+                                                  _Cellule(
+                                                    flex: 8,
+                                                    texte:
+                                                        '${remisePourcent.toStringAsFixed(0)}%',
+                                                    droite: true,
+                                                  ),
+                                                  _Cellule(
+                                                    flex: 9,
+                                                    texte: _formatMontant(
+                                                      ligne.total *
+                                                          (1 -
+                                                              remisePourcent /
+                                                                  100),
+                                                    ),
+                                                    droite: true,
+                                                    gras: true,
+                                                    couleur: accent.last,
+                                                  ),
+                                                  _Cellule(
+                                                    flex: 6,
+                                                    texte:
+                                                        '${(tauxTvaFacture * 100).toStringAsFixed(0)}%',
+                                                    droite: true,
+                                                  ),
+                                                  _Cellule(
+                                                    flex: 9,
+                                                    texte: _formatMontant(
+                                                      ligne.prixUnitaire *
+                                                          (1 -
+                                                              remisePourcent /
+                                                                  100) *
+                                                          (1 + tauxTvaFacture),
+                                                    ),
+                                                    droite: true,
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                const SizedBox(height: 20),
+
+                                // Totaux.
+                                Align(
+                                  alignment: Alignment.centerRight,
+                                  child: Container(
+                                    width: 260,
+                                    padding: const EdgeInsets.all(16),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFF7F8FA),
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    child: Column(
+                                      children: [
+                                        _ligneTotal(
+                                          'TOTAL HT',
+                                          commande.totalHt,
+                                        ),
+                                        if (remisePourcent > 0)
+                                          _ligneTotal(
+                                            'REMISE (${remisePourcent.toStringAsFixed(0)}%)',
+                                            -commande.remiseMontant,
+                                          ),
+                                        _ligneTotal(
+                                          'TOTAL HT (NET)',
+                                          commande.totalHtNet,
+                                        ),
+                                        const SizedBox(height: 4),
+                                        _ligneTotal(
+                                          'T.V.A.',
+                                          commande.montantTva,
+                                        ),
+                                        const SizedBox(height: 6),
+                                        Divider(
+                                          color: Colors.black.withValues(
+                                            alpha: 0.08,
+                                          ),
+                                        ),
+                                        Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
                                           children: [
-                                            _Cellule(
-                                              flex: 11,
-                                              texte: ligne.codeArticle ?? '-',
-                                            ),
-                                            _Cellule(
-                                              flex: 14,
-                                              texte: ligne.codeBarre ?? '-',
-                                            ),
-                                            _Cellule(
-                                              flex: 24,
-                                              texte: ligne.designation,
-                                            ),
-                                            _Cellule(
-                                              flex: 6,
-                                              texte: ligne.colisage != null
-                                                  ? '${ligne.colisage}'
-                                                  : '-',
-                                            ),
-                                            _Cellule(
-                                              flex: 6,
-                                              texte: '${ligne.quantite}',
-                                            ),
-                                            _Cellule(
-                                              flex: 9,
-                                              texte: _formatMontant(
-                                                ligne.prixUnitaire,
+                                            const Text(
+                                              'TOTAL T.T.C.',
+                                              style: TextStyle(
+                                                fontSize: 13,
+                                                fontWeight: FontWeight.w700,
+                                                color: Color(0xFF1B3B5F),
                                               ),
-                                              droite: true,
                                             ),
-                                            _Cellule(
-                                              flex: 8,
-                                              texte:
-                                                  '${remisePourcent.toStringAsFixed(0)}%',
-                                              droite: true,
-                                            ),
-                                            _Cellule(
-                                              flex: 9,
-                                              texte: _formatMontant(
-                                                ligne.total *
-                                                    (1 - remisePourcent / 100),
+                                            Text(
+                                              '${_formatMontant(commande.totalTtc)} DT',
+                                              style: TextStyle(
+                                                fontSize: 19,
+                                                fontWeight: FontWeight.w800,
+                                                color: accent.last,
                                               ),
-                                              droite: true,
-                                              gras: true,
-                                              couleur: accent.last,
-                                            ),
-                                            _Cellule(
-                                              flex: 6,
-                                              texte:
-                                                  '${(tauxTvaFacture * 100).toStringAsFixed(0)}%',
-                                              droite: true,
-                                            ),
-                                            _Cellule(
-                                              flex: 9,
-                                              texte: _formatMontant(
-                                                ligne.prixUnitaire *
-                                                    (1 - remisePourcent / 100) *
-                                                    (1 + tauxTvaFacture),
-                                              ),
-                                              droite: true,
                                             ),
                                           ],
                                         ),
-                                      ),
-                                  ],
+                                      ],
+                                    ),
+                                  ),
                                 ),
-                              ),
-                            ),
-                            const SizedBox(height: 20),
+                                const SizedBox(height: 18),
 
-                            // Totaux.
-                            Align(
-                              alignment: Alignment.centerRight,
-                              child: Container(
-                                width: 260,
-                                padding: const EdgeInsets.all(16),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFF7F8FA),
-                                  borderRadius: BorderRadius.circular(10),
+                                // Montant en toutes lettres.
+                                Text(
+                                  'ARRETEE LA PRESENTE A LA SOMME DE :',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w700,
+                                    color: Colors.black.withValues(alpha: 0.55),
+                                  ),
                                 ),
-                                child: Column(
-                                  children: [
-                                    _ligneTotal('TOTAL HT', commande.totalHt),
-                                    if (remisePourcent > 0)
-                                      _ligneTotal(
-                                        'REMISE (${remisePourcent.toStringAsFixed(0)}%)',
-                                        -commande.remiseMontant,
-                                      ),
-                                    _ligneTotal(
-                                      'TOTAL HT (NET)',
-                                      commande.totalHtNet,
+                                const SizedBox(height: 3),
+                                Text(
+                                  montantEnLettres(commande.totalTtc),
+                                  style: TextStyle(
+                                    fontSize: 11.5,
+                                    color: Colors.black.withValues(alpha: 0.75),
+                                  ),
+                                ),
+
+                                if (commande.note != null &&
+                                    commande.note!.isNotEmpty) ...[
+                                  const SizedBox(height: 16),
+                                  Container(
+                                    width: double.infinity,
+                                    padding: const EdgeInsets.all(14),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFF7F8FA),
+                                      borderRadius: BorderRadius.circular(10),
                                     ),
-                                    const SizedBox(height: 4),
-                                    _ligneTotal('T.V.A.', commande.montantTva),
-                                    const SizedBox(height: 6),
-                                    Divider(
-                                      color: Colors.black.withValues(
-                                        alpha: 0.08,
-                                      ),
-                                    ),
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
-                                        const Text(
-                                          'TOTAL T.T.C.',
-                                          style: TextStyle(
-                                            fontSize: 13,
-                                            fontWeight: FontWeight.w700,
-                                            color: Color(0xFF1B3B5F),
-                                          ),
-                                        ),
+                                        _labelPetit('NOTE'),
+                                        const SizedBox(height: 6),
                                         Text(
-                                          '${_formatMontant(commande.totalTtc)} DT',
+                                          commande.note!,
                                           style: TextStyle(
-                                            fontSize: 19,
-                                            fontWeight: FontWeight.w800,
-                                            color: accent.last,
+                                            fontSize: 12.5,
+                                            color: Colors.black.withValues(
+                                              alpha: 0.65,
+                                            ),
                                           ),
                                         ),
                                       ],
                                     ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 18),
+                                  ),
+                                ],
+                                const SizedBox(height: 20),
 
-                            // Montant en toutes lettres.
-                            Text(
-                              'ARRETEE LA PRESENTE A LA SOMME DE :',
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w700,
-                                color: Colors.black.withValues(alpha: 0.55),
-                              ),
-                            ),
-                            const SizedBox(height: 3),
-                            Text(
-                              montantEnLettres(commande.totalTtc),
-                              style: TextStyle(
-                                fontSize: 11.5,
-                                color: Colors.black.withValues(alpha: 0.75),
-                              ),
-                            ),
-
-                            if (commande.note != null &&
-                                commande.note!.isNotEmpty) ...[
-                              const SizedBox(height: 16),
-                              Container(
-                                width: double.infinity,
-                                padding: const EdgeInsets.all(14),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFF7F8FA),
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: Column(
+                                // Cachet & signature.
+                                Row(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    _labelPetit('NOTE'),
-                                    const SizedBox(height: 6),
-                                    Text(
-                                      commande.note!,
-                                      style: TextStyle(
-                                        fontSize: 12.5,
-                                        color: Colors.black.withValues(
-                                          alpha: 0.65,
+                                    Expanded(
+                                      child: Container(
+                                        height: 70,
+                                        padding: const EdgeInsets.all(10),
+                                        decoration: BoxDecoration(
+                                          border: Border.all(
+                                            color: Colors.black.withValues(
+                                              alpha: 0.15,
+                                            ),
+                                          ),
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
+                                        ),
+                                        child: Text(
+                                          'CACHET & SIGNATURE',
+                                          style: TextStyle(
+                                            fontSize: 10.5,
+                                            color: Colors.black.withValues(
+                                              alpha: 0.4,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 16),
+                                    Expanded(
+                                      child: Container(
+                                        height: 70,
+                                        padding: const EdgeInsets.all(10),
+                                        decoration: BoxDecoration(
+                                          border: Border.all(
+                                            color: Colors.black.withValues(
+                                              alpha: 0.15,
+                                            ),
+                                          ),
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
+                                        ),
+                                        child: Text(
+                                          'CACHET & SIGNATURE CLIENT',
+                                          style: TextStyle(
+                                            fontSize: 10.5,
+                                            color: Colors.black.withValues(
+                                              alpha: 0.4,
+                                            ),
+                                          ),
                                         ),
                                       ),
                                     ),
                                   ],
                                 ),
-                              ),
-                            ],
-                            const SizedBox(height: 20),
-
-                            // Cachet & signature.
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Expanded(
-                                  child: Container(
-                                    height: 70,
-                                    padding: const EdgeInsets.all(10),
-                                    decoration: BoxDecoration(
-                                      border: Border.all(
-                                        color: Colors.black.withValues(
-                                          alpha: 0.15,
-                                        ),
-                                      ),
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: Text(
-                                      'CACHET & SIGNATURE',
-                                      style: TextStyle(
-                                        fontSize: 10.5,
-                                        color: Colors.black.withValues(
-                                          alpha: 0.4,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
+                                const SizedBox(height: 16),
+                                Divider(
+                                  color: Colors.black.withValues(alpha: 0.08),
                                 ),
-                                const SizedBox(width: 16),
-                                Expanded(
-                                  child: Container(
-                                    height: 70,
-                                    padding: const EdgeInsets.all(10),
-                                    decoration: BoxDecoration(
-                                      border: Border.all(
-                                        color: Colors.black.withValues(
-                                          alpha: 0.15,
-                                        ),
-                                      ),
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: Text(
-                                      'CACHET & SIGNATURE CLIENT',
-                                      style: TextStyle(
-                                        fontSize: 10.5,
-                                        color: Colors.black.withValues(
-                                          alpha: 0.4,
-                                        ),
+                                const SizedBox(height: 8),
+                                Center(
+                                  child: Text(
+                                    'Document proforma — sans valeur fiscale — Merci de votre confiance.',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      fontStyle: FontStyle.italic,
+                                      color: Colors.black.withValues(
+                                        alpha: 0.4,
                                       ),
                                     ),
                                   ),
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 16),
-                            Divider(
-                              color: Colors.black.withValues(alpha: 0.08),
-                            ),
-                            const SizedBox(height: 8),
-                            Center(
-                              child: Text(
-                                'Document proforma — sans valeur fiscale — Merci de votre confiance.',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  fontStyle: FontStyle.italic,
-                                  color: Colors.black.withValues(alpha: 0.4),
-                                ),
-                              ),
-                            ),
-                          ],
+                          ),
                         ),
                       ),
-                    ),
-                  ),
+                    );
+                  },
                 ),
               ),
             ],
@@ -731,6 +899,17 @@ class _FactureScreenState extends State<FactureScreen> {
     texte,
     textAlign: TextAlign.right,
     style: TextStyle(fontSize: 10, color: Colors.black.withValues(alpha: 0.55)),
+  );
+
+  Widget _texteInfoGauche(String texte) => Padding(
+    padding: const EdgeInsets.only(top: 1),
+    child: Text(
+      texte,
+      style: TextStyle(
+        fontSize: 10.5,
+        color: Colors.black.withValues(alpha: 0.55),
+      ),
+    ),
   );
 
   Widget _ligneTotal(String label, double valeur) => Padding(
