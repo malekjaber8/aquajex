@@ -85,15 +85,35 @@ class _ArticleFormScreenState extends State<ArticleFormScreen> {
     super.dispose();
   }
 
+  // Firestore refuse tout document dépassant 1 Mo ; l'image est stockée en
+  // base64 dans le document (~+33 % de taille), donc on refuse ici toute
+  // image brute au-delà de cette limite, avec une marge pour le reste des
+  // champs — sinon l'écriture échoue silencieusement côté serveur (voir
+  // CatalogueScreen._ecrireCatalogue).
+  static const _tailleImageMaxOctets = 700 * 1024;
+
   Future<void> _choisirImage() async {
     final resultat = await FilePicker.platform.pickFiles(
       type: FileType.image,
       withData: true,
     );
     final octets = resultat?.files.single.bytes;
-    if (octets != null) {
-      setState(() => _imageBytes = octets);
+    if (octets == null) return;
+    if (octets.length > _tailleImageMaxOctets) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Image trop volumineuse (${(octets.length / 1024).round()} Ko, '
+            'max ${(_tailleImageMaxOctets / 1024).round()} Ko) : choisis-en '
+            'une plus légère.',
+          ),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
     }
+    setState(() => _imageBytes = octets);
   }
 
   void _enregistrer() {

@@ -197,6 +197,29 @@ class _CatalogueScreenState extends State<CatalogueScreen> {
     _chargerGestion();
   }
 
+  /// Exécute une écriture catalogue (Firestore) et affiche l'erreur au lieu
+  /// de la laisser silencieuse. Sans ce filet : Firestore applique
+  /// l'écriture localement de façon optimiste (l'article/la famille
+  /// apparaît immédiatement dans les listes en flux), puis l'annule dès que
+  /// le serveur la rejette (droits insuffisants, document trop volumineux,
+  /// etc.) — ce qui donnait l'impression que "ça marche une seconde puis ça
+  /// disparaît", sans aucun message pour comprendre pourquoi.
+  Future<bool> _ecrireCatalogue(Future<void> Function() operation) async {
+    try {
+      await operation();
+      return true;
+    } catch (e) {
+      if (!mounted) return false;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Échec de l\'enregistrement : $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return false;
+    }
+  }
+
   // --- Familles ---
 
   Future<String?> _demanderNomFamille({String? nomInitial}) async {
@@ -259,7 +282,7 @@ class _CatalogueScreenState extends State<CatalogueScreen> {
           .showSnackBar(SnackBar(content: Text('"$nom" existe déjà')));
       return;
     }
-    await _repo.ajouterFamille(nom);
+    await _ecrireCatalogue(() => _repo.ajouterFamille(nom));
   }
 
   Future<void> _modifierFamille(String ancienNom) async {
@@ -276,8 +299,10 @@ class _CatalogueScreenState extends State<CatalogueScreen> {
           .showSnackBar(SnackBar(content: Text('"$nom" existe déjà')));
       return;
     }
-    await _repo.renommerFamille(ancienNom, nom);
-    if (_familleSelectionnee == ancienNom) {
+    final succes = await _ecrireCatalogue(
+      () => _repo.renommerFamille(ancienNom, nom),
+    );
+    if (succes && _familleSelectionnee == ancienNom) {
       setState(() => _familleSelectionnee = nom);
     }
   }
@@ -306,8 +331,8 @@ class _CatalogueScreenState extends State<CatalogueScreen> {
       ),
     );
     if (confirme == true) {
-      await _repo.supprimerFamille(nom);
-      if (_familleSelectionnee == nom) {
+      final succes = await _ecrireCatalogue(() => _repo.supprimerFamille(nom));
+      if (succes && _familleSelectionnee == nom) {
         setState(() => _familleSelectionnee = null);
       }
     }
@@ -327,7 +352,7 @@ class _CatalogueScreenState extends State<CatalogueScreen> {
       ),
     );
     if (resultat != null) {
-      await _repo.ajouterArticle(resultat);
+      await _ecrireCatalogue(() => _repo.ajouterArticle(resultat));
     }
   }
 
@@ -343,7 +368,7 @@ class _CatalogueScreenState extends State<CatalogueScreen> {
       ),
     );
     if (resultat != null) {
-      await _repo.modifierArticle(resultat);
+      await _ecrireCatalogue(() => _repo.modifierArticle(resultat));
     }
   }
 
@@ -366,7 +391,7 @@ class _CatalogueScreenState extends State<CatalogueScreen> {
       ),
     );
     if (confirme == true) {
-      await _repo.supprimerArticle(article.id);
+      await _ecrireCatalogue(() => _repo.supprimerArticle(article.id));
     }
   }
 
