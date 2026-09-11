@@ -217,8 +217,8 @@ class _ArticleCardState extends State<ArticleCard> {
                                     widget.article.codeArticle!,
                                     overflow: TextOverflow.ellipsis,
                                     style: TextStyle(
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w700,
+                                      fontSize: 12.5,
+                                      fontWeight: FontWeight.w800,
                                       color: accent.last,
                                       letterSpacing: 0.2,
                                     ),
@@ -232,10 +232,10 @@ class _ArticleCardState extends State<ArticleCard> {
                                     textAlign: TextAlign.end,
                                     overflow: TextOverflow.ellipsis,
                                     style: TextStyle(
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w600,
+                                      fontSize: 12.5,
+                                      fontWeight: FontWeight.w800,
                                       color: Colors.black.withValues(
-                                        alpha: 0.4,
+                                        alpha: 0.7,
                                       ),
                                     ),
                                   ),
@@ -248,9 +248,9 @@ class _ArticleCardState extends State<ArticleCard> {
                         Text(
                           'Colisage : ${widget.article.colisage}',
                           style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.black.withValues(alpha: 0.4),
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.black.withValues(alpha: 0.7),
                           ),
                         ),
                       const SizedBox(height: 6),
