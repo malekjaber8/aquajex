@@ -205,26 +205,55 @@ class _ArticleCardState extends State<ArticleCard> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 3,
-                        ),
-                        decoration: BoxDecoration(
-                          color: accent.last.withValues(alpha: 0.10),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text(
-                          widget.article.categorie,
-                          style: TextStyle(
-                            fontSize: 10.5,
-                            fontWeight: FontWeight.w700,
-                            color: accent.last,
-                            letterSpacing: 0.3,
+                      if (widget.article.codeArticle != null ||
+                          widget.article.codeBarre != null)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 2),
+                          child: Row(
+                            children: [
+                              if (widget.article.codeArticle != null)
+                                Flexible(
+                                  child: Text(
+                                    widget.article.codeArticle!,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w700,
+                                      color: accent.last,
+                                      letterSpacing: 0.2,
+                                    ),
+                                  ),
+                                ),
+                              if (widget.article.codeBarre != null) ...[
+                                const Spacer(),
+                                Flexible(
+                                  child: Text(
+                                    widget.article.codeBarre!,
+                                    textAlign: TextAlign.end,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.black.withValues(
+                                        alpha: 0.4,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ],
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 8),
+                      if (widget.article.colisage != null)
+                        Text(
+                          'Colisage : ${widget.article.colisage}',
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black.withValues(alpha: 0.4),
+                          ),
+                        ),
+                      const SizedBox(height: 6),
                       Text(
                         widget.article.designation,
                         maxLines: 2,
