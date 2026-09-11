@@ -125,6 +125,7 @@ class GestionRepository {
     'lignes': jsonEncode(c.lignes.map((l) => l.versJson()).toList()),
     'note': c.note,
     'remise_pourcent': c.remisePourcent,
+    'statut': c.statut.name,
   };
 
   Commande _versCommande(Map<String, Object?> r) => Commande(
@@ -138,6 +139,7 @@ class GestionRepository {
         .toList(),
     note: r['note'] as String?,
     remisePourcent: (r['remise_pourcent'] as num?)?.toDouble() ?? 0,
+    statut: StatutCommande.depuisNom(r['statut'] as String?),
   );
 
   // --- Notes ---
@@ -226,6 +228,7 @@ class GestionRepository {
               'lignes': c.lignes.map((l) => l.versJson()).toList(),
               'note': c.note,
               'remisePourcent': c.remisePourcent,
+              'statut': c.statut.name,
             },
           )
           .toList(),
@@ -267,6 +270,7 @@ class GestionRepository {
           'lignes': jsonEncode(m['lignes']),
           'note': m['note'],
           'remise_pourcent': m['remisePourcent'] ?? 0,
+          'statut': m['statut'] ?? 'enAttente',
         });
       }
     });

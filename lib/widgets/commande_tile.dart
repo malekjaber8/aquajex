@@ -8,6 +8,7 @@ class CommandeTile extends StatelessWidget {
   final VoidCallback? onTap;
   final VoidCallback? onEdit;
   final VoidCallback? onDelete;
+  final ValueChanged<StatutCommande>? onChangerStatut;
 
   const CommandeTile({
     super.key,
@@ -16,6 +17,7 @@ class CommandeTile extends StatelessWidget {
     this.onTap,
     this.onEdit,
     this.onDelete,
+    this.onChangerStatut,
   });
 
   String _formatMontant(double montant) {
@@ -94,6 +96,11 @@ class CommandeTile extends StatelessWidget {
                           ),
                         ),
                       ),
+                      const SizedBox(height: 7),
+                      _StatutBadge(
+                        statut: commande.statut,
+                        onChanger: onChangerStatut,
+                      ),
                     ],
                   ),
                 ),
@@ -118,6 +125,77 @@ class CommandeTile extends StatelessWidget {
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Badge coloré affichant le statut de la commande, tapable pour le
+/// changer (en attente / confirmée / livrée) sans passer par l'écran
+/// d'édition complet.
+class _StatutBadge extends StatelessWidget {
+  final StatutCommande statut;
+  final ValueChanged<StatutCommande>? onChanger;
+
+  const _StatutBadge({required this.statut, this.onChanger});
+
+  @override
+  Widget build(BuildContext context) {
+    return PopupMenuButton<StatutCommande>(
+      initialValue: statut,
+      tooltip: 'Changer le statut',
+      onSelected: onChanger,
+      itemBuilder: (context) => [
+        for (final s in StatutCommande.values)
+          PopupMenuItem(
+            value: s,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: s.couleur,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(s.libelle),
+              ],
+            ),
+          ),
+      ],
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        decoration: BoxDecoration(
+          color: statut.couleur.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 7,
+              height: 7,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: statut.couleur,
+              ),
+            ),
+            const SizedBox(width: 6),
+            Text(
+              statut.libelle,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                color: statut.couleur,
+              ),
+            ),
+            const SizedBox(width: 2),
+            Icon(Icons.keyboard_arrow_down, size: 13, color: statut.couleur),
+          ],
         ),
       ),
     );

@@ -1,7 +1,46 @@
+import 'package:flutter/material.dart';
+
 import 'mode_prix.dart';
 
 /// Taux de TVA appliqué aux factures (19%, taux standard en Tunisie).
 const double tauxTvaFacture = 0.19;
+
+/// Statut de suivi d'une commande/facture, modifiable après sa création
+/// (depuis la liste des commandes).
+enum StatutCommande {
+  enAttente,
+  confirmee,
+  livree;
+
+  static StatutCommande depuisNom(String? nom) {
+    return StatutCommande.values.firstWhere(
+      (s) => s.name == nom,
+      orElse: () => StatutCommande.enAttente,
+    );
+  }
+
+  String get libelle {
+    switch (this) {
+      case StatutCommande.enAttente:
+        return 'En attente';
+      case StatutCommande.confirmee:
+        return 'Confirmée';
+      case StatutCommande.livree:
+        return 'Livrée';
+    }
+  }
+
+  Color get couleur {
+    switch (this) {
+      case StatutCommande.enAttente:
+        return const Color(0xFFC9A24B);
+      case StatutCommande.confirmee:
+        return const Color(0xFF2C8FA0);
+      case StatutCommande.livree:
+        return const Color(0xFF2FAE60);
+    }
+  }
+}
 
 class LigneCommande {
   final String articleId;
@@ -67,6 +106,8 @@ class Commande {
   /// Remise globale (en %) appliquée sur le total HT de la facture.
   final double remisePourcent;
 
+  final StatutCommande statut;
+
   const Commande({
     required this.id,
     required this.clientId,
@@ -76,6 +117,7 @@ class Commande {
     required this.lignes,
     this.note,
     this.remisePourcent = 0,
+    this.statut = StatutCommande.enAttente,
   });
 
   /// Total HT avant remise (prix unitaires × quantités).
@@ -101,6 +143,7 @@ class Commande {
     String? note,
     bool effacerNote = false,
     double? remisePourcent,
+    StatutCommande? statut,
   }) => Commande(
     id: id,
     clientId: clientId ?? this.clientId,
@@ -110,5 +153,6 @@ class Commande {
     lignes: lignes ?? this.lignes,
     note: effacerNote ? null : (note ?? this.note),
     remisePourcent: remisePourcent ?? this.remisePourcent,
+    statut: statut ?? this.statut,
   );
 }

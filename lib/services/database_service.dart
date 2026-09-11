@@ -81,7 +81,7 @@ class DatabaseService {
 
     return openDatabase(
       chemin,
-      version: 6,
+      version: 7,
       onCreate: (db, version) async {
         await _creerTablesCatalogue(db);
         await _creerTablesGestion(db);
@@ -113,6 +113,14 @@ class DatabaseService {
             "TEXT NOT NULL DEFAULT 'particulier'",
           );
           await _ajouterColonneSiAbsente(db, 'clients', 'responsable', 'TEXT');
+        }
+        if (ancienneVersion < 7) {
+          await _ajouterColonneSiAbsente(
+            db,
+            'commandes',
+            'statut',
+            "TEXT NOT NULL DEFAULT 'enAttente'",
+          );
         }
       },
     );
@@ -190,7 +198,8 @@ class DatabaseService {
         mode_prix TEXT NOT NULL,
         lignes TEXT NOT NULL,
         note TEXT,
-        remise_pourcent REAL NOT NULL DEFAULT 0
+        remise_pourcent REAL NOT NULL DEFAULT 0,
+        statut TEXT NOT NULL DEFAULT 'enAttente'
       )
     ''');
   }

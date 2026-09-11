@@ -14,6 +14,7 @@ class CommandesSection extends StatelessWidget {
   final List<Client> clients;
   final ValueChanged<Commande> onEdit;
   final ValueChanged<Commande> onDelete;
+  final void Function(Commande commande, StatutCommande statut) onChangerStatut;
   final String recherche;
   final ValueChanged<String> onRechercheChanged;
 
@@ -24,6 +25,7 @@ class CommandesSection extends StatelessWidget {
     required this.clients,
     required this.onEdit,
     required this.onDelete,
+    required this.onChangerStatut,
     required this.recherche,
     required this.onRechercheChanged,
   });
@@ -102,6 +104,8 @@ class CommandesSection extends StatelessWidget {
                       ),
                       onEdit: () => onEdit(commande),
                       onDelete: () => onDelete(commande),
+                      onChangerStatut: (statut) =>
+                          onChangerStatut(commande, statut),
                     );
                   },
                 ),

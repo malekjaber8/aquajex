@@ -588,6 +588,34 @@ class _CatalogueScreenState extends State<CatalogueScreen> {
     }
   }
 
+  Future<void> _changerStatutCommande(
+    Commande commande,
+    StatutCommande statut,
+  ) async {
+    final misAJour = commande.copyWith(statut: statut);
+    setState(() {
+      _commandes = [
+        for (final c in _commandes) c.id == commande.id ? misAJour : c,
+      ];
+    });
+    try {
+      await _gestionRepo.modifierCommande(misAJour);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _commandes = [
+          for (final c in _commandes) c.id == commande.id ? commande : c,
+        ];
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Échec de la mise à jour du statut : $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
   // --- Notes ---
 
   Future<void> _ajouterNote() async {
@@ -762,6 +790,7 @@ class _CatalogueScreenState extends State<CatalogueScreen> {
             clients: _clients,
             onEdit: _modifierCommande,
             onDelete: _supprimerCommande,
+            onChangerStatut: _changerStatutCommande,
             recherche: _rechercheCommande,
             onRechercheChanged: (v) => setState(() => _rechercheCommande = v),
           );
