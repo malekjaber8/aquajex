@@ -35,24 +35,29 @@ class SidebarNav extends StatelessWidget {
       ),
       child: SafeArea(
         right: false,
-        child: Column(
-          children: [
-            const SizedBox(height: 24),
-            for (int i = 0; i < items.length; i++)
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 7,
+        // Défile plutôt que déborder quand la fenêtre est trop courte pour
+        // afficher tous les éléments (ex. après l'ajout d'une rubrique) —
+        // sans ça, les derniers éléments pouvaient être coupés/inaccessibles.
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              const SizedBox(height: 24),
+              for (int i = 0; i < items.length; i++)
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 7,
+                  ),
+                  child: _SidebarButton(
+                    item: items[i],
+                    selected: i == selectedIndex,
+                    enabled: enabled?.call(i) ?? true,
+                    accent: accent,
+                    onTap: () => onSelect(i),
+                  ),
                 ),
-                child: _SidebarButton(
-                  item: items[i],
-                  selected: i == selectedIndex,
-                  enabled: enabled?.call(i) ?? true,
-                  accent: accent,
-                  onTap: () => onSelect(i),
-                ),
-              ),
-          ],
+            ],
+          ),
         ),
       ),
     );

@@ -70,17 +70,23 @@ class _AuthGateState extends State<AuthGate> {
         // puis, un instant après, l'utilisateur restauré. Ne consommer ce
         // garde-fou que sur le premier événement où un utilisateur est
         // effectivement présent (peu importe son rang dans le flux) permet
-        // de forcer la déconnexion de session restaurée à coup sûr, sans
-        // jamais redéconnecter un utilisateur qui vient de se connecter
-        // volontairement via l'écran de connexion.
+        // de forcer la déconnexion de session restaurée à coup sûr. On ne le
+        // fait toutefois que si `connexionManuelleDemandee` est encore
+        // faux : sur un appareil sans session restaurée, ce premier
+        // événement non-nul est celui de la connexion volontaire de
+        // l'utilisateur lui-même (pas une restauration), et le
+        // redéconnecter à ce moment-là le renvoyait en boucle à l'écran de
+        // connexion malgré des identifiants corrects.
         if (!_premierEtatTraite && utilisateur != null) {
           _premierEtatTraite = true;
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            AuthService.deconnecter();
-          });
-          return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
-          );
+          if (!AuthService.connexionManuelleDemandee) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              AuthService.deconnecter();
+            });
+            return const Scaffold(
+              body: Center(child: CircularProgressIndicator()),
+            );
+          }
         }
 
         if (utilisateur == null) {

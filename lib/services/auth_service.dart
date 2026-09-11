@@ -48,7 +48,14 @@ class AuthService {
   static String _versEmail(String nomUtilisateur) =>
       '${nomUtilisateur.trim().toLowerCase()}$_domaine';
 
+  /// Vrai dès que l'utilisateur a lui-même déclenché une connexion depuis
+  /// l'écran de connexion — sert à AuthGate à distinguer une connexion
+  /// volontaire d'une session restaurée automatiquement par Firebase au
+  /// démarrage (la seule qu'on veuille forcer à se déconnecter).
+  static bool connexionManuelleDemandee = false;
+
   static Future<void> connecter(String nomUtilisateur, String motDePasse) {
+    connexionManuelleDemandee = true;
     return _auth.signInWithEmailAndPassword(
       email: _versEmail(nomUtilisateur),
       password: motDePasse,
