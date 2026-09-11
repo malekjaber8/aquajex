@@ -870,6 +870,11 @@ class _CatalogueScreenState extends State<CatalogueScreen> {
                   selectedIndex: _selectedIndex,
                   onSelect: (i) => setState(() => _selectedIndex = i),
                   accent: accent,
+                  primaryIndices: const [
+                    _indexCatalogue,
+                    _indexClients,
+                    _indexCommandes,
+                  ],
                 )
               : null,
           floatingActionButton: _fabVisible

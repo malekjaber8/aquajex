@@ -123,12 +123,18 @@ class _SidebarButton extends StatelessWidget {
 
 /// Barre de navigation basse (mobile), équivalent de [SidebarNav] pour les
 /// petits écrans.
+///
+/// Si [primaryIndices] est fourni, seuls ces éléments sont affichés
+/// directement ; les autres sont regroupés derrière un bouton "Plus" qui
+/// ouvre une feuille de sélection — évite une barre trop encombrée quand
+/// il y a beaucoup de rubriques.
 class BottomNav extends StatelessWidget {
   final List<SidebarItem> items;
   final int selectedIndex;
   final ValueChanged<int> onSelect;
   final List<Color> accent;
   final bool Function(int index)? enabled;
+  final List<int>? primaryIndices;
 
   const BottomNav({
     super.key,
@@ -137,10 +143,19 @@ class BottomNav extends StatelessWidget {
     required this.onSelect,
     required this.accent,
     this.enabled,
+    this.primaryIndices,
   });
 
   @override
   Widget build(BuildContext context) {
+    final indicesPrincipaux =
+        primaryIndices ?? [for (int i = 0; i < items.length; i++) i];
+    final indicesRestants = [
+      for (int i = 0; i < items.length; i++)
+        if (!indicesPrincipaux.contains(i)) i,
+    ];
+    final plusActif = indicesRestants.contains(selectedIndex);
+
     return DecoratedBox(
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.92),
@@ -154,42 +169,123 @@ class BottomNav extends StatelessWidget {
           height: 62,
           child: Row(
             children: [
-              for (int i = 0; i < items.length; i++)
+              for (final i in indicesPrincipaux)
                 Expanded(
-                  child: Builder(
-                    builder: (context) {
-                      final actif = enabled?.call(i) ?? true;
-                      final couleur = i == selectedIndex
-                          ? accent.last
-                          : actif
-                          ? const Color(0xFF6B7A8D)
-                          : const Color(0xFF6B7A8D).withValues(alpha: 0.35);
-                      return InkWell(
-                        onTap: actif ? () => onSelect(i) : null,
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(items[i].icon, size: 22, color: couleur),
-                            const SizedBox(height: 3),
-                            Text(
-                              items[i].label,
-                              style: TextStyle(
-                                fontSize: 10.5,
-                                fontWeight: i == selectedIndex
-                                    ? FontWeight.w700
-                                    : FontWeight.w500,
-                                color: couleur,
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
+                  child: _BottomNavButton(
+                    item: items[i],
+                    selected: i == selectedIndex,
+                    actif: enabled?.call(i) ?? true,
+                    accent: accent,
+                    onTap: () => onSelect(i),
+                  ),
+                ),
+              if (indicesRestants.isNotEmpty)
+                Expanded(
+                  child: _BottomNavButton(
+                    item: const SidebarItem(
+                      icon: Icons.more_horiz_rounded,
+                      label: 'Plus',
+                    ),
+                    selected: plusActif,
+                    actif: true,
+                    accent: accent,
+                    onTap: () => _ouvrirPlus(context, indicesRestants),
                   ),
                 ),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  void _ouvrirPlus(BuildContext context, List<int> indicesRestants) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              for (final i in indicesRestants)
+                Builder(
+                  builder: (context) {
+                    final actif = enabled?.call(i) ?? true;
+                    final couleur = i == selectedIndex
+                        ? accent.last
+                        : actif
+                        ? const Color(0xFF1B3B5F)
+                        : const Color(0xFF1B3B5F).withValues(alpha: 0.35);
+                    return ListTile(
+                      enabled: actif,
+                      leading: Icon(items[i].icon, color: couleur),
+                      title: Text(
+                        items[i].label,
+                        style: TextStyle(
+                          fontWeight: i == selectedIndex
+                              ? FontWeight.w700
+                              : FontWeight.w500,
+                          color: couleur,
+                        ),
+                      ),
+                      onTap: () {
+                        Navigator.of(context).pop();
+                        onSelect(i);
+                      },
+                    );
+                  },
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _BottomNavButton extends StatelessWidget {
+  final SidebarItem item;
+  final bool selected;
+  final bool actif;
+  final List<Color> accent;
+  final VoidCallback onTap;
+
+  const _BottomNavButton({
+    required this.item,
+    required this.selected,
+    required this.actif,
+    required this.accent,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final couleur = selected
+        ? accent.last
+        : actif
+        ? const Color(0xFF6B7A8D)
+        : const Color(0xFF6B7A8D).withValues(alpha: 0.35);
+    return InkWell(
+      onTap: actif ? onTap : null,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(item.icon, size: 22, color: couleur),
+          const SizedBox(height: 3),
+          Text(
+            item.label,
+            style: TextStyle(
+              fontSize: 10.5,
+              fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+              color: couleur,
+            ),
+          ),
+        ],
       ),
     );
   }
