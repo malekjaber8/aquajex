@@ -501,14 +501,14 @@ class _ArticleFormScreenState extends State<ArticleFormScreen> {
         value: _disponible,
         onChanged: (v) => setState(() => _disponible = v),
         activeThumbColor: accent.last,
-        title: const Text(
-          'Disponible',
-          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+        title: Text(
+          _disponible ? 'En stock' : 'Rupture de stock',
+          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
         ),
         subtitle: Text(
           _disponible
               ? 'Visible comme disponible dans le catalogue'
-              : 'Affiché comme indisponible (grisé)',
+              : 'Affiché comme en rupture (grisé) dans le catalogue',
           style: TextStyle(
             fontSize: 11.5,
             color: Colors.black.withValues(alpha: 0.45),

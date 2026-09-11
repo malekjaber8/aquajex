@@ -86,6 +86,28 @@ class CatalogueRepository {
         });
   }
 
+  /// Flux en direct (tous tarifs confondus) de tous les articles, sans
+  /// filtre de statut — utilisé par la rubrique Gestion de stock, qui
+  /// filtre ensuite localement par disponibilité (en stock / rupture).
+  static Stream<List<ArticleAvecTarif>> streamTousArticles() {
+    return FirebaseFirestore.instance.collection('articles').snapshots().map((
+      snap,
+    ) {
+      final resultats = snap.docs.map((d) {
+        final data = {...d.data(), 'id': d.id};
+        final tarif = Tarif.values.firstWhere(
+          (t) => t.name == data['tarif'],
+          orElse: () => Tarif.aquajex,
+        );
+        return ArticleAvecTarif(article: _versArticle(data), tarif: tarif);
+      }).toList();
+      resultats.sort(
+        (a, b) => a.article.designation.compareTo(b.article.designation),
+      );
+      return resultats;
+    });
+  }
+
   String _idFamille(String nom) => '${_tarifKey}__$nom';
 
   Future<void> ajouterFamille(String nom) async {

@@ -7,6 +7,7 @@ import '../models/mode_prix.dart';
 import '../models/tarif.dart';
 import '../services/catalogue_repository.dart';
 import '../widgets/decorative_background.dart';
+import '../widgets/gestion_stock_view.dart';
 import '../widgets/sidebar_nav.dart';
 import '../widgets/statut_articles_view.dart';
 import 'catalogue_screen.dart';
@@ -16,6 +17,7 @@ const _navItems = [
   SidebarItem(icon: Icons.grid_view_rounded, label: 'Catalogue'),
   SidebarItem(icon: Icons.local_offer_outlined, label: 'Promotion'),
   SidebarItem(icon: Icons.auto_awesome_outlined, label: 'Nouveauté'),
+  SidebarItem(icon: Icons.inventory_outlined, label: 'Stock'),
   SidebarItem(icon: Icons.people_outline, label: 'Clients'),
   SidebarItem(icon: Icons.request_quote_outlined, label: 'Commandes'),
   SidebarItem(icon: Icons.sticky_note_2_outlined, label: 'Notes'),
@@ -24,6 +26,7 @@ const _navItems = [
 const _indexCatalogue = 0;
 const _indexPromotion = 1;
 const _indexNouveaute = 2;
+const _indexStock = 3;
 
 class TarifSelectionScreen extends StatefulWidget {
   final bool isAdmin;
@@ -40,14 +43,16 @@ class _TarifSelectionScreenState extends State<TarifSelectionScreen> {
 
   List<ArticleAvecTarif> _articlesPromo = [];
   List<ArticleAvecTarif> _articlesNouveaute = [];
+  List<ArticleAvecTarif> _articlesTous = [];
   StreamSubscription<List<ArticleAvecTarif>>? _promoSub;
   StreamSubscription<List<ArticleAvecTarif>>? _nouveauteSub;
+  StreamSubscription<List<ArticleAvecTarif>>? _tousSub;
 
   @override
   void initState() {
     super.initState();
     // Mélange les deux catalogues (Aquajex + Les Cinq Frères) pour les
-    // rubriques Promotion/Nouveauté du menu latéral.
+    // rubriques Promotion/Nouveauté/Stock du menu latéral.
     _promoSub = CatalogueRepository.streamArticlesParStatut(StatutArticle.promo)
         .listen((articles) {
           if (!mounted) return;
@@ -59,12 +64,17 @@ class _TarifSelectionScreenState extends State<TarifSelectionScreen> {
               if (!mounted) return;
               setState(() => _articlesNouveaute = articles);
             }, onError: (_) {});
+    _tousSub = CatalogueRepository.streamTousArticles().listen((articles) {
+      if (!mounted) return;
+      setState(() => _articlesTous = articles);
+    }, onError: (_) {});
   }
 
   @override
   void dispose() {
     _promoSub?.cancel();
     _nouveauteSub?.cancel();
+    _tousSub?.cancel();
     super.dispose();
   }
 
@@ -291,6 +301,13 @@ class _TarifSelectionScreenState extends State<TarifSelectionScreen> {
               _articlesNouveaute,
             );
             break;
+          case _indexStock:
+            corpsPrincipal = GestionStockView(
+              articles: _articlesTous,
+              modePrix: _modePrix,
+              onTapArticle: (data) => _ouvrirCatalogue(data.tarif),
+            );
+            break;
           default:
             corpsPrincipal = _buildContenuCatalogue();
         }
@@ -330,7 +347,8 @@ class _TarifSelectionScreenState extends State<TarifSelectionScreen> {
                         enabled: (i) =>
                             i == _indexCatalogue ||
                             i == _indexPromotion ||
-                            i == _indexNouveaute,
+                            i == _indexNouveaute ||
+                            i == _indexStock,
                       ),
                       Expanded(child: contenu),
                     ],
@@ -345,7 +363,8 @@ class _TarifSelectionScreenState extends State<TarifSelectionScreen> {
                   enabled: (i) =>
                       i == _indexCatalogue ||
                       i == _indexPromotion ||
-                      i == _indexNouveaute,
+                      i == _indexNouveaute ||
+                      i == _indexStock,
                 )
               : null,
         );

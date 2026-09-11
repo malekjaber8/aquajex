@@ -13,6 +13,7 @@ import '../services/catalogue_repository.dart';
 import '../services/gestion_repository.dart';
 import '../widgets/commande_edit_sheet.dart';
 import '../widgets/decorative_background.dart';
+import '../widgets/gestion_stock_view.dart';
 import '../widgets/panier_sheet.dart';
 import '../widgets/sidebar_nav.dart';
 import '../widgets/statut_articles_view.dart';
@@ -66,16 +67,19 @@ class _CatalogueScreenState extends State<CatalogueScreen> {
 
   List<ArticleAvecTarif> _articlesPromo = [];
   List<ArticleAvecTarif> _articlesNouveaute = [];
+  List<ArticleAvecTarif> _articlesTous = [];
 
   StreamSubscription<List<String>>? _famillesSub;
   StreamSubscription<List<Article>>? _articlesSub;
   StreamSubscription<List<ArticleAvecTarif>>? _promoSub;
   StreamSubscription<List<ArticleAvecTarif>>? _nouveauteSub;
+  StreamSubscription<List<ArticleAvecTarif>>? _tousSub;
 
   static const _items = [
     SidebarItem(icon: Icons.grid_view_rounded, label: 'Catalogue'),
     SidebarItem(icon: Icons.local_offer_outlined, label: 'Promotion'),
     SidebarItem(icon: Icons.auto_awesome_outlined, label: 'Nouveauté'),
+    SidebarItem(icon: Icons.inventory_outlined, label: 'Stock'),
     SidebarItem(icon: Icons.people_outline, label: 'Clients'),
     SidebarItem(icon: Icons.request_quote_outlined, label: 'Commandes'),
     SidebarItem(icon: Icons.sticky_note_2_outlined, label: 'Notes'),
@@ -84,9 +88,10 @@ class _CatalogueScreenState extends State<CatalogueScreen> {
   static const _indexCatalogue = 0;
   static const _indexPromotion = 1;
   static const _indexNouveaute = 2;
-  static const _indexClients = 3;
-  static const _indexCommandes = 4;
-  static const _indexNotes = 5;
+  static const _indexStock = 3;
+  static const _indexClients = 4;
+  static const _indexCommandes = 5;
+  static const _indexNotes = 6;
 
   @override
   void initState() {
@@ -117,7 +122,8 @@ class _CatalogueScreenState extends State<CatalogueScreen> {
       });
     }, onError: (_) {});
     // Mélange les deux catalogues (Aquajex + Les Cinq Frères) pour les
-    // rubriques Promotion/Nouveauté, identiques à celles de la page d'accueil.
+    // rubriques Promotion/Nouveauté/Stock, identiques à celles de la page
+    // d'accueil.
     _promoSub = CatalogueRepository.streamArticlesParStatut(StatutArticle.promo)
         .listen((articles) {
           if (!mounted) return;
@@ -129,6 +135,10 @@ class _CatalogueScreenState extends State<CatalogueScreen> {
               if (!mounted) return;
               setState(() => _articlesNouveaute = articles);
             }, onError: (_) {});
+    _tousSub = CatalogueRepository.streamTousArticles().listen((articles) {
+      if (!mounted) return;
+      setState(() => _articlesTous = articles);
+    }, onError: (_) {});
   }
 
   @override
@@ -137,6 +147,7 @@ class _CatalogueScreenState extends State<CatalogueScreen> {
     _articlesSub?.cancel();
     _promoSub?.cancel();
     _nouveauteSub?.cancel();
+    _tousSub?.cancel();
     super.dispose();
   }
 
@@ -697,6 +708,13 @@ class _CatalogueScreenState extends State<CatalogueScreen> {
           body = StatutArticlesView(
             statut: StatutArticle.nouveaute,
             articles: _articlesNouveaute,
+            modePrix: widget.modePrix,
+            onTapArticle: (data) => _ouvrirCatalogueTarif(data.tarif),
+          );
+          break;
+        case _indexStock:
+          body = GestionStockView(
+            articles: _articlesTous,
             modePrix: widget.modePrix,
             onTapArticle: (data) => _ouvrirCatalogueTarif(data.tarif),
           );
