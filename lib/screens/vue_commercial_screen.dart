@@ -8,6 +8,7 @@ import '../services/auth_service.dart';
 import '../services/gestion_repository.dart';
 import '../widgets/decorative_background.dart';
 import '../widgets/section_placeholder.dart';
+import 'facture_screen.dart';
 
 const _accent = [Color(0xFF1B3B5F), Color(0xFFC9A24B)];
 
@@ -70,6 +71,13 @@ class _VueCommercialScreenState extends State<VueCommercialScreen> {
         _chargement = false;
       });
     }
+  }
+
+  Client? _clientPour(Commande commande) {
+    for (final c in _clients) {
+      if (c.id == commande.clientId) return c;
+    }
+    return null;
   }
 
   void _changerTarif(Tarif tarif) {
@@ -304,6 +312,15 @@ class _VueCommercialScreenState extends State<VueCommercialScreen> {
       itemBuilder: (context, i) {
         final commande = _commandes[i];
         return _Carte(
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => FactureScreen(
+                commande: commande,
+                client: _clientPour(commande),
+                tarif: _tarif,
+              ),
+            ),
+          ),
           child: Row(
             children: [
               Container(
@@ -432,14 +449,14 @@ class _VueCommercialScreenState extends State<VueCommercialScreen> {
 
 class _Carte extends StatelessWidget {
   final Widget child;
+  final VoidCallback? onTap;
 
-  const _Carte({required this.child});
+  const _Carte({required this.child, this.onTap});
 
   @override
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
@@ -451,7 +468,14 @@ class _Carte extends StatelessWidget {
           ),
         ],
       ),
-      child: child,
+      clipBehavior: Clip.antiAlias,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          child: Padding(padding: const EdgeInsets.all(14), child: child),
+        ),
+      ),
     );
   }
 }
