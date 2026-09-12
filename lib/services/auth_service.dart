@@ -141,6 +141,28 @@ class AuthService {
     }
   }
 
+  /// Change le mot de passe du compte actuellement connecté.
+  ///
+  /// Firebase exige une connexion "récente" pour une opération aussi
+  /// sensible : on ré-authentifie donc explicitement avec le mot de passe
+  /// actuel avant d'appliquer le nouveau (sert aussi à vérifier que c'est
+  /// bien le propriétaire du compte qui fait la demande).
+  static Future<void> changerMotDePasse({
+    required String motDePasseActuel,
+    required String nouveauMotDePasse,
+  }) async {
+    final utilisateur = _auth.currentUser;
+    if (utilisateur == null || utilisateur.email == null) {
+      throw StateError('Aucun utilisateur connecté.');
+    }
+    final identifiants = EmailAuthProvider.credential(
+      email: utilisateur.email!,
+      password: motDePasseActuel,
+    );
+    await utilisateur.reauthenticateWithCredential(identifiants);
+    await utilisateur.updatePassword(nouveauMotDePasse);
+  }
+
   /// Traduit une exception Firebase Auth en message compréhensible en
   /// français pour l'utilisateur final.
   static String messageErreur(Object erreur) {
@@ -161,6 +183,8 @@ class AuthService {
           return 'Ce nom d\'utilisateur est déjà pris.';
         case 'weak-password':
           return 'Mot de passe trop court (6 caractères minimum).';
+        case 'requires-recent-login':
+          return 'Reconnecte-toi puis réessaie.';
       }
     }
     return 'Échec de l\'opération. Réessaie.';

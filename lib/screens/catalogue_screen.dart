@@ -11,6 +11,7 @@ import '../models/tarif.dart';
 import '../services/auth_service.dart';
 import '../services/catalogue_repository.dart';
 import '../services/gestion_repository.dart';
+import '../widgets/changer_mot_de_passe_sheet.dart';
 import '../widgets/commande_edit_sheet.dart';
 import '../widgets/decorative_background.dart';
 import '../widgets/gestion_stock_view.dart';
@@ -1067,6 +1068,14 @@ class _TopBar extends StatelessWidget {
                   ),
                 ),
               ],
+              IconButton(
+                onPressed: () => afficherChangementMotDePasse(context),
+                icon: Icon(
+                  Icons.lock_outline,
+                  color: Colors.black.withValues(alpha: 0.5),
+                ),
+                tooltip: 'Changer mon mot de passe',
+              ),
               IconButton(
                 onPressed: () {
                   // CatalogueScreen est empilé par-dessus l'écran racine
