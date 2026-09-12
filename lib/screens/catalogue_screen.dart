@@ -857,6 +857,7 @@ class _CatalogueScreenState extends State<CatalogueScreen> {
               modePrix: widget.modePrix,
               panierCount: panierCount,
               onOuvrirPanier: _ouvrirPanier,
+              isAdmin: widget.isAdmin,
             ),
             Expanded(child: body),
           ],
@@ -932,12 +933,14 @@ class _TopBar extends StatelessWidget {
   final ModePrix modePrix;
   final int panierCount;
   final VoidCallback onOuvrirPanier;
+  final bool isAdmin;
 
   const _TopBar({
     required this.tarif,
     required this.modePrix,
     required this.panierCount,
     required this.onOuvrirPanier,
+    required this.isAdmin,
   });
 
   @override
@@ -1068,14 +1071,15 @@ class _TopBar extends StatelessWidget {
                   ),
                 ),
               ],
-              IconButton(
-                onPressed: () => afficherChangementMotDePasse(context),
-                icon: Icon(
-                  Icons.lock_outline,
-                  color: Colors.black.withValues(alpha: 0.5),
+              if (isAdmin)
+                IconButton(
+                  onPressed: () => afficherChangementMotDePasse(context),
+                  icon: Icon(
+                    Icons.lock_outline,
+                    color: Colors.black.withValues(alpha: 0.5),
+                  ),
+                  tooltip: 'Changer mon mot de passe',
                 ),
-                tooltip: 'Changer mon mot de passe',
-              ),
               IconButton(
                 onPressed: () {
                   // CatalogueScreen est empilé par-dessus l'écran racine
