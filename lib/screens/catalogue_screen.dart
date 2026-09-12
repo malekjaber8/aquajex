@@ -55,6 +55,7 @@ class _CatalogueScreenState extends State<CatalogueScreen> {
   String _rechercheClient = '';
   String _rechercheCommande = '';
   StatutArticle? _filtreStatut;
+  StatutCommande? _filtreStatutCommande;
   bool _chargementGestion = true;
   bool _chargementFamilles = true;
   bool _chargementArticles = true;
@@ -840,6 +841,9 @@ class _CatalogueScreenState extends State<CatalogueScreen> {
             onChangerStatut: _changerStatutCommande,
             recherche: _rechercheCommande,
             onRechercheChanged: (v) => setState(() => _rechercheCommande = v),
+            filtreStatut: _filtreStatutCommande,
+            onFiltreStatutChanged: (v) =>
+                setState(() => _filtreStatutCommande = v),
           );
           break;
         case _indexNotes:

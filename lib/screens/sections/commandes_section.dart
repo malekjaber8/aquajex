@@ -18,6 +18,10 @@ class CommandesSection extends StatelessWidget {
   final String recherche;
   final ValueChanged<String> onRechercheChanged;
 
+  /// null = "Tous" (aucun filtre par statut).
+  final StatutCommande? filtreStatut;
+  final ValueChanged<StatutCommande?> onFiltreStatutChanged;
+
   const CommandesSection({
     super.key,
     required this.tarif,
@@ -28,6 +32,8 @@ class CommandesSection extends StatelessWidget {
     required this.onChangerStatut,
     required this.recherche,
     required this.onRechercheChanged,
+    required this.filtreStatut,
+    required this.onFiltreStatutChanged,
   });
 
   Client? _clientPour(Commande commande) {
@@ -39,8 +45,9 @@ class CommandesSection extends StatelessWidget {
 
   List<Commande> get _commandesFiltrees {
     final q = recherche.trim().toLowerCase();
-    if (q.isEmpty) return commandes;
     return commandes.where((c) {
+      if (filtreStatut != null && c.statut != filtreStatut) return false;
+      if (q.isEmpty) return true;
       return c.id.toLowerCase().contains(q) ||
           c.clientNom.toLowerCase().contains(q);
     }).toList();
@@ -73,11 +80,21 @@ class CommandesSection extends StatelessWidget {
             onChanged: onRechercheChanged,
           ),
         ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(24, 10, 24, 0),
+          child: _FiltreStatutCommandeBar(
+            accent: accent,
+            valeur: filtreStatut,
+            onChanged: onFiltreStatutChanged,
+          ),
+        ),
         Expanded(
           child: resultats.isEmpty
               ? Center(
                   child: Text(
-                    'Aucune facture ne correspond à "${recherche.trim()}".',
+                    recherche.trim().isNotEmpty
+                        ? 'Aucune facture ne correspond à "${recherche.trim()}".'
+                        : 'Aucune facture ${filtreStatut!.libelle.toLowerCase()} pour le moment.',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: Colors.black.withValues(alpha: 0.45),
@@ -111,6 +128,82 @@ class CommandesSection extends StatelessWidget {
                 ),
         ),
       ],
+    );
+  }
+}
+
+class _FiltreStatutCommandeBar extends StatelessWidget {
+  final List<Color> accent;
+  final StatutCommande? valeur;
+  final ValueChanged<StatutCommande?> onChanged;
+
+  const _FiltreStatutCommandeBar({
+    required this.accent,
+    required this.valeur,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: [
+          _puce(null, 'Tous', accent.last),
+          for (final statut in StatutCommande.values) ...[
+            const SizedBox(width: 8),
+            _puce(statut, statut.libelle, statut.couleur),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _puce(StatutCommande? statut, String libelle, Color couleur) {
+    final selectionne = valeur == statut;
+    return Material(
+      color: selectionne ? null : Colors.white,
+      borderRadius: BorderRadius.circular(20),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(20),
+        onTap: () => onChanged(selectionne ? null : statut),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            color: selectionne ? couleur : null,
+            border: Border.all(
+              color: selectionne
+                  ? Colors.transparent
+                  : Colors.black.withValues(alpha: 0.08),
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (statut != null) ...[
+                Container(
+                  width: 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: selectionne ? Colors.white : couleur,
+                  ),
+                ),
+                const SizedBox(width: 7),
+              ],
+              Text(
+                libelle,
+                style: TextStyle(
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w700,
+                  color: selectionne ? Colors.white : Colors.black87,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
