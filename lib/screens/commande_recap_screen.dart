@@ -110,6 +110,17 @@ class _CommandeRecapScreenState extends State<CommandeRecapScreen> {
           ),
         ),
       );
+    } catch (e) {
+      // Sans ce filet, un échec d'enregistrement (ex : Firestore refuse
+      // l'écriture) ne montrait rien à l'écran — le panier n'était pas vidé
+      // mais rien n'expliquait pourquoi la commande n'apparaissait jamais.
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Échec de l\'enregistrement de la commande : $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
     } finally {
       if (mounted) setState(() => _enCours = false);
     }

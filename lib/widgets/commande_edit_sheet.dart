@@ -226,15 +226,27 @@ class _CommandeEditSheetState extends State<_CommandeEditSheet> {
     }
     setState(() => _enCours = true);
     final note = _noteCtrl.text.trim();
-    await widget.onEnregistrer(
-      _clientId,
-      _clientNom,
-      _lignes,
-      note.isEmpty ? null : note,
-      _remisePourcent,
-    );
-    if (!mounted) return;
-    Navigator.of(context).pop(true);
+    try {
+      await widget.onEnregistrer(
+        _clientId,
+        _clientNom,
+        _lignes,
+        note.isEmpty ? null : note,
+        _remisePourcent,
+      );
+      if (!mounted) return;
+      Navigator.of(context).pop(true);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Échec de l\'enregistrement : $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _enCours = false);
+    }
   }
 
   @override

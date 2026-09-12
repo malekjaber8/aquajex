@@ -197,14 +197,14 @@ class _CatalogueScreenState extends State<CatalogueScreen> {
     _chargerGestion();
   }
 
-  /// Exécute une écriture catalogue (Firestore) et affiche l'erreur au lieu
-  /// de la laisser silencieuse. Sans ce filet : Firestore applique
-  /// l'écriture localement de façon optimiste (l'article/la famille
-  /// apparaît immédiatement dans les listes en flux), puis l'annule dès que
-  /// le serveur la rejette (droits insuffisants, document trop volumineux,
-  /// etc.) — ce qui donnait l'impression que "ça marche une seconde puis ça
-  /// disparaît", sans aucun message pour comprendre pourquoi.
-  Future<bool> _ecrireCatalogue(Future<void> Function() operation) async {
+  /// Exécute une écriture Firestore (catalogue, client ou commande) et
+  /// affiche l'erreur au lieu de la laisser silencieuse. Sans ce filet :
+  /// Firestore applique l'écriture localement de façon optimiste (l'élément
+  /// apparaît immédiatement dans les listes), puis l'annule dès que le
+  /// serveur la rejette (droits insuffisants, document trop volumineux,
+  /// perte réseau, etc.) — ce qui donnait l'impression que "ça marche une
+  /// seconde puis ça disparaît", sans aucun message pour comprendre pourquoi.
+  Future<bool> _ecrireFirestore(Future<void> Function() operation) async {
     try {
       await operation();
       return true;
@@ -282,7 +282,7 @@ class _CatalogueScreenState extends State<CatalogueScreen> {
           .showSnackBar(SnackBar(content: Text('"$nom" existe déjà')));
       return;
     }
-    await _ecrireCatalogue(() => _repo.ajouterFamille(nom));
+    await _ecrireFirestore(() => _repo.ajouterFamille(nom));
   }
 
   Future<void> _modifierFamille(String ancienNom) async {
@@ -299,7 +299,7 @@ class _CatalogueScreenState extends State<CatalogueScreen> {
           .showSnackBar(SnackBar(content: Text('"$nom" existe déjà')));
       return;
     }
-    final succes = await _ecrireCatalogue(
+    final succes = await _ecrireFirestore(
       () => _repo.renommerFamille(ancienNom, nom),
     );
     if (succes && _familleSelectionnee == ancienNom) {
@@ -331,7 +331,7 @@ class _CatalogueScreenState extends State<CatalogueScreen> {
       ),
     );
     if (confirme == true) {
-      final succes = await _ecrireCatalogue(() => _repo.supprimerFamille(nom));
+      final succes = await _ecrireFirestore(() => _repo.supprimerFamille(nom));
       if (succes && _familleSelectionnee == nom) {
         setState(() => _familleSelectionnee = null);
       }
@@ -352,7 +352,7 @@ class _CatalogueScreenState extends State<CatalogueScreen> {
       ),
     );
     if (resultat != null) {
-      await _ecrireCatalogue(() => _repo.ajouterArticle(resultat));
+      await _ecrireFirestore(() => _repo.ajouterArticle(resultat));
     }
   }
 
@@ -368,7 +368,7 @@ class _CatalogueScreenState extends State<CatalogueScreen> {
       ),
     );
     if (resultat != null) {
-      await _ecrireCatalogue(() => _repo.modifierArticle(resultat));
+      await _ecrireFirestore(() => _repo.modifierArticle(resultat));
     }
   }
 
@@ -391,7 +391,7 @@ class _CatalogueScreenState extends State<CatalogueScreen> {
       ),
     );
     if (confirme == true) {
-      await _ecrireCatalogue(() => _repo.supprimerArticle(article.id));
+      await _ecrireFirestore(() => _repo.supprimerArticle(article.id));
     }
   }
 
@@ -403,7 +403,10 @@ class _CatalogueScreenState extends State<CatalogueScreen> {
       MaterialPageRoute(builder: (_) => ClientFormScreen(accent: accent)),
     );
     if (resultat != null) {
-      await _gestionRepo.ajouterClient(resultat);
+      final succes = await _ecrireFirestore(
+        () => _gestionRepo.ajouterClient(resultat),
+      );
+      if (!succes) return null;
       setState(() {
         _clients = [..._clients, resultat]
           ..sort((a, b) => a.nomAffichage.compareTo(b.nomAffichage));
@@ -421,10 +424,16 @@ class _CatalogueScreenState extends State<CatalogueScreen> {
       ),
     );
     if (resultat != null) {
-      await _gestionRepo.modifierClient(resultat);
-      setState(() {
-        _clients = [for (final c in _clients) c.id == client.id ? resultat : c];
-      });
+      final succes = await _ecrireFirestore(
+        () => _gestionRepo.modifierClient(resultat),
+      );
+      if (succes) {
+        setState(() {
+          _clients = [
+            for (final c in _clients) c.id == client.id ? resultat : c,
+          ];
+        });
+      }
     }
   }
 
@@ -447,10 +456,14 @@ class _CatalogueScreenState extends State<CatalogueScreen> {
       ),
     );
     if (confirme == true) {
-      await _gestionRepo.supprimerClient(client.id);
-      setState(() {
-        _clients = _clients.where((c) => c.id != client.id).toList();
-      });
+      final succes = await _ecrireFirestore(
+        () => _gestionRepo.supprimerClient(client.id),
+      );
+      if (succes) {
+        setState(() {
+          _clients = _clients.where((c) => c.id != client.id).toList();
+        });
+      }
     }
   }
 
@@ -581,10 +594,14 @@ class _CatalogueScreenState extends State<CatalogueScreen> {
       ),
     );
     if (confirme == true) {
-      await _gestionRepo.supprimerCommande(commande.id);
-      setState(() {
-        _commandes = _commandes.where((c) => c.id != commande.id).toList();
-      });
+      final succes = await _ecrireFirestore(
+        () => _gestionRepo.supprimerCommande(commande.id),
+      );
+      if (succes) {
+        setState(() {
+          _commandes = _commandes.where((c) => c.id != commande.id).toList();
+        });
+      }
     }
   }
 
