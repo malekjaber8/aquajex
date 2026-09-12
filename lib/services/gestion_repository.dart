@@ -18,7 +18,9 @@ import '../models/tarif.dart';
 /// Firestore autorisent l'admin à *lire* n'importe quel document de ces
 /// collections, mais jamais à les écrire pour un autre compte : si ce
 /// paramètre est utilisé, seules les méthodes de lecture (`getClients`,
-/// `getCommandes`, `getNotes`) doivent être appelées.
+/// `getCommandes`, `getNotes`) et [changerStatutCommande] doivent être
+/// appelées (cette dernière est la seule écriture que les règles autorisent
+/// à l'admin sur les données d'un commercial).
 class GestionRepository {
   final Tarif tarif;
   final String? ownerUidPourConsultation;
@@ -129,6 +131,14 @@ class GestionRepository {
 
   Future<void> supprimerCommande(String id) async {
     await _commandesRef.doc(id).delete();
+  }
+
+  /// Change uniquement le statut d'une commande (en attente / confirmée /
+  /// livrée), sans toucher au reste du document. C'est la seule écriture que
+  /// les règles Firestore autorisent à l'admin sur la commande d'un autre
+  /// compte — voir [ownerUidPourConsultation] et `VueCommercialScreen`.
+  Future<void> changerStatutCommande(String id, StatutCommande statut) async {
+    await _commandesRef.doc(id).update({'statut': statut.name});
   }
 
   Map<String, dynamic> _versDocumentCommande(Commande c) => {

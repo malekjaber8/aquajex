@@ -52,7 +52,14 @@ service cloud.firestore {
     match /commandes/{id} {
       allow read: if estConnecte() &&
         (request.auth.uid == resource.data.ownerUid || estAdmin());
-      allow update, delete: if estConnecte() &&
+      allow update: if estConnecte() &&
+        request.auth.uid == resource.data.ownerUid;
+      // L'admin peut aussi changer uniquement le statut (en attente /
+      // confirmée / livrée) d'une commande d'un commercial, depuis
+      // VueCommercialScreen — jamais le reste (montants, lignes...).
+      allow update: if estAdmin() &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['statut']);
+      allow delete: if estConnecte() &&
         request.auth.uid == resource.data.ownerUid;
       allow create: if estConnecte() &&
         request.resource.data.ownerUid == request.auth.uid;

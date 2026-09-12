@@ -99,6 +99,33 @@ class _VueCommercialScreenState extends State<VueCommercialScreen> {
     );
   }
 
+  Future<void> _changerStatut(Commande commande, StatutCommande statut) async {
+    if (statut == commande.statut) return;
+    final ancien = commande.statut;
+    setState(() {
+      final i = _commandes.indexWhere((c) => c.id == commande.id);
+      if (i != -1) _commandes[i] = commande.copyWith(statut: statut);
+    });
+    try {
+      await GestionRepository(
+        _tarif,
+        ownerUidPourConsultation: widget.compte.uid,
+      ).changerStatutCommande(commande.id, statut);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        final i = _commandes.indexWhere((c) => c.id == commande.id);
+        if (i != -1) _commandes[i] = commande.copyWith(statut: ancien);
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Échec du changement de statut : $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
   void _changerTarif(Tarif tarif) {
     if (tarif == _tarif) return;
     setState(() => _tarif = tarif);
@@ -382,23 +409,9 @@ class _VueCommercialScreenState extends State<VueCommercialScreen> {
                       ),
                     ),
                     const SizedBox(height: 4),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 3,
-                      ),
-                      decoration: BoxDecoration(
-                        color: commande.statut.couleur.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        commande.statut.libelle,
-                        style: TextStyle(
-                          fontSize: 10.5,
-                          fontWeight: FontWeight.w700,
-                          color: commande.statut.couleur,
-                        ),
-                      ),
+                    _StatutBadgeModifiable(
+                      statut: commande.statut,
+                      onChanger: (s) => _changerStatut(commande, s),
                     ),
                   ],
                 ),
@@ -723,6 +736,67 @@ class _FicheClientSheet extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+/// Badge de statut tapable : seul champ que l'admin peut modifier sur la
+/// commande d'un commercial (voir GestionRepository.changerStatutCommande).
+class _StatutBadgeModifiable extends StatelessWidget {
+  final StatutCommande statut;
+  final ValueChanged<StatutCommande> onChanger;
+
+  const _StatutBadgeModifiable({required this.statut, required this.onChanger});
+
+  @override
+  Widget build(BuildContext context) {
+    return PopupMenuButton<StatutCommande>(
+      initialValue: statut,
+      tooltip: 'Changer le statut',
+      onSelected: onChanger,
+      itemBuilder: (context) => [
+        for (final s in StatutCommande.values)
+          PopupMenuItem(
+            value: s,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: s.couleur,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(s.libelle),
+              ],
+            ),
+          ),
+      ],
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+        decoration: BoxDecoration(
+          color: statut.couleur.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              statut.libelle,
+              style: TextStyle(
+                fontSize: 10.5,
+                fontWeight: FontWeight.w700,
+                color: statut.couleur,
+              ),
+            ),
+            const SizedBox(width: 2),
+            Icon(Icons.keyboard_arrow_down, size: 12, color: statut.couleur),
+          ],
+        ),
+      ),
     );
   }
 }
