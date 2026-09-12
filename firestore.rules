@@ -52,5 +52,12 @@ service cloud.firestore {
       allow create: if estConnecte() &&
         request.resource.data.ownerUid == request.auth.uid;
     }
+
+    match /notes/{id} {
+      allow read, update, delete: if estConnecte() &&
+        request.auth.uid == resource.data.ownerUid;
+      allow create: if estConnecte() &&
+        request.resource.data.ownerUid == request.auth.uid;
+    }
   }
 }

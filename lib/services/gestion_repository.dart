@@ -6,15 +6,13 @@ import '../models/commande.dart';
 import '../models/mode_prix.dart';
 import '../models/note.dart';
 import '../models/tarif.dart';
-import 'database_service.dart';
 
 /// Accès aux clients, commandes et notes, propre à chaque tarif.
 ///
-/// Les clients et commandes vivent désormais sur Firestore, propres au
-/// compte connecté (voir `ownerUid` + firestore.rules) : chacun ne voit que
-/// ce qu'il a créé, et l'admin peut consulter le travail d'un commercial en
-/// se connectant simplement avec son compte. Les notes, elles, restent
-/// volontairement locales à l'appareil (SQLite) — non demandées côté cloud.
+/// Les trois vivent sur Firestore, propres au compte connecté (voir
+/// `ownerUid` + firestore.rules) : chacun ne voit que ce qu'il a créé, et
+/// l'admin peut consulter le travail d'un commercial en se connectant
+/// simplement avec son compte.
 class GestionRepository {
   final Tarif tarif;
 
@@ -37,6 +35,9 @@ class GestionRepository {
 
   CollectionReference<Map<String, dynamic>> get _commandesRef =>
       _db.collection('commandes');
+
+  CollectionReference<Map<String, dynamic>> get _notesRef =>
+      _db.collection('notes');
 
   // --- Clients ---
 
@@ -151,57 +152,50 @@ class GestionRepository {
     statut: StatutCommande.depuisNom(d['statut'] as String?),
   );
 
-  // --- Notes (restent locales à l'appareil) ---
+  // --- Notes ---
 
   Future<List<Note>> getNotes() async {
-    final db = await DatabaseService.instance.database;
-    final rows = await db.query(
-      'notes',
-      where: 'tarif = ?',
-      whereArgs: [_tarifKey],
-      orderBy: 'date DESC',
-    );
-    return rows.map(_versNote).toList();
+    final snap = await _notesRef
+        .where('ownerUid', isEqualTo: _ownerUid)
+        .where('tarif', isEqualTo: _tarifKey)
+        .get();
+    final notes = snap.docs
+        .map((d) => _versNote({...d.data(), 'id': d.id}))
+        .toList();
+    notes.sort((a, b) => b.date.compareTo(a.date));
+    return notes;
   }
 
   Future<void> ajouterNote(Note note) async {
-    final db = await DatabaseService.instance.database;
-    await db.insert('notes', _versLigneNote(note));
+    await _notesRef.doc(note.id).set(_versDocumentNote(note));
   }
 
   Future<void> modifierNote(Note note) async {
-    final db = await DatabaseService.instance.database;
-    await db.update(
-      'notes',
-      _versLigneNote(note),
-      where: 'id = ?',
-      whereArgs: [note.id],
-    );
+    await _notesRef.doc(note.id).set(_versDocumentNote(note));
   }
 
   Future<void> supprimerNote(String id) async {
-    final db = await DatabaseService.instance.database;
-    await db.delete('notes', where: 'id = ?', whereArgs: [id]);
+    await _notesRef.doc(id).delete();
   }
 
-  Map<String, Object?> _versLigneNote(Note n) => {
-    'id': n.id,
+  Map<String, dynamic> _versDocumentNote(Note n) => {
+    'ownerUid': _ownerUid,
     'tarif': _tarifKey,
     'contenu': n.contenu,
-    'client_id': n.clientId,
-    'client_nom': n.clientNom,
+    'clientId': n.clientId,
+    'clientNom': n.clientNom,
     'date': n.date.toIso8601String(),
-    'date_rappel': n.dateRappel?.toIso8601String(),
+    'dateRappel': n.dateRappel?.toIso8601String(),
   };
 
-  Note _versNote(Map<String, Object?> r) => Note(
-    id: r['id'] as String,
-    contenu: r['contenu'] as String,
-    clientId: r['client_id'] as String?,
-    clientNom: r['client_nom'] as String?,
-    date: DateTime.parse(r['date'] as String),
-    dateRappel: r['date_rappel'] != null
-        ? DateTime.parse(r['date_rappel'] as String)
+  Note _versNote(Map<String, dynamic> d) => Note(
+    id: d['id'] as String,
+    contenu: d['contenu'] as String,
+    clientId: d['clientId'] as String?,
+    clientNom: d['clientNom'] as String?,
+    date: DateTime.parse(d['date'] as String),
+    dateRappel: d['dateRappel'] != null
+        ? DateTime.parse(d['dateRappel'] as String)
         : null,
   );
 
