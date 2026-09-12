@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:printing/printing.dart';
 
 import '../models/article.dart';
 import '../models/client.dart';
@@ -9,6 +10,7 @@ import '../models/mode_prix.dart';
 import '../models/note.dart';
 import '../models/tarif.dart';
 import '../services/auth_service.dart';
+import '../services/catalogue_pdf.dart';
 import '../services/catalogue_repository.dart';
 import '../services/gestion_repository.dart';
 import '../widgets/changer_mot_de_passe_sheet.dart';
@@ -218,6 +220,33 @@ class _CatalogueScreenState extends State<CatalogueScreen> {
         ),
       );
       return false;
+    }
+  }
+
+  bool _impressionCatalogueEnCours = false;
+
+  Future<void> _imprimerCatalogue() async {
+    setState(() => _impressionCatalogueEnCours = true);
+    try {
+      await Printing.layoutPdf(
+        name: 'catalogue_${widget.tarif.name}.pdf',
+        onLayout: (_) => genererCataloguePdf(
+          tarif: widget.tarif,
+          modePrix: widget.modePrix,
+          familles: _familles,
+          articles: _articles,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Échec de l\'impression : $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _impressionCatalogueEnCours = false);
     }
   }
 
@@ -858,6 +887,8 @@ class _CatalogueScreenState extends State<CatalogueScreen> {
               panierCount: panierCount,
               onOuvrirPanier: _ouvrirPanier,
               isAdmin: widget.isAdmin,
+              onImprimerCatalogue: _imprimerCatalogue,
+              impressionCatalogueEnCours: _impressionCatalogueEnCours,
             ),
             Expanded(child: body),
           ],
@@ -934,6 +965,8 @@ class _TopBar extends StatelessWidget {
   final int panierCount;
   final VoidCallback onOuvrirPanier;
   final bool isAdmin;
+  final VoidCallback onImprimerCatalogue;
+  final bool impressionCatalogueEnCours;
 
   const _TopBar({
     required this.tarif,
@@ -941,6 +974,8 @@ class _TopBar extends StatelessWidget {
     required this.panierCount,
     required this.onOuvrirPanier,
     required this.isAdmin,
+    required this.onImprimerCatalogue,
+    required this.impressionCatalogueEnCours,
   });
 
   @override
@@ -1001,7 +1036,24 @@ class _TopBar extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(width: 6),
+              const SizedBox(width: 4),
+              IconButton(
+                onPressed: impressionCatalogueEnCours
+                    ? null
+                    : onImprimerCatalogue,
+                icon: impressionCatalogueEnCours
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : Icon(
+                        Icons.print_outlined,
+                        color: Colors.black.withValues(alpha: 0.6),
+                      ),
+                tooltip: 'Imprimer le catalogue',
+              ),
+              const SizedBox(width: 2),
               Stack(
                 clipBehavior: Clip.none,
                 children: [
