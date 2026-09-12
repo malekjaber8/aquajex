@@ -49,16 +49,16 @@ service cloud.firestore {
         request.resource.data.ownerUid == request.auth.uid;
     }
 
+    // Exception pour les commandes : l'admin peut aussi les *modifier*
+    // (statut, montants, articles...) depuis la vue de consultation d'un
+    // commercial, sans se déconnecter de son propre compte. La suppression
+    // reste réservée au propriétaire, et la création aussi (l'admin ne peut
+    // pas créer de commande pour le compte d'un commercial).
     match /commandes/{id} {
       allow read: if estConnecte() &&
         (request.auth.uid == resource.data.ownerUid || estAdmin());
       allow update: if estConnecte() &&
-        request.auth.uid == resource.data.ownerUid;
-      // L'admin peut aussi changer uniquement le statut (en attente /
-      // confirmée / livrée) d'une commande d'un commercial, depuis
-      // VueCommercialScreen — jamais le reste (montants, lignes...).
-      allow update: if estAdmin() &&
-        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['statut']);
+        (request.auth.uid == resource.data.ownerUid || estAdmin());
       allow delete: if estConnecte() &&
         request.auth.uid == resource.data.ownerUid;
       allow create: if estConnecte() &&

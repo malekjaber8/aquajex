@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 
+import '../models/article.dart';
 import '../models/client.dart';
 import '../models/commande.dart';
 import '../models/note.dart';
 import '../models/tarif.dart';
 import '../services/auth_service.dart';
+import '../services/catalogue_repository.dart';
 import '../services/gestion_repository.dart';
+import '../widgets/commande_edit_sheet.dart';
 import '../widgets/decorative_background.dart';
 import '../widgets/section_placeholder.dart';
 import 'facture_screen.dart';
@@ -14,11 +17,15 @@ const _accent = [Color(0xFF1B3B5F), Color(0xFFC9A24B)];
 
 enum _Rubrique { clients, commandes, notes }
 
-/// Consultation en lecture seule des clients/commandes/notes d'un commercial,
-/// ouverte depuis GestionCommerciauxScreen — l'admin reste connecté avec son
-/// propre compte pendant qu'il regarde (voir GestionRepository.
-/// ownerUidPourConsultation et les règles Firestore associées, qui
-/// autorisent l'admin à lire mais jamais à écrire pour un autre compte).
+/// Consultation des clients/commandes/notes d'un commercial, ouverte depuis
+/// GestionCommerciauxScreen — l'admin reste connecté avec son propre compte
+/// pendant qu'il regarde (voir GestionRepository.ownerUidPourConsultation et
+/// les règles Firestore associées). La vue est en lecture seule sauf pour le
+/// statut d'une commande et, désormais, la commande elle-même (montants,
+/// articles, remise) : l'admin peut la modifier comme le ferait le
+/// commercial, mais ne peut pas créer de nouveau client pour son compte
+/// (ça resterait bloqué côté règles Firestore : la création exige que
+/// ownerUid == l'uid réellement connecté).
 class VueCommercialScreen extends StatefulWidget {
   final CompteCommercial compte;
 
@@ -37,6 +44,7 @@ class _VueCommercialScreenState extends State<VueCommercialScreen> {
   List<Client> _clients = [];
   List<Commande> _commandes = [];
   List<Note> _notes = [];
+  List<Article> _articles = [];
 
   @override
   void initState() {
@@ -57,11 +65,13 @@ class _VueCommercialScreenState extends State<VueCommercialScreen> {
       final clients = await repo.getClients();
       final commandes = await repo.getCommandes();
       final notes = await repo.getNotes();
+      final articles = await CatalogueRepository(_tarif).streamArticles().first;
       if (!mounted) return;
       setState(() {
         _clients = clients;
         _commandes = commandes;
         _notes = notes;
+        _articles = articles;
         _chargement = false;
       });
     } catch (e) {
@@ -95,7 +105,53 @@ class _VueCommercialScreenState extends State<VueCommercialScreen> {
         tarif: _tarif,
         formatDate: _formatDate,
         formatMontant: _formatMontant,
+        onModifierCommande: _modifierCommande,
       ),
+    );
+  }
+
+  Future<Client?> _nouveauClientIndisponible() async {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text(
+          'Impossible de créer un client pour le compte de ce commercial '
+          'depuis cette vue.',
+        ),
+      ),
+    );
+    return null;
+  }
+
+  Future<void> _modifierCommande(Commande commande) async {
+    final accent = _tarif.accentGradient;
+    await afficherEditionCommande(
+      context,
+      commande: commande,
+      accent: accent,
+      modePrix: commande.modePrix,
+      articlesDisponibles: _articles,
+      clientsActuels: () => _clients,
+      onNouveauClient: _nouveauClientIndisponible,
+      onEnregistrer: (clientId, clientNom, lignes, note, remisePourcent) async {
+        final misAJour = commande.copyWith(
+          clientId: clientId,
+          clientNom: clientNom,
+          lignes: lignes,
+          note: note,
+          effacerNote: note == null,
+          remisePourcent: remisePourcent,
+        );
+        await GestionRepository(
+          _tarif,
+          ownerUidPourConsultation: widget.compte.uid,
+        ).modifierCommande(misAJour);
+        if (!mounted) return;
+        setState(() {
+          _commandes = [
+            for (final c in _commandes) c.id == commande.id ? misAJour : c,
+          ];
+        });
+      },
     );
   }
 
@@ -369,6 +425,7 @@ class _VueCommercialScreenState extends State<VueCommercialScreen> {
                 commande: commande,
                 client: _clientPour(commande),
                 tarif: _tarif,
+                onModifier: () => _modifierCommande(commande),
               ),
             ),
           ),
@@ -570,6 +627,7 @@ class _FicheClientSheet extends StatelessWidget {
   final Tarif tarif;
   final String Function(DateTime) formatDate;
   final String Function(double) formatMontant;
+  final Future<void> Function(Commande) onModifierCommande;
 
   const _FicheClientSheet({
     required this.client,
@@ -577,6 +635,7 @@ class _FicheClientSheet extends StatelessWidget {
     required this.tarif,
     required this.formatDate,
     required this.formatMontant,
+    required this.onModifierCommande,
   });
 
   @override
@@ -699,6 +758,7 @@ class _FicheClientSheet extends StatelessWidget {
                             commande: commande,
                             client: client,
                             tarif: tarif,
+                            onModifier: () => onModifierCommande(commande),
                           ),
                         ),
                       );

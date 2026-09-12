@@ -12,15 +12,13 @@ import '../models/tarif.dart';
 /// Les trois vivent sur Firestore, propres au compte connecté (voir
 /// `ownerUid` + firestore.rules) : chacun ne voit que ce qu'il a créé.
 ///
-/// L'admin peut aussi consulter (lecture seule) les données d'un commercial
-/// précis sans se déconnecter de son propre compte, en passant son uid dans
+/// L'admin peut aussi consulter les données d'un commercial précis sans se
+/// déconnecter de son propre compte, en passant son uid dans
 /// [ownerUidPourConsultation] — voir `VueCommercialScreen`. Les règles
 /// Firestore autorisent l'admin à *lire* n'importe quel document de ces
-/// collections, mais jamais à les écrire pour un autre compte : si ce
-/// paramètre est utilisé, seules les méthodes de lecture (`getClients`,
-/// `getCommandes`, `getNotes`) et [changerStatutCommande] doivent être
-/// appelées (cette dernière est la seule écriture que les règles autorisent
-/// à l'admin sur les données d'un commercial).
+/// collections, et à *modifier* (jamais créer/supprimer) une commande d'un
+/// autre compte ; clients et notes restent en lecture seule pour l'admin
+/// dans ce mode.
 class GestionRepository {
   final Tarif tarif;
   final String? ownerUidPourConsultation;
@@ -134,9 +132,9 @@ class GestionRepository {
   }
 
   /// Change uniquement le statut d'une commande (en attente / confirmée /
-  /// livrée), sans toucher au reste du document. C'est la seule écriture que
-  /// les règles Firestore autorisent à l'admin sur la commande d'un autre
-  /// compte — voir [ownerUidPourConsultation] et `VueCommercialScreen`.
+  /// livrée), sans toucher au reste du document — pratique pour le badge de
+  /// statut tapable de `VueCommercialScreen` (voir aussi [modifierCommande]
+  /// pour une édition complète).
   Future<void> changerStatutCommande(String id, StatutCommande statut) async {
     await _commandesRef.doc(id).update({'statut': statut.name});
   }
