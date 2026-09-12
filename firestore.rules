@@ -35,26 +35,33 @@ service cloud.firestore {
       allow write: if estAdmin();
     }
 
-    // Clients et commandes appartiennent au compte qui les a créés : un
-    // commercial ne voit que les siens, et l'admin peut consulter le
-    // travail d'un commercial en se connectant simplement avec son compte
-    // (mêmes règles pour tout le monde, pas de passe-droit admin ici).
+    // Clients, commandes et notes appartiennent au compte qui les a créés :
+    // un commercial ne voit que les siens. L'admin peut en plus les *lire*
+    // (jamais les modifier/supprimer) pour n'importe quel compte, pour
+    // consulter la session d'un commercial sans se déconnecter de la
+    // sienne — voir VueCommercialScreen.
     match /clients/{id} {
-      allow read, update, delete: if estConnecte() &&
+      allow read: if estConnecte() &&
+        (request.auth.uid == resource.data.ownerUid || estAdmin());
+      allow update, delete: if estConnecte() &&
         request.auth.uid == resource.data.ownerUid;
       allow create: if estConnecte() &&
         request.resource.data.ownerUid == request.auth.uid;
     }
 
     match /commandes/{id} {
-      allow read, update, delete: if estConnecte() &&
+      allow read: if estConnecte() &&
+        (request.auth.uid == resource.data.ownerUid || estAdmin());
+      allow update, delete: if estConnecte() &&
         request.auth.uid == resource.data.ownerUid;
       allow create: if estConnecte() &&
         request.resource.data.ownerUid == request.auth.uid;
     }
 
     match /notes/{id} {
-      allow read, update, delete: if estConnecte() &&
+      allow read: if estConnecte() &&
+        (request.auth.uid == resource.data.ownerUid || estAdmin());
+      allow update, delete: if estConnecte() &&
         request.auth.uid == resource.data.ownerUid;
       allow create: if estConnecte() &&
         request.resource.data.ownerUid == request.auth.uid;

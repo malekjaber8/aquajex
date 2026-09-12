@@ -10,19 +10,27 @@ import '../models/tarif.dart';
 /// Accès aux clients, commandes et notes, propre à chaque tarif.
 ///
 /// Les trois vivent sur Firestore, propres au compte connecté (voir
-/// `ownerUid` + firestore.rules) : chacun ne voit que ce qu'il a créé, et
-/// l'admin peut consulter le travail d'un commercial en se connectant
-/// simplement avec son compte.
+/// `ownerUid` + firestore.rules) : chacun ne voit que ce qu'il a créé.
+///
+/// L'admin peut aussi consulter (lecture seule) les données d'un commercial
+/// précis sans se déconnecter de son propre compte, en passant son uid dans
+/// [ownerUidPourConsultation] — voir `VueCommercialScreen`. Les règles
+/// Firestore autorisent l'admin à *lire* n'importe quel document de ces
+/// collections, mais jamais à les écrire pour un autre compte : si ce
+/// paramètre est utilisé, seules les méthodes de lecture (`getClients`,
+/// `getCommandes`, `getNotes`) doivent être appelées.
 class GestionRepository {
   final Tarif tarif;
+  final String? ownerUidPourConsultation;
 
-  GestionRepository(this.tarif);
+  GestionRepository(this.tarif, {this.ownerUidPourConsultation});
 
   String get _tarifKey => tarif.name;
 
   FirebaseFirestore get _db => FirebaseFirestore.instance;
 
   String get _ownerUid {
+    if (ownerUidPourConsultation != null) return ownerUidPourConsultation!;
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) {
       throw StateError('Aucun utilisateur connecté.');

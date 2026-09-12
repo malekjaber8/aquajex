@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../services/auth_service.dart';
 import '../widgets/decorative_background.dart';
+import 'vue_commercial_screen.dart';
 
 const _accent = [Color(0xFF1B3B5F), Color(0xFFC9A24B)];
 
@@ -133,61 +134,76 @@ class _CompteTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+        onTap: () => Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => VueCommercialScreen(compte: compte),
           ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 42,
-            height: 42,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: const LinearGradient(colors: _accent),
-            ),
-            child: const Icon(
-              Icons.person_outline,
-              color: Colors.white,
-              size: 20,
-            ),
+        ),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  compte.nomComplet.isNotEmpty
-                      ? compte.nomComplet
-                      : compte.nomUtilisateur,
-                  style: const TextStyle(
-                    fontSize: 14.5,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF1B3B5F),
-                  ),
+          child: Row(
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: const LinearGradient(colors: _accent),
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  '@${compte.nomUtilisateur}',
-                  style: TextStyle(
-                    fontSize: 12.5,
-                    color: Colors.black.withValues(alpha: 0.45),
-                  ),
+                child: const Icon(
+                  Icons.person_outline,
+                  color: Colors.white,
+                  size: 20,
                 ),
-              ],
-            ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      compte.nomComplet.isNotEmpty
+                          ? compte.nomComplet
+                          : compte.nomUtilisateur,
+                      style: const TextStyle(
+                        fontSize: 14.5,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF1B3B5F),
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '@${compte.nomUtilisateur}',
+                      style: TextStyle(
+                        fontSize: 12.5,
+                        color: Colors.black.withValues(alpha: 0.45),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.chevron_right,
+                color: Colors.black.withValues(alpha: 0.3),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
