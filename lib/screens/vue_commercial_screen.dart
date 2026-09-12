@@ -80,6 +80,25 @@ class _VueCommercialScreenState extends State<VueCommercialScreen> {
     return null;
   }
 
+  List<Commande> _commandesPour(Client client) {
+    return _commandes.where((c) => c.clientId == client.id).toList();
+  }
+
+  void _ouvrirDetailClient(Client client) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _FicheClientSheet(
+        client: client,
+        commandes: _commandesPour(client),
+        tarif: _tarif,
+        formatDate: _formatDate,
+        formatMontant: _formatMontant,
+      ),
+    );
+  }
+
   void _changerTarif(Tarif tarif) {
     if (tarif == _tarif) return;
     setState(() => _tarif = tarif);
@@ -257,6 +276,7 @@ class _VueCommercialScreenState extends State<VueCommercialScreen> {
       itemBuilder: (context, i) {
         final c = _clients[i];
         return _Carte(
+          onTap: () => _ouvrirDetailClient(c),
           child: Row(
             children: [
               CircleAvatar(
@@ -288,6 +308,10 @@ class _VueCommercialScreenState extends State<VueCommercialScreen> {
                       ),
                   ],
                 ),
+              ),
+              Icon(
+                Icons.chevron_right,
+                color: Colors.black.withValues(alpha: 0.25),
               ),
             ],
           ),
@@ -520,6 +544,211 @@ class _Puce extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Fiche client en lecture seule (nom, coordonnées, historique de commandes)
+/// ouverte depuis l'onglet Clients de [VueCommercialScreen].
+class _FicheClientSheet extends StatelessWidget {
+  final Client client;
+  final List<Commande> commandes;
+  final Tarif tarif;
+  final String Function(DateTime) formatDate;
+  final String Function(double) formatMontant;
+
+  const _FicheClientSheet({
+    required this.client,
+    required this.commandes,
+    required this.tarif,
+    required this.formatDate,
+    required this.formatMontant,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final c = client;
+    return DraggableScrollableSheet(
+      initialChildSize: 0.7,
+      minChildSize: 0.4,
+      maxChildSize: 0.92,
+      expand: false,
+      builder: (context, scrollController) {
+        return Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          child: ListView(
+            controller: scrollController,
+            padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.black12,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  CircleAvatar(
+                    radius: 24,
+                    backgroundColor: _accent.last.withValues(alpha: 0.15),
+                    foregroundColor: _accent.last,
+                    child: Text(
+                      c.initiales,
+                      style: const TextStyle(fontWeight: FontWeight.w700),
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          c.nomAffichage,
+                          style: const TextStyle(
+                            fontSize: 17,
+                            fontWeight: FontWeight.w800,
+                            color: Color(0xFF1B3B5F),
+                          ),
+                        ),
+                        Text(
+                          c.estSociete ? 'Société' : 'Particulier',
+                          style: TextStyle(
+                            fontSize: 12.5,
+                            color: Colors.black.withValues(alpha: 0.45),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              if (c.estSociete && (c.responsable?.trim().isNotEmpty ?? false))
+                _LigneInfo(icone: Icons.badge_outlined, texte: c.responsable!),
+              if (!c.estSociete)
+                _LigneInfo(
+                  icone: Icons.badge_outlined,
+                  texte: c.nomComplet.isNotEmpty ? c.nomComplet : '—',
+                ),
+              if (c.telephone?.trim().isNotEmpty ?? false)
+                _LigneInfo(icone: Icons.phone_outlined, texte: c.telephone!),
+              if (c.adresse?.trim().isNotEmpty ?? false)
+                _LigneInfo(
+                  icone: Icons.location_on_outlined,
+                  texte: c.adresse!,
+                ),
+              if (c.matriculeFiscal?.trim().isNotEmpty ?? false)
+                _LigneInfo(
+                  icone: Icons.numbers_outlined,
+                  texte: 'MF : ${c.matriculeFiscal}',
+                ),
+              if (c.cin?.trim().isNotEmpty ?? false)
+                _LigneInfo(
+                  icone: Icons.credit_card_outlined,
+                  texte: 'CIN : ${c.cin}',
+                ),
+              const SizedBox(height: 24),
+              Text(
+                'Commandes (${commandes.length})',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.black.withValues(alpha: 0.45),
+                  letterSpacing: 0.3,
+                ),
+              ),
+              const SizedBox(height: 10),
+              if (commandes.isEmpty)
+                Text(
+                  'Aucune commande pour ce client.',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: Colors.black.withValues(alpha: 0.4),
+                  ),
+                )
+              else
+                for (final commande in commandes)
+                  _Carte(
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => FactureScreen(
+                            commande: commande,
+                            client: client,
+                            tarif: tarif,
+                          ),
+                        ),
+                      );
+                    },
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.receipt_long_outlined,
+                          color: _accent.last,
+                          size: 18,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            formatDate(commande.date),
+                            style: const TextStyle(
+                              fontSize: 13.5,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF1B3B5F),
+                            ),
+                          ),
+                        ),
+                        Text(
+                          '${formatMontant(commande.totalTtc)} DT',
+                          style: TextStyle(
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.w800,
+                            color: _accent.last,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _LigneInfo extends StatelessWidget {
+  final IconData icone;
+  final String texte;
+
+  const _LigneInfo({required this.icone, required this.texte});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icone, size: 18, color: Colors.black.withValues(alpha: 0.4)),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              texte,
+              style: const TextStyle(fontSize: 13.5, color: Color(0xFF1B3B5F)),
+            ),
+          ),
+        ],
       ),
     );
   }
