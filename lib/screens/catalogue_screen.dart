@@ -884,6 +884,11 @@ class _CatalogueScreenState extends State<CatalogueScreen> {
       builder: (context, constraints) {
         // Couvre téléphone ET tablette : voir largeurSeuilBureau.
         final mobile = constraints.maxWidth < largeurSeuilBureau;
+        // En dessous de cette largeur (téléphone), la barre du bas n'a pas
+        // la place pour les 7 rubriques : on n'en garde que 3 et le reste
+        // passe sous "Plus". Une tablette a largement la place de toutes
+        // les afficher directement.
+        final barreEtroite = constraints.maxWidth < 700;
         final contenu = Column(
           children: [
             _TopBar(
@@ -925,11 +930,9 @@ class _CatalogueScreenState extends State<CatalogueScreen> {
                   selectedIndex: _selectedIndex,
                   onSelect: (i) => setState(() => _selectedIndex = i),
                   accent: accent,
-                  primaryIndices: const [
-                    _indexCatalogue,
-                    _indexClients,
-                    _indexCommandes,
-                  ],
+                  primaryIndices: barreEtroite
+                      ? const [_indexCatalogue, _indexClients, _indexCommandes]
+                      : null,
                 )
               : null,
           floatingActionButton: _fabVisible
