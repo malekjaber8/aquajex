@@ -121,7 +121,13 @@ class CarteArticleMixte extends StatelessWidget {
                 fit: StackFit.expand,
                 children: [
                   article.imageBytes != null
-                      ? Image.memory(article.imageBytes!, fit: BoxFit.cover)
+                      ? Container(
+                          color: const Color(0xFFF3F5F8),
+                          child: Image.memory(
+                            article.imageBytes!,
+                            fit: BoxFit.contain,
+                          ),
+                        )
                       : Container(
                           color: const Color(0xFFF3F5F8),
                           alignment: Alignment.center,

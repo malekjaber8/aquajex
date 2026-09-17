@@ -102,7 +102,7 @@ class _ArticleCardState extends State<ArticleCard> {
                         child: widget.article.imageBytes != null
                             ? Image.memory(
                                 widget.article.imageBytes!,
-                                fit: BoxFit.cover,
+                                fit: BoxFit.contain,
                               )
                             : Center(
                                 child: Icon(

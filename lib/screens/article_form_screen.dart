@@ -380,7 +380,7 @@ class _ArticleFormScreenState extends State<ArticleFormScreen> {
             ? Stack(
                 fit: StackFit.expand,
                 children: [
-                  Image.memory(_imageBytes!, fit: BoxFit.cover),
+                  Image.memory(_imageBytes!, fit: BoxFit.contain),
                   Positioned(
                     right: 6,
                     top: 6,

@@ -77,7 +77,10 @@ class _ArticleDetailCard extends StatelessWidget {
                     child: Container(
                       color: const Color(0xFFF3F5F8),
                       child: article.imageBytes != null
-                          ? Image.memory(article.imageBytes!, fit: BoxFit.cover)
+                          ? Image.memory(
+                              article.imageBytes!,
+                              fit: BoxFit.contain,
+                            )
                           : Center(
                               child: Icon(
                                 Icons.inventory_2_outlined,
