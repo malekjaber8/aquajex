@@ -54530,7 +54530,7 @@ A.aF8.prototype={
 $2(a,b){return a+b.d},
 $S:243}
 A.aF7.prototype={
-$2(a,b){var s,r,q,p=this,o=null,n=b.b<700,m=p.b,l=m.a,k=t.p,j=A.aO(A.b([new A.a8U(l.c,l.d,p.c,m.gavv(),l.e,m.gasR(),m.k3,o),A.bd(p.a.a,1)],k),B.M,B.E,B.I)
+$2(a,b){var s,r,q,p=this,o=null,n=b.b<1024,m=p.b,l=m.a,k=t.p,j=A.aO(A.b([new A.a8U(l.c,l.d,p.c,m.gavv(),l.e,m.gasR(),m.k3,o),A.bd(p.a.a,1)],k),B.M,B.E,B.I)
 l=n?j:A.aF(A.b([new A.Ky(B.no,m.f,new A.aER(m),p.d,o,o),A.bd(j,1)],k),B.M,B.E,B.I,0)
 l=A.ez(!n,l,B.at,!0,!0)
 if(n)k=!(m.as||m.at||m.ax)
@@ -55817,7 +55817,7 @@ A.aQ9.prototype={
 $1(a){return this.a.yN(a.b)},
 $S:78}
 A.aQn.prototype={
-$2(a,b){var s,r,q,p,o,n=null,m=b.b<700,l=this.a
+$2(a,b){var s,r,q,p,o,n=null,m=b.b<1024,l=this.a
 switch(l.e){case 1:s=l.Wo(B.cS,l.f)
 break
 case 2:s=l.Wo(B.eN,l.r)
