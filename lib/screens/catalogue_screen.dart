@@ -882,7 +882,8 @@ class _CatalogueScreenState extends State<CatalogueScreen> {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final mobile = constraints.maxWidth < 700;
+        // Couvre téléphone ET tablette : voir largeurSeuilBureau.
+        final mobile = constraints.maxWidth < largeurSeuilBureau;
         final contenu = Column(
           children: [
             _TopBar(

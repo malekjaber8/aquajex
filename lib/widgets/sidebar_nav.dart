@@ -1,5 +1,14 @@
 import 'package:flutter/material.dart';
 
+/// En dessous de cette largeur, l'app utilise la coquille tactile (barre du
+/// bas, pas de barre latérale) au lieu de la mise en page bureau — ce qui
+/// couvre à la fois le téléphone et la tablette (l'une comme l'autre sont
+/// tactiles et profitent d'une barre atteignable au pouce plutôt que d'une
+/// barre latérale pensée pour la souris). Le PC (fenêtre par défaut de
+/// 1280px, voir windows/runner/main.cpp) reste toujours au-dessus, sauf si
+/// la fenêtre est délibérément rétrécie.
+const double largeurSeuilBureau = 1024;
+
 class SidebarItem {
   final IconData icon;
   final String label;

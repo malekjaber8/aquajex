@@ -285,7 +285,8 @@ class _TarifSelectionScreenState extends State<TarifSelectionScreen> {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final mobile = constraints.maxWidth < 700;
+        // Couvre téléphone ET tablette : voir largeurSeuilBureau.
+        final mobile = constraints.maxWidth < largeurSeuilBureau;
 
         final Widget corpsPrincipal;
         switch (_selectedIndex) {
