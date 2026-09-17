@@ -13,6 +13,7 @@ import '../services/auth_service.dart';
 import '../services/catalogue_pdf.dart';
 import '../services/catalogue_repository.dart';
 import '../services/gestion_repository.dart';
+import '../widgets/article_detail_dialog.dart';
 import '../widgets/changer_mot_de_passe_sheet.dart';
 import '../widgets/commande_edit_sheet.dart';
 import '../widgets/decorative_background.dart';
@@ -34,11 +35,18 @@ class CatalogueScreen extends StatefulWidget {
   final ModePrix modePrix;
   final bool isAdmin;
 
+  /// Article à ouvrir directement à l'arrivée sur l'écran (sa fiche
+  /// détail), quand on vient de taper dessus depuis l'accueil ou une
+  /// rubrique Promotion/Nouveauté/Stock — au lieu d'atterrir sur la liste
+  /// des familles sans savoir où il se trouve.
+  final Article? articleInitial;
+
   const CatalogueScreen({
     super.key,
     required this.tarif,
     required this.modePrix,
     required this.isAdmin,
+    this.articleInitial,
   });
 
   @override
@@ -50,7 +58,7 @@ class _CatalogueScreenState extends State<CatalogueScreen> {
   late final GestionRepository _gestionRepo = GestionRepository(widget.tarif);
 
   int _selectedIndex = 0;
-  String? _familleSelectionnee;
+  late String? _familleSelectionnee = widget.articleInitial?.categorie;
   String _rechercheArticle = '';
   String _rechercheClient = '';
   String _rechercheCommande = '';
@@ -143,6 +151,17 @@ class _CatalogueScreenState extends State<CatalogueScreen> {
       if (!mounted) return;
       setState(() => _articlesTous = articles);
     }, onError: (_) {});
+    if (widget.articleInitial != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        afficherFicheArticle(
+          context,
+          article: widget.articleInitial!,
+          modePrix: widget.modePrix,
+          accent: widget.tarif.accentGradient,
+        );
+      });
+    }
   }
 
   @override
@@ -155,17 +174,36 @@ class _CatalogueScreenState extends State<CatalogueScreen> {
     super.dispose();
   }
 
-  void _ouvrirCatalogueTarif(Tarif tarif) {
-    if (tarif == widget.tarif) return;
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(
-        builder: (_) => CatalogueScreen(
-          tarif: tarif,
+  /// Depuis Promotion/Nouveauté/Stock (qui mélangent les deux tarifs) :
+  /// ouvre la fiche de l'article tapé, dans son tarif et sa famille — sans
+  /// se contenter d'atterrir sur la liste des familles comme avant.
+  void _ouvrirArticleDansCatalogue(ArticleAvecTarif data) {
+    if (data.tarif == widget.tarif) {
+      setState(() {
+        _selectedIndex = _indexCatalogue;
+        _familleSelectionnee = data.article.categorie;
+      });
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        afficherFicheArticle(
+          context,
+          article: data.article,
           modePrix: widget.modePrix,
-          isAdmin: widget.isAdmin,
+          accent: widget.tarif.accentGradient,
+        );
+      });
+    } else {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (_) => CatalogueScreen(
+            tarif: data.tarif,
+            modePrix: widget.modePrix,
+            isAdmin: widget.isAdmin,
+            articleInitial: data.article,
+          ),
         ),
-      ),
-    );
+      );
+    }
   }
 
   Future<void> _chargerGestion() async {
@@ -802,7 +840,7 @@ class _CatalogueScreenState extends State<CatalogueScreen> {
             statut: StatutArticle.promo,
             articles: _articlesPromo,
             modePrix: widget.modePrix,
-            onTapArticle: (data) => _ouvrirCatalogueTarif(data.tarif),
+            onTapArticle: _ouvrirArticleDansCatalogue,
           );
           break;
         case _indexNouveaute:
@@ -810,14 +848,14 @@ class _CatalogueScreenState extends State<CatalogueScreen> {
             statut: StatutArticle.nouveaute,
             articles: _articlesNouveaute,
             modePrix: widget.modePrix,
-            onTapArticle: (data) => _ouvrirCatalogueTarif(data.tarif),
+            onTapArticle: _ouvrirArticleDansCatalogue,
           );
           break;
         case _indexStock:
           body = GestionStockView(
             articles: _articlesTous,
             modePrix: widget.modePrix,
-            onTapArticle: (data) => _ouvrirCatalogueTarif(data.tarif),
+            onTapArticle: _ouvrirArticleDansCatalogue,
           );
           break;
         case _indexClients:

@@ -95,13 +95,14 @@ class _TarifSelectionScreenState extends State<TarifSelectionScreen> {
     ).push(MaterialPageRoute(builder: (_) => const GestionCommerciauxScreen()));
   }
 
-  void _ouvrirCatalogue(Tarif tarif) {
+  void _ouvrirCatalogue(Tarif tarif, {Article? article}) {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => CatalogueScreen(
           tarif: tarif,
           modePrix: _modePrix,
           isAdmin: widget.isAdmin,
+          articleInitial: article,
         ),
       ),
     );
@@ -258,7 +259,8 @@ class _TarifSelectionScreenState extends State<TarifSelectionScreen> {
                   child: CarteArticleMixte(
                     data: data,
                     modePrix: _modePrix,
-                    onTap: () => _ouvrirCatalogue(data.tarif),
+                    onTap: () =>
+                        _ouvrirCatalogue(data.tarif, article: data.article),
                   ),
                 );
               },
@@ -277,7 +279,8 @@ class _TarifSelectionScreenState extends State<TarifSelectionScreen> {
       statut: statut,
       articles: articles,
       modePrix: _modePrix,
-      onTapArticle: (data) => _ouvrirCatalogue(data.tarif),
+      onTapArticle: (data) =>
+          _ouvrirCatalogue(data.tarif, article: data.article),
     );
   }
 
@@ -306,7 +309,8 @@ class _TarifSelectionScreenState extends State<TarifSelectionScreen> {
             corpsPrincipal = GestionStockView(
               articles: _articlesTous,
               modePrix: _modePrix,
-              onTapArticle: (data) => _ouvrirCatalogue(data.tarif),
+              onTapArticle: (data) =>
+                  _ouvrirCatalogue(data.tarif, article: data.article),
             );
             break;
           default:
