@@ -14,7 +14,11 @@ class CommandesSection extends StatelessWidget {
   final List<Client> clients;
   final ValueChanged<Commande> onEdit;
   final ValueChanged<Commande> onDelete;
-  final void Function(Commande commande, StatutCommande statut) onChangerStatut;
+
+  /// null = commercial connecté : le statut est visible mais pas modifiable
+  /// (seul l'admin peut le changer, voir CommandeTile/_StatutBadge).
+  final void Function(Commande commande, StatutCommande statut)?
+  onChangerStatut;
   final String recherche;
   final ValueChanged<String> onRechercheChanged;
 
@@ -121,8 +125,9 @@ class CommandesSection extends StatelessWidget {
                       ),
                       onEdit: () => onEdit(commande),
                       onDelete: () => onDelete(commande),
-                      onChangerStatut: (statut) =>
-                          onChangerStatut(commande, statut),
+                      onChangerStatut: onChangerStatut == null
+                          ? null
+                          : (statut) => onChangerStatut!(commande, statut),
                     );
                   },
                 ),

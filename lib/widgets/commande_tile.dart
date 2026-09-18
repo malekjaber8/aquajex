@@ -131,9 +131,11 @@ class CommandeTile extends StatelessWidget {
   }
 }
 
-/// Badge coloré affichant le statut de la commande, tapable pour le
+/// Badge coloré affichant le statut de la commande. Tapable pour le
 /// changer (en attente / confirmée / livrée) sans passer par l'écran
-/// d'édition complet.
+/// d'édition complet — uniquement si [onChanger] est fourni (admin). Un
+/// commercial voit ce badge en lecture seule : il ne peut que constater
+/// le statut, pas le modifier (seul l'admin décide).
 class _StatutBadge extends StatelessWidget {
   final StatutCommande statut;
   final ValueChanged<StatutCommande>? onChanger;
@@ -142,6 +144,43 @@ class _StatutBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final onChanger = this.onChanger;
+    final badge = Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: statut.couleur.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 7,
+            height: 7,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: statut.couleur,
+            ),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            statut.libelle,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              color: statut.couleur,
+            ),
+          ),
+          if (onChanger != null) ...[
+            const SizedBox(width: 2),
+            Icon(Icons.keyboard_arrow_down, size: 13, color: statut.couleur),
+          ],
+        ],
+      ),
+    );
+
+    if (onChanger == null) return badge;
+
     return PopupMenuButton<StatutCommande>(
       initialValue: statut,
       tooltip: 'Changer le statut',
@@ -167,37 +206,7 @@ class _StatutBadge extends StatelessWidget {
             ),
           ),
       ],
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-        decoration: BoxDecoration(
-          color: statut.couleur.withValues(alpha: 0.12),
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 7,
-              height: 7,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: statut.couleur,
-              ),
-            ),
-            const SizedBox(width: 6),
-            Text(
-              statut.libelle,
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-                color: statut.couleur,
-              ),
-            ),
-            const SizedBox(width: 2),
-            Icon(Icons.keyboard_arrow_down, size: 13, color: statut.couleur),
-          ],
-        ),
-      ),
+      child: badge,
     );
   }
 }
