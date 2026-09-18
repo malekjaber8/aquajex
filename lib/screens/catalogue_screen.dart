@@ -13,6 +13,7 @@ import '../services/auth_service.dart';
 import '../services/catalogue_pdf.dart';
 import '../services/catalogue_repository.dart';
 import '../services/gestion_repository.dart';
+import '../services/panier_service.dart';
 import '../widgets/article_detail_dialog.dart';
 import '../widgets/changer_mot_de_passe_sheet.dart';
 import '../widgets/commande_edit_sheet.dart';
@@ -75,7 +76,10 @@ class _CatalogueScreenState extends State<CatalogueScreen> {
   List<Client> _clients = [];
   List<Commande> _commandes = [];
   List<Note> _notes = [];
-  final List<LigneCommande> _panier = [];
+
+  /// Propre à ce catalogue (voir PanierService) : survit à la navigation,
+  /// tant qu'aucune commande n'a été confirmée pour ce tarif.
+  List<LigneCommande> get _panier => PanierService.pour(widget.tarif);
 
   List<ArticleAvecTarif> _articlesPromo = [];
   List<ArticleAvecTarif> _articlesNouveaute = [];
