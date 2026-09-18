@@ -93,6 +93,27 @@ class AuthService {
     return role == 'admin' ? RoleUtilisateur.admin : RoleUtilisateur.commercial;
   }
 
+  /// Nom à afficher pour le compte actuellement connecté (nom complet du
+  /// compte, ou à défaut son nom d'utilisateur) — sert à identifier le
+  /// commercial dans la notification Telegram envoyée à l'admin quand il
+  /// enregistre une commande (voir TelegramService).
+  static Future<String> recupererNomAffichageActuel() async {
+    final utilisateur = _auth.currentUser;
+    if (utilisateur == null) return 'Inconnu';
+    final doc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(utilisateur.uid)
+        .get();
+    final data = doc.data();
+    final nomComplet = (data?['nomComplet'] as String?)?.trim();
+    if (nomComplet != null && nomComplet.isNotEmpty) return nomComplet;
+    final nomUtilisateur = (data?['nomUtilisateur'] as String?)?.trim();
+    if (nomUtilisateur != null && nomUtilisateur.isNotEmpty) {
+      return nomUtilisateur;
+    }
+    return utilisateur.email ?? 'Inconnu';
+  }
+
   /// Flux des comptes commerciaux (fiches Firestore `users` de rôle
   /// "commercial"), pour l'écran de gestion réservé à l'admin.
   static Stream<List<CompteCommercial>> streamComptesCommerciaux() {

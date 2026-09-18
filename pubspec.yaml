@@ -50,6 +50,9 @@ dependencies:
   printing: ^5.15.0
   google_fonts: ^8.2.1
 
+  # Notification Telegram à l'admin quand un commercial enregistre une commande.
+  http: ^1.2.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

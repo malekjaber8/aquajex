@@ -14,6 +14,7 @@ import '../services/catalogue_pdf.dart';
 import '../services/catalogue_repository.dart';
 import '../services/gestion_repository.dart';
 import '../services/panier_service.dart';
+import '../services/telegram_service.dart';
 import '../widgets/article_detail_dialog.dart';
 import '../widgets/changer_mot_de_passe_sheet.dart';
 import '../widgets/commande_edit_sheet.dart';
@@ -611,12 +612,26 @@ class _CatalogueScreenState extends State<CatalogueScreen> {
                 _panier.clear();
               });
             }
+            if (!widget.isAdmin) unawaited(_notifierTelegram(commande));
             return commande;
           },
         ),
       ),
     );
     if (mounted) setState(() {});
+  }
+
+  /// Prévient l'admin sur Telegram qu'un commercial vient d'enregistrer une
+  /// commande — jamais appelé quand c'est l'admin lui-même qui commande
+  /// (voir l'appel ci-dessus, gardé par `!widget.isAdmin`).
+  Future<void> _notifierTelegram(Commande commande) async {
+    final nomCommercial = await AuthService.recupererNomAffichageActuel();
+    await TelegramService.notifierNouvelleCommande(
+      nomCommercial: nomCommercial,
+      clientNom: commande.clientNom,
+      tarifNom: widget.tarif.nom,
+      totalTtc: commande.totalTtc,
+    );
   }
 
   Future<void> _modifierCommande(Commande commande) async {
