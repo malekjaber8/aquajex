@@ -51,241 +51,65 @@ Future<Uint8List> genererFacturePdf({
   final remisePourcent = commande.remisePourcent;
 
   document.addPage(
-    pw.Page(
+    pw.MultiPage(
       pageFormat: PdfPageFormat.a4,
       margin: const pw.EdgeInsets.all(32),
       build: (context) {
-        return pw.Column(
-          crossAxisAlignment: pw.CrossAxisAlignment.start,
-          children: [
-            // En-tête : logo à gauche, coordonnées légales à droite.
-            pw.Row(
-              crossAxisAlignment: pw.CrossAxisAlignment.start,
-              children: [
-                pw.Container(
-                  height: 60,
-                  width: 100,
-                  alignment: pw.Alignment.centerLeft,
-                  child: pw.Image(logo, fit: pw.BoxFit.contain),
-                ),
-                pw.Spacer(),
-                pw.Column(
-                  crossAxisAlignment: pw.CrossAxisAlignment.end,
-                  children: [
-                    pw.Text(
-                      _raisonSociale,
-                      style: pw.TextStyle(
-                        fontSize: 15,
-                        fontWeight: pw.FontWeight.bold,
-                        color: encre,
-                      ),
-                    ),
-                    pw.Text(
-                      _activite,
-                      style: const pw.TextStyle(
-                        fontSize: 8,
-                        color: PdfColors.grey600,
-                      ),
-                    ),
-                    pw.SizedBox(height: 3),
-                    pw.Text(
-                      _adresseSociete,
-                      style: const pw.TextStyle(fontSize: 8),
-                    ),
-                    pw.Text(
-                      '$_tvaSociete   $_rcSociete',
-                      style: const pw.TextStyle(fontSize: 8),
-                    ),
-                    pw.Text(
-                      _telSociete,
-                      style: const pw.TextStyle(fontSize: 8),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-            pw.SizedBox(height: 14),
-            pw.Divider(color: PdfColors.grey400),
-            pw.SizedBox(height: 12),
-
-            // Facture (N°, date) + informations client, côte à côte.
-            pw.Row(
-              crossAxisAlignment: pw.CrossAxisAlignment.start,
-              children: [
-                pw.Expanded(
-                  child: pw.Container(
-                    padding: const pw.EdgeInsets.all(10),
-                    decoration: pw.BoxDecoration(
-                      color: PdfColors.grey100,
-                      borderRadius: pw.BorderRadius.circular(8),
-                    ),
-                    child: pw.Column(
-                      crossAxisAlignment: pw.CrossAxisAlignment.start,
-                      children: [
-                        pw.Text(
-                          'FACTURE PROFORMA',
-                          style: pw.TextStyle(
-                            fontSize: 13,
-                            fontWeight: pw.FontWeight.bold,
-                            color: accent,
-                          ),
-                        ),
-                        pw.SizedBox(height: 4),
-                        pw.Text(
-                          'N° ${commande.id}',
-                          style: const pw.TextStyle(fontSize: 9),
-                        ),
-                        pw.Text(
-                          _formatDatePdf(commande.date),
-                          style: const pw.TextStyle(fontSize: 9),
-                        ),
-                        pw.SizedBox(height: 2),
-                        pw.Text(
-                          'Mode de prix : ${commande.modePrix.libelle}',
-                          style: const pw.TextStyle(fontSize: 9),
-                        ),
-                      ],
+        return [
+          // En-tête : logo à gauche, coordonnées légales à droite.
+          pw.Row(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              pw.Container(
+                height: 60,
+                width: 100,
+                alignment: pw.Alignment.centerLeft,
+                child: pw.Image(logo, fit: pw.BoxFit.contain),
+              ),
+              pw.Spacer(),
+              pw.Column(
+                crossAxisAlignment: pw.CrossAxisAlignment.end,
+                children: [
+                  pw.Text(
+                    _raisonSociale,
+                    style: pw.TextStyle(
+                      fontSize: 15,
+                      fontWeight: pw.FontWeight.bold,
+                      color: encre,
                     ),
                   ),
-                ),
-                pw.SizedBox(width: 12),
-                pw.Expanded(
-                  child: pw.Container(
-                    padding: const pw.EdgeInsets.all(10),
-                    decoration: pw.BoxDecoration(
-                      color: PdfColors.grey100,
-                      borderRadius: pw.BorderRadius.circular(8),
-                    ),
-                    child: pw.Column(
-                      crossAxisAlignment: pw.CrossAxisAlignment.start,
-                      children: [
-                        pw.Text(
-                          'CLIENT',
-                          style: pw.TextStyle(
-                            fontSize: 9,
-                            fontWeight: pw.FontWeight.bold,
-                            color: PdfColors.grey600,
-                          ),
-                        ),
-                        pw.SizedBox(height: 4),
-                        pw.Text(
-                          commande.clientNom,
-                          style: pw.TextStyle(
-                            fontSize: 12,
-                            fontWeight: pw.FontWeight.bold,
-                            color: encre,
-                          ),
-                        ),
-                        if (client?.estSociete == true &&
-                            client?.responsable != null)
-                          pw.Text(
-                            'Responsable : ${client!.responsable}',
-                            style: const pw.TextStyle(fontSize: 9),
-                          ),
-                        if (client?.telephone != null)
-                          pw.Text(
-                            'Tél : ${client!.telephone}',
-                            style: const pw.TextStyle(fontSize: 9),
-                          ),
-                        if (client?.adresse != null)
-                          pw.Text(
-                            client!.adresse!,
-                            style: const pw.TextStyle(fontSize: 9),
-                          ),
-                        if (client?.matriculeFiscal != null)
-                          pw.Text(
-                            'Matricule fiscal : ${client!.matriculeFiscal}',
-                            style: const pw.TextStyle(fontSize: 9),
-                          ),
-                        if (client?.cin != null)
-                          pw.Text(
-                            'CIN : ${client!.cin}',
-                            style: const pw.TextStyle(fontSize: 9),
-                          ),
-                      ],
+                  pw.Text(
+                    _activite,
+                    style: const pw.TextStyle(
+                      fontSize: 8,
+                      color: PdfColors.grey600,
                     ),
                   ),
-                ),
-              ],
-            ),
-            pw.SizedBox(height: 16),
-
-            // Tableau des articles.
-            pw.Table(
-              columnWidths: const {
-                0: pw.FlexColumnWidth(1.1),
-                1: pw.FlexColumnWidth(1.4),
-                2: pw.FlexColumnWidth(2.5),
-                3: pw.FlexColumnWidth(0.6),
-                4: pw.FlexColumnWidth(0.6),
-                5: pw.FlexColumnWidth(0.9),
-                6: pw.FlexColumnWidth(0.8),
-                7: pw.FlexColumnWidth(0.9),
-                8: pw.FlexColumnWidth(0.6),
-                9: pw.FlexColumnWidth(0.9),
-              },
-              children: [
-                pw.TableRow(
-                  decoration: pw.BoxDecoration(color: accent),
-                  children: [
-                    _celluleEntete('Référence'),
-                    _celluleEntete('Code Barre'),
-                    _celluleEntete('Désignation'),
-                    _celluleEntete('Col.'),
-                    _celluleEntete('Qté'),
-                    _celluleEntete('P.U. HT'),
-                    _celluleEntete('Remise'),
-                    _celluleEntete('Mnt H.T'),
-                    _celluleEntete('TVA'),
-                    _celluleEntete('P.U. TTC'),
-                  ],
-                ),
-                for (final ligne in commande.lignes)
-                  pw.TableRow(
-                    decoration: const pw.BoxDecoration(
-                      border: pw.Border(
-                        bottom: pw.BorderSide(color: PdfColors.grey300),
-                      ),
-                    ),
-                    children: [
-                      _celluleCorps(ligne.codeArticle ?? '-'),
-                      _celluleCorps(ligne.codeBarre ?? '-'),
-                      _celluleCorps(ligne.designation),
-                      _celluleCorps(
-                        ligne.colisage != null ? '${ligne.colisage}' : '-',
-                      ),
-                      _celluleCorps('${ligne.quantite}'),
-                      _celluleCorps(_formatMontantPdf(ligne.prixUnitaire)),
-                      _celluleCorps('${remisePourcent.toStringAsFixed(0)}%'),
-                      _celluleCorps(
-                        _formatMontantPdf(
-                          ligne.total * (1 - remisePourcent / 100),
-                        ),
-                        gras: true,
-                      ),
-                      _celluleCorps(
-                        '${(tauxTvaFacture * 100).toStringAsFixed(0)}%',
-                      ),
-                      _celluleCorps(
-                        _formatMontantPdf(
-                          ligne.prixUnitaire *
-                              (1 - remisePourcent / 100) *
-                              (1 + tauxTvaFacture),
-                        ),
-                      ),
-                    ],
+                  pw.SizedBox(height: 3),
+                  pw.Text(
+                    _adresseSociete,
+                    style: const pw.TextStyle(fontSize: 8),
                   ),
-              ],
-            ),
-            pw.SizedBox(height: 16),
+                  pw.Text(
+                    '$_tvaSociete   $_rcSociete',
+                    style: const pw.TextStyle(fontSize: 8),
+                  ),
+                  pw.Text(_telSociete, style: const pw.TextStyle(fontSize: 8)),
+                ],
+              ),
+            ],
+          ),
+          pw.SizedBox(height: 14),
+          pw.Divider(color: PdfColors.grey400),
+          pw.SizedBox(height: 12),
 
-            // Totaux.
-            pw.Row(
-              mainAxisAlignment: pw.MainAxisAlignment.end,
-              children: [
-                pw.Container(
-                  width: 220,
-                  padding: const pw.EdgeInsets.all(12),
+          // Facture (N°, date) + informations client, côte à côte.
+          pw.Row(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              pw.Expanded(
+                child: pw.Container(
+                  padding: const pw.EdgeInsets.all(10),
                   decoration: pw.BoxDecoration(
                     color: PdfColors.grey100,
                     borderRadius: pw.BorderRadius.circular(8),
@@ -293,65 +117,170 @@ Future<Uint8List> genererFacturePdf({
                   child: pw.Column(
                     crossAxisAlignment: pw.CrossAxisAlignment.start,
                     children: [
-                      _ligneTotalPdf('TOTAL HT', commande.totalHt),
-                      if (remisePourcent > 0)
-                        _ligneTotalPdf(
-                          'REMISE (${remisePourcent.toStringAsFixed(0)}%)',
-                          -commande.remiseMontant,
+                      pw.Text(
+                        'FACTURE PROFORMA',
+                        style: pw.TextStyle(
+                          fontSize: 13,
+                          fontWeight: pw.FontWeight.bold,
+                          color: accent,
                         ),
-                      _ligneTotalPdf('TOTAL HT (NET)', commande.totalHtNet),
+                      ),
                       pw.SizedBox(height: 4),
-                      _ligneTotalPdf('T.V.A.', commande.montantTva),
-                      pw.SizedBox(height: 6),
-                      pw.Divider(color: PdfColors.grey400),
-                      pw.Row(
-                        mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                        children: [
-                          pw.Text(
-                            'TOTAL T.T.C.',
-                            style: pw.TextStyle(
-                              fontSize: 11,
-                              fontWeight: pw.FontWeight.bold,
-                              color: encre,
-                            ),
-                          ),
-                          pw.Text(
-                            '${_formatMontantPdf(commande.totalTtc)} DT',
-                            style: pw.TextStyle(
-                              fontSize: 14,
-                              fontWeight: pw.FontWeight.bold,
-                              color: accent,
-                            ),
-                          ),
-                        ],
+                      pw.Text(
+                        'N° ${commande.id}',
+                        style: const pw.TextStyle(fontSize: 9),
+                      ),
+                      pw.Text(
+                        _formatDatePdf(commande.date),
+                        style: const pw.TextStyle(fontSize: 9),
+                      ),
+                      pw.SizedBox(height: 2),
+                      pw.Text(
+                        'Mode de prix : ${commande.modePrix.libelle}',
+                        style: const pw.TextStyle(fontSize: 9),
                       ),
                     ],
                   ),
                 ),
-              ],
-            ),
-            pw.SizedBox(height: 14),
-
-            // Montant en toutes lettres.
-            pw.Text(
-              'ARRETEE LA PRESENTE A LA SOMME DE :',
-              style: pw.TextStyle(
-                fontSize: 8.5,
-                fontWeight: pw.FontWeight.bold,
-                color: PdfColors.grey700,
               ),
-            ),
-            pw.SizedBox(height: 2),
-            pw.Text(
-              montantEnLettres(commande.totalTtc),
-              style: const pw.TextStyle(fontSize: 9),
-            ),
+              pw.SizedBox(width: 12),
+              pw.Expanded(
+                child: pw.Container(
+                  padding: const pw.EdgeInsets.all(10),
+                  decoration: pw.BoxDecoration(
+                    color: PdfColors.grey100,
+                    borderRadius: pw.BorderRadius.circular(8),
+                  ),
+                  child: pw.Column(
+                    crossAxisAlignment: pw.CrossAxisAlignment.start,
+                    children: [
+                      pw.Text(
+                        'CLIENT',
+                        style: pw.TextStyle(
+                          fontSize: 9,
+                          fontWeight: pw.FontWeight.bold,
+                          color: PdfColors.grey600,
+                        ),
+                      ),
+                      pw.SizedBox(height: 4),
+                      pw.Text(
+                        commande.clientNom,
+                        style: pw.TextStyle(
+                          fontSize: 12,
+                          fontWeight: pw.FontWeight.bold,
+                          color: encre,
+                        ),
+                      ),
+                      if (client?.estSociete == true &&
+                          client?.responsable != null)
+                        pw.Text(
+                          'Responsable : ${client!.responsable}',
+                          style: const pw.TextStyle(fontSize: 9),
+                        ),
+                      if (client?.telephone != null)
+                        pw.Text(
+                          'Tél : ${client!.telephone}',
+                          style: const pw.TextStyle(fontSize: 9),
+                        ),
+                      if (client?.adresse != null)
+                        pw.Text(
+                          client!.adresse!,
+                          style: const pw.TextStyle(fontSize: 9),
+                        ),
+                      if (client?.matriculeFiscal != null)
+                        pw.Text(
+                          'Matricule fiscal : ${client!.matriculeFiscal}',
+                          style: const pw.TextStyle(fontSize: 9),
+                        ),
+                      if (client?.cin != null)
+                        pw.Text(
+                          'CIN : ${client!.cin}',
+                          style: const pw.TextStyle(fontSize: 9),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+          pw.SizedBox(height: 16),
 
-            if (commande.note != null && commande.note!.isNotEmpty) ...[
-              pw.SizedBox(height: 14),
+          // Tableau des articles.
+          pw.Table(
+            columnWidths: const {
+              0: pw.FlexColumnWidth(1.1),
+              1: pw.FlexColumnWidth(1.4),
+              2: pw.FlexColumnWidth(2.5),
+              3: pw.FlexColumnWidth(0.6),
+              4: pw.FlexColumnWidth(0.6),
+              5: pw.FlexColumnWidth(0.9),
+              6: pw.FlexColumnWidth(0.8),
+              7: pw.FlexColumnWidth(0.9),
+              8: pw.FlexColumnWidth(0.6),
+              9: pw.FlexColumnWidth(0.9),
+            },
+            children: [
+              pw.TableRow(
+                decoration: pw.BoxDecoration(color: accent),
+                children: [
+                  _celluleEntete('Référence'),
+                  _celluleEntete('Code Barre'),
+                  _celluleEntete('Désignation'),
+                  _celluleEntete('Col.'),
+                  _celluleEntete('Qté'),
+                  _celluleEntete('P.U. HT'),
+                  _celluleEntete('Remise'),
+                  _celluleEntete('Mnt H.T'),
+                  _celluleEntete('TVA'),
+                  _celluleEntete('P.U. TTC'),
+                ],
+              ),
+              for (final ligne in commande.lignes)
+                pw.TableRow(
+                  decoration: const pw.BoxDecoration(
+                    border: pw.Border(
+                      bottom: pw.BorderSide(color: PdfColors.grey300),
+                    ),
+                  ),
+                  children: [
+                    _celluleCorps(ligne.codeArticle ?? '-'),
+                    _celluleCorps(ligne.codeBarre ?? '-'),
+                    _celluleCorps(ligne.designation),
+                    _celluleCorps(
+                      ligne.colisage != null ? '${ligne.colisage}' : '-',
+                    ),
+                    _celluleCorps('${ligne.quantite}'),
+                    _celluleCorps(_formatMontantPdf(ligne.prixUnitaire)),
+                    _celluleCorps('${remisePourcent.toStringAsFixed(0)}%'),
+                    _celluleCorps(
+                      _formatMontantPdf(
+                        ligne.total * (1 - remisePourcent / 100),
+                      ),
+                      gras: true,
+                    ),
+                    _celluleCorps(
+                      '${(tauxTvaFacture * 100).toStringAsFixed(0)}%',
+                    ),
+                    _celluleCorps(
+                      _formatMontantPdf(
+                        ligne.prixUnitaire *
+                            (1 - remisePourcent / 100) *
+                            (1 + tauxTvaFacture),
+                      ),
+                    ),
+                  ],
+                ),
+            ],
+          ),
+          pw.SizedBox(height: 16),
+
+          // Totaux.
+          pw.Row(
+            mainAxisAlignment: pw.MainAxisAlignment.end,
+            children: [
               pw.Container(
-                width: double.infinity,
-                padding: const pw.EdgeInsets.all(10),
+                width: 220,
+                padding: const pw.EdgeInsets.all(12),
                 decoration: pw.BoxDecoration(
                   color: PdfColors.grey100,
                   borderRadius: pw.BorderRadius.circular(8),
@@ -359,78 +288,143 @@ Future<Uint8List> genererFacturePdf({
                 child: pw.Column(
                   crossAxisAlignment: pw.CrossAxisAlignment.start,
                   children: [
-                    pw.Text(
-                      'NOTE',
-                      style: pw.TextStyle(
-                        fontSize: 9,
-                        fontWeight: pw.FontWeight.bold,
-                        color: PdfColors.grey600,
+                    _ligneTotalPdf('TOTAL HT', commande.totalHt),
+                    if (remisePourcent > 0)
+                      _ligneTotalPdf(
+                        'REMISE (${remisePourcent.toStringAsFixed(0)}%)',
+                        -commande.remiseMontant,
                       ),
-                    ),
+                    _ligneTotalPdf('TOTAL HT (NET)', commande.totalHtNet),
                     pw.SizedBox(height: 4),
-                    pw.Text(
-                      commande.note!,
-                      style: const pw.TextStyle(fontSize: 10),
+                    _ligneTotalPdf('T.V.A.', commande.montantTva),
+                    pw.SizedBox(height: 6),
+                    pw.Divider(color: PdfColors.grey400),
+                    pw.Row(
+                      mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                      children: [
+                        pw.Text(
+                          'TOTAL T.T.C.',
+                          style: pw.TextStyle(
+                            fontSize: 11,
+                            fontWeight: pw.FontWeight.bold,
+                            color: encre,
+                          ),
+                        ),
+                        pw.Text(
+                          '${_formatMontantPdf(commande.totalTtc)} DT',
+                          style: pw.TextStyle(
+                            fontSize: 14,
+                            fontWeight: pw.FontWeight.bold,
+                            color: accent,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
               ),
             ],
+          ),
+          pw.SizedBox(height: 14),
 
-            pw.Spacer(),
-            pw.Row(
-              crossAxisAlignment: pw.CrossAxisAlignment.start,
-              children: [
-                pw.Expanded(
-                  child: pw.Container(
-                    height: 70,
-                    decoration: pw.BoxDecoration(
-                      border: pw.Border.all(color: PdfColors.grey400),
-                      borderRadius: pw.BorderRadius.circular(6),
-                    ),
-                    padding: const pw.EdgeInsets.all(6),
-                    child: pw.Text(
-                      'CACHET & SIGNATURE',
-                      style: const pw.TextStyle(
-                        fontSize: 8,
-                        color: PdfColors.grey600,
-                      ),
-                    ),
-                  ),
-                ),
-                pw.SizedBox(width: 16),
-                pw.Expanded(
-                  child: pw.Container(
-                    height: 70,
-                    decoration: pw.BoxDecoration(
-                      border: pw.Border.all(color: PdfColors.grey400),
-                      borderRadius: pw.BorderRadius.circular(6),
-                    ),
-                    padding: const pw.EdgeInsets.all(6),
-                    child: pw.Text(
-                      'CACHET & SIGNATURE CLIENT',
-                      style: const pw.TextStyle(
-                        fontSize: 8,
-                        color: PdfColors.grey600,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+          // Montant en toutes lettres.
+          pw.Text(
+            'ARRETEE LA PRESENTE A LA SOMME DE :',
+            style: pw.TextStyle(
+              fontSize: 8.5,
+              fontWeight: pw.FontWeight.bold,
+              color: PdfColors.grey700,
             ),
-            pw.SizedBox(height: 10),
-            pw.Divider(color: PdfColors.grey300),
-            pw.Center(
-              child: pw.Text(
-                'Document proforma — sans valeur fiscale — Merci de votre confiance.',
-                style: const pw.TextStyle(
-                  fontSize: 8.5,
-                  color: PdfColors.grey500,
-                ),
+          ),
+          pw.SizedBox(height: 2),
+          pw.Text(
+            montantEnLettres(commande.totalTtc),
+            style: const pw.TextStyle(fontSize: 9),
+          ),
+
+          if (commande.note != null && commande.note!.isNotEmpty) ...[
+            pw.SizedBox(height: 14),
+            pw.Container(
+              width: double.infinity,
+              padding: const pw.EdgeInsets.all(10),
+              decoration: pw.BoxDecoration(
+                color: PdfColors.grey100,
+                borderRadius: pw.BorderRadius.circular(8),
+              ),
+              child: pw.Column(
+                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                children: [
+                  pw.Text(
+                    'NOTE',
+                    style: pw.TextStyle(
+                      fontSize: 9,
+                      fontWeight: pw.FontWeight.bold,
+                      color: PdfColors.grey600,
+                    ),
+                  ),
+                  pw.SizedBox(height: 4),
+                  pw.Text(
+                    commande.note!,
+                    style: const pw.TextStyle(fontSize: 10),
+                  ),
+                ],
               ),
             ),
           ],
-        );
+
+          pw.SizedBox(height: 24),
+          pw.Row(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              pw.Expanded(
+                child: pw.Container(
+                  height: 70,
+                  decoration: pw.BoxDecoration(
+                    border: pw.Border.all(color: PdfColors.grey400),
+                    borderRadius: pw.BorderRadius.circular(6),
+                  ),
+                  padding: const pw.EdgeInsets.all(6),
+                  child: pw.Text(
+                    'CACHET & SIGNATURE',
+                    style: const pw.TextStyle(
+                      fontSize: 8,
+                      color: PdfColors.grey600,
+                    ),
+                  ),
+                ),
+              ),
+              pw.SizedBox(width: 16),
+              pw.Expanded(
+                child: pw.Container(
+                  height: 70,
+                  decoration: pw.BoxDecoration(
+                    border: pw.Border.all(color: PdfColors.grey400),
+                    borderRadius: pw.BorderRadius.circular(6),
+                  ),
+                  padding: const pw.EdgeInsets.all(6),
+                  child: pw.Text(
+                    'CACHET & SIGNATURE CLIENT',
+                    style: const pw.TextStyle(
+                      fontSize: 8,
+                      color: PdfColors.grey600,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          pw.SizedBox(height: 10),
+          pw.Divider(color: PdfColors.grey300),
+          pw.Center(
+            child: pw.Text(
+              'Document proforma — sans valeur fiscale — Merci de votre confiance.',
+              style: const pw.TextStyle(
+                fontSize: 8.5,
+                color: PdfColors.grey500,
+              ),
+            ),
+          ),
+        ];
       },
     ),
   );
