@@ -97,10 +97,18 @@ class _PanierSheetState extends State<_PanierSheet> {
   @override
   Widget build(BuildContext context) {
     final accent = widget.accent;
+    // Avec peu d'articles, une feuille toujours ouverte aux 3/4 de l'écran
+    // laisse un grand vide sous la dernière carte : on adapte sa taille de
+    // départ au nombre de lignes (toujours redimensionnable ensuite).
+    const tailleMin = 0.32;
+    final tailleInitiale = (tailleMin + widget.lignes.length * 0.11).clamp(
+      tailleMin,
+      0.85,
+    );
 
     return DraggableScrollableSheet(
-      initialChildSize: 0.75,
-      minChildSize: 0.4,
+      initialChildSize: tailleInitiale,
+      minChildSize: tailleMin,
       maxChildSize: 0.92,
       expand: false,
       builder: (context, scrollController) => Material(
@@ -144,83 +152,143 @@ class _PanierSheetState extends State<_PanierSheet> {
               ),
             ),
             Expanded(
-              child: widget.lignes.isEmpty
-                  ? Center(
-                      child: Text(
-                        'Le panier est vide.\nAjoutez des articles depuis le catalogue.',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Colors.black.withValues(alpha: 0.45),
+              child: Container(
+                width: double.infinity,
+                color: widget.lignes.isEmpty
+                    ? Colors.white
+                    : const Color(0xFFF7F8FA),
+                child: widget.lignes.isEmpty
+                    ? Center(
+                        child: Text(
+                          'Le panier est vide.\nAjoutez des articles depuis le catalogue.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Colors.black.withValues(alpha: 0.45),
+                          ),
                         ),
-                      ),
-                    )
-                  : ListView.builder(
-                      controller: scrollController,
-                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
-                      itemCount: widget.lignes.length,
-                      itemBuilder: (context, index) {
-                        final ligne = widget.lignes[index];
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: Column(
+                      )
+                    : ListView.builder(
+                        controller: scrollController,
+                        padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
+                        itemCount: widget.lignes.length,
+                        itemBuilder: (context, index) {
+                          final ligne = widget.lignes[index];
+                          return Container(
+                            margin: const EdgeInsets.only(bottom: 12),
+                            padding: const EdgeInsets.all(14),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                color: Colors.black.withValues(alpha: 0.06),
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.04),
+                                  blurRadius: 6,
+                                  offset: const Offset(0, 3),
+                                ),
+                              ],
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(
-                                      ligne.designation,
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w600,
-                                        color: Color(0xFF1B3B5F),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          if ((ligne.codeArticle ?? '')
+                                              .isNotEmpty)
+                                            Padding(
+                                              padding: const EdgeInsets.only(
+                                                bottom: 3,
+                                              ),
+                                              child: Text(
+                                                'Réf. ${ligne.codeArticle}',
+                                                style: TextStyle(
+                                                  fontSize: 11,
+                                                  fontWeight: FontWeight.w800,
+                                                  letterSpacing: 0.3,
+                                                  color: accent.last,
+                                                ),
+                                              ),
+                                            ),
+                                          Text(
+                                            ligne.designation,
+                                            maxLines: 2,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: const TextStyle(
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w700,
+                                              color: Color(0xFF1B3B5F),
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     ),
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      '${_formatMontant(ligne.prixUnitaire)} DT / unité',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.black.withValues(
-                                          alpha: 0.45,
+                                    const SizedBox(width: 8),
+                                    InkWell(
+                                      onTap: () => _supprimer(index),
+                                      borderRadius: BorderRadius.circular(20),
+                                      child: const Padding(
+                                        padding: EdgeInsets.all(2),
+                                        child: Icon(
+                                          Icons.close,
+                                          size: 18,
+                                          color: Colors.black38,
                                         ),
                                       ),
                                     ),
                                   ],
                                 ),
-                              ),
-                              StepperQuantite(
-                                quantite: ligne.quantite,
-                                accent: accent,
-                                onMoins: () => _modifierQuantite(index, -1),
-                                onPlus: () => _modifierQuantite(index, 1),
-                                onChanged: (q) => _definirQuantite(index, q),
-                              ),
-                              const SizedBox(width: 12),
-                              SizedBox(
-                                width: 74,
-                                child: Text(
-                                  '${_formatMontant(ligne.total)} DT',
-                                  textAlign: TextAlign.right,
-                                  style: TextStyle(
-                                    fontSize: 13.5,
-                                    fontWeight: FontWeight.w700,
-                                    color: accent.last,
-                                  ),
+                                const SizedBox(height: 12),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        '${_formatMontant(ligne.prixUnitaire)} DT / unité',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.black.withValues(
+                                            alpha: 0.45,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    StepperQuantite(
+                                      quantite: ligne.quantite,
+                                      accent: accent,
+                                      onMoins: () =>
+                                          _modifierQuantite(index, -1),
+                                      onPlus: () => _modifierQuantite(index, 1),
+                                      onChanged: (q) =>
+                                          _definirQuantite(index, q),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    SizedBox(
+                                      width: 74,
+                                      child: Text(
+                                        '${_formatMontant(ligne.total)} DT',
+                                        textAlign: TextAlign.right,
+                                        style: TextStyle(
+                                          fontSize: 13.5,
+                                          fontWeight: FontWeight.w800,
+                                          color: accent.last,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                              ),
-                              IconButton(
-                                onPressed: () => _supprimer(index),
-                                icon: const Icon(Icons.close, size: 18),
-                                color: Colors.black38,
-                              ),
-                            ],
-                          ),
-                        );
-                      },
-                    ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+              ),
             ),
             if (widget.lignes.isNotEmpty)
               Container(
