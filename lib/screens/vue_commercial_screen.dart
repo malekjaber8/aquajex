@@ -26,6 +26,10 @@ enum _Rubrique { clients, commandes, notes }
 /// commercial, mais ne peut pas créer de nouveau client pour son compte
 /// (ça resterait bloqué côté règles Firestore : la création exige que
 /// ownerUid == l'uid réellement connecté).
+///
+/// Clients/commandes/notes sont communs aux deux catalogues, donc le
+/// sélecteur Aquajex/Cinq Frères ne change plus que le tarif dans lequel
+/// piocher un nouvel article quand on modifie une commande.
 class VueCommercialScreen extends StatefulWidget {
   final CompteCommercial compte;
 
@@ -59,7 +63,6 @@ class _VueCommercialScreenState extends State<VueCommercialScreen> {
     });
     try {
       final repo = GestionRepository(
-        _tarif,
         ownerUidPourConsultation: widget.compte.uid,
       );
       final clients = await repo.getClients();
@@ -81,6 +84,19 @@ class _VueCommercialScreenState extends State<VueCommercialScreen> {
         _chargement = false;
       });
     }
+  }
+
+  /// Les clients/commandes/notes sont communs aux deux catalogues (voir
+  /// GestionRepository) : seuls les articles disponibles pour "Ajouter un
+  /// article" pendant une édition dépendent du tarif sélectionné, donc
+  /// changer de tarif ne recharge qu'eux — pas besoin de repasser par
+  /// l'écran de chargement complet.
+  Future<void> _chargerArticles() async {
+    try {
+      final articles = await CatalogueRepository(_tarif).streamArticles().first;
+      if (!mounted) return;
+      setState(() => _articles = articles);
+    } catch (_) {}
   }
 
   Client? _clientPour(Commande commande) {
@@ -141,10 +157,8 @@ class _VueCommercialScreenState extends State<VueCommercialScreen> {
           effacerNote: note == null,
           remisePourcent: remisePourcent,
         );
-        await GestionRepository(
-          _tarif,
-          ownerUidPourConsultation: widget.compte.uid,
-        ).modifierCommande(misAJour);
+        await GestionRepository(ownerUidPourConsultation: widget.compte.uid)
+            .modifierCommande(misAJour);
         if (!mounted) return;
         setState(() {
           _commandes = [
@@ -163,10 +177,8 @@ class _VueCommercialScreenState extends State<VueCommercialScreen> {
       if (i != -1) _commandes[i] = commande.copyWith(statut: statut);
     });
     try {
-      await GestionRepository(
-        _tarif,
-        ownerUidPourConsultation: widget.compte.uid,
-      ).changerStatutCommande(commande.id, statut);
+      await GestionRepository(ownerUidPourConsultation: widget.compte.uid)
+          .changerStatutCommande(commande.id, statut);
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -185,7 +197,7 @@ class _VueCommercialScreenState extends State<VueCommercialScreen> {
   void _changerTarif(Tarif tarif) {
     if (tarif == _tarif) return;
     setState(() => _tarif = tarif);
-    _charger();
+    _chargerArticles();
   }
 
   String _formatDate(DateTime d) =>
@@ -348,8 +360,7 @@ class _VueCommercialScreenState extends State<VueCommercialScreen> {
       return SectionPlaceholder(
         icon: Icons.people_outline,
         titre: 'Aucun client',
-        sousTitre:
-            'Ce commercial n\'a pas encore ajouté de client\npour ce tarif.',
+        sousTitre: 'Ce commercial n\'a pas encore ajouté de client.',
         accent: _accent,
       );
     }
@@ -408,8 +419,7 @@ class _VueCommercialScreenState extends State<VueCommercialScreen> {
       return SectionPlaceholder(
         icon: Icons.request_quote_outlined,
         titre: 'Aucune commande',
-        sousTitre:
-            'Ce commercial n\'a pas encore créé de commande\npour ce tarif.',
+        sousTitre: 'Ce commercial n\'a pas encore créé de commande.',
         accent: _accent,
       );
     }
@@ -493,8 +503,7 @@ class _VueCommercialScreenState extends State<VueCommercialScreen> {
       return SectionPlaceholder(
         icon: Icons.sticky_note_2_outlined,
         titre: 'Aucune note',
-        sousTitre:
-            'Ce commercial n\'a pas encore ajouté de note\npour ce tarif.',
+        sousTitre: 'Ce commercial n\'a pas encore ajouté de note.',
         accent: _accent,
       );
     }

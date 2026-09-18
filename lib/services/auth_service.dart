@@ -3,6 +3,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 
+import 'panier_service.dart';
+
 enum RoleUtilisateur { admin, commercial }
 
 /// Fiche d'un compte commercial (issue de Firestore `users/{uid}`), pour
@@ -66,6 +68,11 @@ class AuthService {
     debugPrint(
       '[Auth] deconnecter() appelé, currentUser=${_auth.currentUser?.email}',
     );
+    // Le panier est partagé entre les deux catalogues pour toute la durée
+    // de vie de l'app (voir PanierService) : sans ça, il survivrait à la
+    // déconnexion et un autre compte se connectant ensuite sur le même
+    // appareil hériterait du panier du précédent.
+    PanierService.lignes.clear();
     try {
       await _auth.signOut();
       debugPrint(

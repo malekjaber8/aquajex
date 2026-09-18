@@ -5,9 +5,10 @@ import '../models/client.dart';
 import '../models/commande.dart';
 import '../models/mode_prix.dart';
 import '../models/note.dart';
-import '../models/tarif.dart';
 
-/// Accès aux clients, commandes et notes, propre à chaque tarif.
+/// Accès aux clients, commandes et notes, communs aux deux catalogues
+/// (Aquajex et Les Cinq Frères) — contrairement aux familles/articles
+/// (voir CatalogueRepository), qui restent propres à chacun.
 ///
 /// Les trois vivent sur Firestore, propres au compte connecté (voir
 /// `ownerUid` + firestore.rules) : chacun ne voit que ce qu'il a créé.
@@ -20,12 +21,9 @@ import '../models/tarif.dart';
 /// autre compte ; clients et notes restent en lecture seule pour l'admin
 /// dans ce mode.
 class GestionRepository {
-  final Tarif tarif;
   final String? ownerUidPourConsultation;
 
-  GestionRepository(this.tarif, {this.ownerUidPourConsultation});
-
-  String get _tarifKey => tarif.name;
+  GestionRepository({this.ownerUidPourConsultation});
 
   FirebaseFirestore get _db => FirebaseFirestore.instance;
 
@@ -52,7 +50,6 @@ class GestionRepository {
   Future<List<Client>> getClients() async {
     final snap = await _clientsRef
         .where('ownerUid', isEqualTo: _ownerUid)
-        .where('tarif', isEqualTo: _tarifKey)
         .get();
     final clients = snap.docs
         .map((d) => _versClient({...d.data(), 'id': d.id}))
@@ -80,7 +77,6 @@ class GestionRepository {
 
   Map<String, dynamic> _versDocumentClient(Client c) => {
     'ownerUid': _ownerUid,
-    'tarif': _tarifKey,
     'type': c.type.name,
     'nom': c.nom,
     'prenom': c.prenom,
@@ -110,7 +106,6 @@ class GestionRepository {
   Future<List<Commande>> getCommandes() async {
     final snap = await _commandesRef
         .where('ownerUid', isEqualTo: _ownerUid)
-        .where('tarif', isEqualTo: _tarifKey)
         .get();
     final commandes = snap.docs
         .map((d) => _versCommande({...d.data(), 'id': d.id}))
@@ -141,7 +136,6 @@ class GestionRepository {
 
   Map<String, dynamic> _versDocumentCommande(Commande c) => {
     'ownerUid': _ownerUid,
-    'tarif': _tarifKey,
     'clientId': c.clientId,
     'clientNom': c.clientNom,
     'date': c.date.toIso8601String(),
@@ -171,10 +165,7 @@ class GestionRepository {
   // --- Notes ---
 
   Future<List<Note>> getNotes() async {
-    final snap = await _notesRef
-        .where('ownerUid', isEqualTo: _ownerUid)
-        .where('tarif', isEqualTo: _tarifKey)
-        .get();
+    final snap = await _notesRef.where('ownerUid', isEqualTo: _ownerUid).get();
     final notes = snap.docs
         .map((d) => _versNote({...d.data(), 'id': d.id}))
         .toList();
@@ -196,7 +187,6 @@ class GestionRepository {
 
   Map<String, dynamic> _versDocumentNote(Note n) => {
     'ownerUid': _ownerUid,
-    'tarif': _tarifKey,
     'contenu': n.contenu,
     'clientId': n.clientId,
     'clientNom': n.clientNom,
@@ -215,7 +205,7 @@ class GestionRepository {
         : null,
   );
 
-  /// Exporte clients + commandes de ce tarif (compte connecté) en structure
+  /// Exporte clients + commandes du compte connecté en structure
   /// sérialisable JSON.
   Future<Map<String, dynamic>> exporterDonnees() async {
     final clients = await getClients();
@@ -255,8 +245,8 @@ class GestionRepository {
     };
   }
 
-  /// Remplace entièrement les clients et commandes de ce tarif (compte
-  /// connecté) par le contenu importé.
+  /// Remplace entièrement les clients et commandes du compte connecté par
+  /// le contenu importé.
   Future<void> importerDonnees(Map<String, dynamic> data) async {
     final anciens = await Future.wait([getClients(), getCommandes()]);
     final batch = _db.batch();
