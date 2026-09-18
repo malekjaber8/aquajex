@@ -5,10 +5,14 @@ import '../models/client.dart';
 import '../models/commande.dart';
 import '../models/mode_prix.dart';
 import '../models/note.dart';
+import '../models/tarif.dart';
 
-/// Accès aux clients, commandes et notes, communs aux deux catalogues
-/// (Aquajex et Les Cinq Frères) — contrairement aux familles/articles
-/// (voir CatalogueRepository), qui restent propres à chacun.
+/// Accès aux clients, commandes et notes.
+///
+/// Les clients sont communs aux deux catalogues (Aquajex et Les Cinq
+/// Frères) : même liste quel que soit le tarif. Commandes et notes, elles,
+/// restent propres à chaque tarif — comme les familles/articles (voir
+/// CatalogueRepository).
 ///
 /// Les trois vivent sur Firestore, propres au compte connecté (voir
 /// `ownerUid` + firestore.rules) : chacun ne voit que ce qu'il a créé.
@@ -21,9 +25,12 @@ import '../models/note.dart';
 /// autre compte ; clients et notes restent en lecture seule pour l'admin
 /// dans ce mode.
 class GestionRepository {
+  final Tarif tarif;
   final String? ownerUidPourConsultation;
 
-  GestionRepository({this.ownerUidPourConsultation});
+  GestionRepository(this.tarif, {this.ownerUidPourConsultation});
+
+  String get _tarifKey => tarif.name;
 
   FirebaseFirestore get _db => FirebaseFirestore.instance;
 
@@ -106,6 +113,7 @@ class GestionRepository {
   Future<List<Commande>> getCommandes() async {
     final snap = await _commandesRef
         .where('ownerUid', isEqualTo: _ownerUid)
+        .where('tarif', isEqualTo: _tarifKey)
         .get();
     final commandes = snap.docs
         .map((d) => _versCommande({...d.data(), 'id': d.id}))
@@ -136,6 +144,7 @@ class GestionRepository {
 
   Map<String, dynamic> _versDocumentCommande(Commande c) => {
     'ownerUid': _ownerUid,
+    'tarif': _tarifKey,
     'clientId': c.clientId,
     'clientNom': c.clientNom,
     'date': c.date.toIso8601String(),
@@ -165,7 +174,10 @@ class GestionRepository {
   // --- Notes ---
 
   Future<List<Note>> getNotes() async {
-    final snap = await _notesRef.where('ownerUid', isEqualTo: _ownerUid).get();
+    final snap = await _notesRef
+        .where('ownerUid', isEqualTo: _ownerUid)
+        .where('tarif', isEqualTo: _tarifKey)
+        .get();
     final notes = snap.docs
         .map((d) => _versNote({...d.data(), 'id': d.id}))
         .toList();
@@ -187,6 +199,7 @@ class GestionRepository {
 
   Map<String, dynamic> _versDocumentNote(Note n) => {
     'ownerUid': _ownerUid,
+    'tarif': _tarifKey,
     'contenu': n.contenu,
     'clientId': n.clientId,
     'clientNom': n.clientNom,

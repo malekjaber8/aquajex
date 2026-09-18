@@ -13,7 +13,6 @@ import '../services/auth_service.dart';
 import '../services/catalogue_pdf.dart';
 import '../services/catalogue_repository.dart';
 import '../services/gestion_repository.dart';
-import '../services/panier_service.dart';
 import '../widgets/article_detail_dialog.dart';
 import '../widgets/changer_mot_de_passe_sheet.dart';
 import '../widgets/commande_edit_sheet.dart';
@@ -56,7 +55,7 @@ class CatalogueScreen extends StatefulWidget {
 
 class _CatalogueScreenState extends State<CatalogueScreen> {
   late final CatalogueRepository _repo = CatalogueRepository(widget.tarif);
-  late final GestionRepository _gestionRepo = GestionRepository();
+  late final GestionRepository _gestionRepo = GestionRepository(widget.tarif);
 
   int _selectedIndex = 0;
   late String? _familleSelectionnee = widget.articleInitial?.categorie;
@@ -76,11 +75,7 @@ class _CatalogueScreenState extends State<CatalogueScreen> {
   List<Client> _clients = [];
   List<Commande> _commandes = [];
   List<Note> _notes = [];
-
-  /// Partagé entre les deux catalogues (voir PanierService) : composer une
-  /// commande avec des articles Aquajex ET Cinq Frères est possible parce
-  /// que ce n'est pas une liste propre à cet écran.
-  List<LigneCommande> get _panier => PanierService.lignes;
+  final List<LigneCommande> _panier = [];
 
   List<ArticleAvecTarif> _articlesPromo = [];
   List<ArticleAvecTarif> _articlesNouveaute = [];
