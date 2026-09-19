@@ -250,11 +250,20 @@ Future<Uint8List> genererFacturePdf({
                       ligne.colisage != null ? '${ligne.colisage}' : '-',
                     ),
                     _celluleCorps('${ligne.quantite}'),
-                    _celluleCorps(_formatMontantPdf(ligne.prixUnitaire)),
+                    // ligne.prixUnitaire est un prix TTC (voir
+                    // LigneCommande.prixUnitaire) : le HT s'en déduit par
+                    // division, jamais en le multipliant par 1 + TVA.
+                    _celluleCorps(
+                      _formatMontantPdf(
+                        (ligne.prixUnitaire * (1 - remisePourcent / 100)) /
+                            (1 + tauxTvaFacture),
+                      ),
+                    ),
                     _celluleCorps('${remisePourcent.toStringAsFixed(0)}%'),
                     _celluleCorps(
                       _formatMontantPdf(
-                        ligne.total * (1 - remisePourcent / 100),
+                        (ligne.total * (1 - remisePourcent / 100)) /
+                            (1 + tauxTvaFacture),
                       ),
                       gras: true,
                     ),
@@ -263,9 +272,7 @@ Future<Uint8List> genererFacturePdf({
                     ),
                     _celluleCorps(
                       _formatMontantPdf(
-                        ligne.prixUnitaire *
-                            (1 - remisePourcent / 100) *
-                            (1 + tauxTvaFacture),
+                        ligne.prixUnitaire * (1 - remisePourcent / 100),
                       ),
                     ),
                   ],

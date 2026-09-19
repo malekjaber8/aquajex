@@ -45,6 +45,11 @@ enum StatutCommande {
 class LigneCommande {
   final String articleId;
   final String designation;
+
+  /// Prix unitaire TTC (toutes taxes comprises) — c'est le prix tel que
+  /// saisi dans la fiche article et affiché dans le catalogue, pas un prix
+  /// hors taxe : voir `Commande.totalHt`/`totalHtNet`/`montantTva`, qui en
+  /// déduisent le HT par division plutôt que de l'ajouter par erreur.
   final double prixUnitaire;
   final int quantite;
   final String? codeArticle;
@@ -103,7 +108,8 @@ class Commande {
   final List<LigneCommande> lignes;
   final String? note;
 
-  /// Remise globale (en %) appliquée sur le total HT de la facture.
+  /// Remise globale (en %) appliquée sur le total TTC (le prix de vente) de
+  /// la facture.
   final double remisePourcent;
 
   final StatutCommande statut;
@@ -120,19 +126,28 @@ class Commande {
     this.statut = StatutCommande.enAttente,
   });
 
-  /// Total HT avant remise (prix unitaires × quantités).
-  double get totalHt => lignes.fold(0, (s, l) => s + l.total);
+  /// Total TTC avant remise (prix unitaires TTC × quantités).
+  double get totalTtcBrut => lignes.fold(0, (s, l) => s + l.total);
 
   /// Alias conservé pour la compatibilité (utilisé comme total "brut").
-  double get total => totalHt;
+  double get total => totalTtcBrut;
 
-  double get remiseMontant => totalHt * (remisePourcent / 100);
+  /// La remise s'applique sur le TTC (le prix de vente affiché), pas sur
+  /// le HT.
+  double get remiseMontant => totalTtcBrut * (remisePourcent / 100);
 
-  double get totalHtNet => totalHt - remiseMontant;
+  /// Total TTC net, après remise — le montant réellement facturé au client.
+  double get totalTtcNet => totalTtcBrut - remiseMontant;
 
-  double get montantTva => totalHtNet * tauxTvaFacture;
+  double get totalTtc => totalTtcNet;
 
-  double get totalTtc => totalHtNet + montantTva;
+  /// Total HT informatif (avant remise), déduit du TTC par division : les
+  /// prix du catalogue sont saisis TTC, pas HT (voir LigneCommande.prixUnitaire).
+  double get totalHt => totalTtcBrut / (1 + tauxTvaFacture);
+
+  double get totalHtNet => totalTtcNet / (1 + tauxTvaFacture);
+
+  double get montantTva => totalTtcNet - totalHtNet;
 
   int get nombreArticles => lignes.fold(0, (s, l) => s + l.quantite);
 

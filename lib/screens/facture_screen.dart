@@ -456,7 +456,7 @@ class _FactureScreenState extends State<FactureScreen> {
                                                         .spaceBetween,
                                                 children: [
                                                   Text(
-                                                    '${ligne.quantite} × ${_formatMontant(ligne.prixUnitaire)} DT HT'
+                                                    '${ligne.quantite} × ${_formatMontant(ligne.prixUnitaire)} DT TTC'
                                                     '${remisePourcent > 0 ? '  ·  -${remisePourcent.toStringAsFixed(0)}%' : ''}',
                                                     style: TextStyle(
                                                       fontSize: 11.5,
@@ -483,7 +483,7 @@ class _FactureScreenState extends State<FactureScreen> {
                                                 alignment:
                                                     Alignment.centerRight,
                                                 child: Text(
-                                                  '${_formatMontant(ligne.prixUnitaire * (1 - remisePourcent / 100) * (1 + tauxTvaFacture))} DT TTC',
+                                                  '${_formatMontant(ligne.prixUnitaire * (1 - remisePourcent / 100))} DT TTC',
                                                   style: TextStyle(
                                                     fontSize: 13,
                                                     fontWeight: FontWeight.w800,
@@ -620,10 +620,19 @@ class _FactureScreenState extends State<FactureScreen> {
                                                     flex: 6,
                                                     texte: '${ligne.quantite}',
                                                   ),
+                                                  // ligne.prixUnitaire est un
+                                                  // prix TTC : le HT s'en
+                                                  // déduit par division, pas
+                                                  // en le multipliant par
+                                                  // 1 + TVA.
                                                   _Cellule(
                                                     flex: 9,
                                                     texte: _formatMontant(
-                                                      ligne.prixUnitaire,
+                                                      (ligne.prixUnitaire *
+                                                              (1 -
+                                                                  remisePourcent /
+                                                                      100)) /
+                                                          (1 + tauxTvaFacture),
                                                     ),
                                                     droite: true,
                                                   ),
@@ -636,10 +645,11 @@ class _FactureScreenState extends State<FactureScreen> {
                                                   _Cellule(
                                                     flex: 9,
                                                     texte: _formatMontant(
-                                                      ligne.total *
-                                                          (1 -
-                                                              remisePourcent /
-                                                                  100),
+                                                      (ligne.total *
+                                                              (1 -
+                                                                  remisePourcent /
+                                                                      100)) /
+                                                          (1 + tauxTvaFacture),
                                                     ),
                                                     droite: true,
                                                     gras: true,
@@ -657,8 +667,7 @@ class _FactureScreenState extends State<FactureScreen> {
                                                       ligne.prixUnitaire *
                                                           (1 -
                                                               remisePourcent /
-                                                                  100) *
-                                                          (1 + tauxTvaFacture),
+                                                                  100),
                                                     ),
                                                     droite: true,
                                                   ),

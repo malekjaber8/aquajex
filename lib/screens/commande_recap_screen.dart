@@ -46,15 +46,18 @@ class _CommandeRecapScreenState extends State<CommandeRecapScreen> {
     super.dispose();
   }
 
-  double get _totalHt => widget.lignes.fold(0, (s, l) => s + l.total);
+  // Les prix du catalogue sont saisis TTC (voir LigneCommande.prixUnitaire) :
+  // le HT est déduit du TTC par division, pas l'inverse.
+  double get _totalTtcBrut => widget.lignes.fold(0, (s, l) => s + l.total);
+  double get _totalHt => _totalTtcBrut / (1 + tauxTvaFacture);
 
   double get _remisePourcent =>
       double.tryParse(_remiseCtrl.text.trim().replaceAll(',', '.')) ?? 0;
 
-  double get _remiseMontant => _totalHt * (_remisePourcent / 100);
-  double get _totalHtNet => _totalHt - _remiseMontant;
-  double get _tva => _totalHtNet * tauxTvaFacture;
-  double get _totalTtc => _totalHtNet + _tva;
+  double get _remiseMontant => _totalTtcBrut * (_remisePourcent / 100);
+  double get _totalTtc => _totalTtcBrut - _remiseMontant;
+  double get _totalHtNet => _totalTtc / (1 + tauxTvaFacture);
+  double get _tva => _totalTtc - _totalHtNet;
 
   String _formatMontant(double montant) {
     final parts = montant.toStringAsFixed(3).split('.');
