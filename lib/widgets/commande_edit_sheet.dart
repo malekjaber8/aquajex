@@ -387,6 +387,21 @@ class _CommandeEditSheetState extends State<_CommandeEditSheet> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
+                                    if ((ligne.codeArticle ?? '').isNotEmpty)
+                                      Padding(
+                                        padding: const EdgeInsets.only(
+                                          bottom: 3,
+                                        ),
+                                        child: Text(
+                                          'Réf. ${ligne.codeArticle}',
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.w800,
+                                            letterSpacing: 0.3,
+                                            color: accent.last,
+                                          ),
+                                        ),
+                                      ),
                                     Text(
                                       ligne.designation,
                                       maxLines: 2,
@@ -820,7 +835,7 @@ class _ArticlePickerSheetState extends State<_ArticlePickerSheet> {
                 controller: _rechercheCtrl,
                 onChanged: (v) => setState(() => _recherche = v),
                 decoration: InputDecoration(
-                  hintText: 'Rechercher un article…',
+                  hintText: 'Rechercher par référence ou nom…',
                   prefixIcon: const Icon(Icons.search, size: 20),
                   filled: true,
                   fillColor: const Color(0xFFF3F5F8),
@@ -867,7 +882,11 @@ class _ArticlePickerSheetState extends State<_ArticlePickerSheet> {
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(fontWeight: FontWeight.w600),
                           ),
-                          subtitle: Text(article.categorie),
+                          subtitle: Text(
+                            (article.codeArticle ?? '').isNotEmpty
+                                ? 'Réf. ${article.codeArticle} · ${article.categorie}'
+                                : article.categorie,
+                          ),
                           onTap: () => Navigator.of(context).pop(article),
                         );
                       },
