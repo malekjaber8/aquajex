@@ -45,6 +45,9 @@ class _VueCommercialScreenState extends State<VueCommercialScreen> {
   Tarif _tarif = Tarif.aquajex;
   _Rubrique _rubrique = _Rubrique.clients;
 
+  /// null = "Tous" (aucun filtre par statut).
+  StatutCommande? _filtreStatutCommande;
+
   bool _chargement = true;
   String? _erreur;
   List<Client> _clients = [];
@@ -98,6 +101,11 @@ class _VueCommercialScreenState extends State<VueCommercialScreen> {
 
   List<Commande> _commandesPour(Client client) {
     return _commandes.where((c) => c.clientId == client.id).toList();
+  }
+
+  List<Commande> get _commandesFiltrees {
+    if (_filtreStatutCommande == null) return _commandes;
+    return _commandes.where((c) => c.statut == _filtreStatutCommande).toList();
   }
 
   void _ouvrirDetailClient(Client client) {
@@ -418,78 +426,103 @@ class _VueCommercialScreenState extends State<VueCommercialScreen> {
         accent: _accent,
       );
     }
-    return ListView.builder(
-      padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
-      itemCount: _commandes.length,
-      itemBuilder: (context, i) {
-        final commande = _commandes[i];
-        return _Carte(
-          onTap: () => Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (_) => FactureScreen(
-                commande: commande,
-                client: _clientPour(commande),
-                tarif: _tarif,
-                onModifier: () => _modifierCommande(commande),
-              ),
-            ),
+    final resultats = _commandesFiltrees;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(24, 12, 24, 0),
+          child: _FiltreStatutBar(
+            valeur: _filtreStatutCommande,
+            onChanged: (s) => setState(() => _filtreStatutCommande = s),
           ),
-          child: Row(
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: _accent.last.withValues(alpha: 0.12),
-                ),
-                alignment: Alignment.center,
-                child: Icon(
-                  Icons.receipt_long_outlined,
-                  color: _accent.last,
-                  size: 18,
-                ),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      commande.clientNom,
-                      style: const TextStyle(
-                        fontSize: 14.5,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF1B3B5F),
+        ),
+        Expanded(
+          child: resultats.isEmpty
+              ? Center(
+                  child: Text(
+                    'Aucune commande ${_filtreStatutCommande!.libelle.toLowerCase()} pour le moment.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Colors.black.withValues(alpha: 0.45),
+                    ),
+                  ),
+                )
+              : ListView.builder(
+                  padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
+                  itemCount: resultats.length,
+                  itemBuilder: (context, i) {
+                    final commande = resultats[i];
+                    return _Carte(
+                      onTap: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => FactureScreen(
+                            commande: commande,
+                            client: _clientPour(commande),
+                            tarif: _tarif,
+                            onModifier: () => _modifierCommande(commande),
+                          ),
+                        ),
                       ),
-                    ),
-                    Text(
-                      '${_formatDate(commande.date)} · ${commande.nombreArticles} article${commande.nombreArticles > 1 ? 's' : ''}',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.black.withValues(alpha: 0.45),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: _accent.last.withValues(alpha: 0.12),
+                            ),
+                            alignment: Alignment.center,
+                            child: Icon(
+                              Icons.receipt_long_outlined,
+                              color: _accent.last,
+                              size: 18,
+                            ),
+                          ),
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  commande.clientNom,
+                                  style: const TextStyle(
+                                    fontSize: 14.5,
+                                    fontWeight: FontWeight.w700,
+                                    color: Color(0xFF1B3B5F),
+                                  ),
+                                ),
+                                Text(
+                                  '${_formatDate(commande.date)} · ${commande.nombreArticles} article${commande.nombreArticles > 1 ? 's' : ''}',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.black.withValues(alpha: 0.45),
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                _StatutBadgeModifiable(
+                                  statut: commande.statut,
+                                  onChanger: (s) => _changerStatut(commande, s),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Text(
+                            '${_formatMontant(commande.totalTtc)} DT',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w800,
+                              color: _accent.last,
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                    const SizedBox(height: 4),
-                    _StatutBadgeModifiable(
-                      statut: commande.statut,
-                      onChanger: (s) => _changerStatut(commande, s),
-                    ),
-                  ],
+                    );
+                  },
                 ),
-              ),
-              Text(
-                '${_formatMontant(commande.totalTtc)} DT',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w800,
-                  color: _accent.last,
-                ),
-              ),
-            ],
-          ),
-        );
-      },
+        ),
+      ],
     );
   }
 
@@ -574,6 +607,42 @@ class _Carte extends StatelessWidget {
           onTap: onTap,
           child: Padding(padding: const EdgeInsets.all(14), child: child),
         ),
+      ),
+    );
+  }
+}
+
+/// Filtre par statut pour l'onglet Commandes (Tous / En attente / Confirmée
+/// / Livrée), même principe que celui du catalogue d'un commercial (voir
+/// CommandesSection) mais réutilisant le style `_Puce` déjà en place ici.
+class _FiltreStatutBar extends StatelessWidget {
+  final StatutCommande? valeur;
+  final ValueChanged<StatutCommande?> onChanged;
+
+  const _FiltreStatutBar({required this.valeur, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: [
+          _Puce(
+            libelle: 'Tous',
+            selectionne: valeur == null,
+            couleur: _accent.last,
+            onTap: () => onChanged(null),
+          ),
+          for (final statut in StatutCommande.values) ...[
+            const SizedBox(width: 8),
+            _Puce(
+              libelle: statut.libelle,
+              selectionne: valeur == statut,
+              couleur: statut.couleur,
+              onTap: () => onChanged(valeur == statut ? null : statut),
+            ),
+          ],
+        ],
       ),
     );
   }
