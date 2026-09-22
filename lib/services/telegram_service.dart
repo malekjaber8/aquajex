@@ -11,9 +11,11 @@ import 'package:http/http.dart' as http;
 class TelegramService {
   TelegramService._();
 
-  // Jeton du bot (@BotFather) et identifiant du chat/canal à notifier.
+  // Jeton du bot (@BotFather) et identifiant du groupe Telegram "Aquajex
+  // application" à notifier — quiconque est ajouté/retiré de ce groupe
+  // reçoit ou non les notifications, sans toucher au code.
   static const _botToken = '8870039849:AAFFk52-hzmfXNBpmoD6m1Umh8qY-zM0lpI';
-  static const _chatId = '8703392030';
+  static const _chatId = '-5317979459';
 
   static Future<void> notifierNouvelleCommande({
     required String nomCommercial,
