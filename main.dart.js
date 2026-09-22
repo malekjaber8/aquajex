@@ -36246,7 +36246,7 @@ s=q}for(;;)switch(s){case 0:k="\ud83d\uded2 Nouvelle commande\nCommercial : "+b+
 q=3
 m=t.N
 s=6
-return A.p(A.bsU(A.j8("https://api.telegram.org/bot8870039849:AAFFk52-hzmfXNBpmoD6m1Umh8qY-zM0lpI/sendMessage",0,null),A.av(["chat_id","8703392030","text",k],m,m)),$async$aAq)
+return A.p(A.bsU(A.j8("https://api.telegram.org/bot8870039849:AAFFk52-hzmfXNBpmoD6m1Umh8qY-zM0lpI/sendMessage",0,null),A.av(["chat_id","-5317979459","text",k],m,m)),$async$aAq)
 case 6:o=f
 if(o.b!==200){m=o
 A.Ej().$1("[Telegram] \xe9chec ("+o.b+") : "+A.brE(A.bp1(m.e)).eA(m.w))}q=1
