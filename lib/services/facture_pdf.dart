@@ -218,6 +218,7 @@ Future<Uint8List> genererFacturePdf({
               7: pw.FlexColumnWidth(0.9),
               8: pw.FlexColumnWidth(0.6),
               9: pw.FlexColumnWidth(0.9),
+              10: pw.FlexColumnWidth(0.9),
             },
             children: [
               pw.TableRow(
@@ -233,6 +234,7 @@ Future<Uint8List> genererFacturePdf({
                   _celluleEntete('Mnt H.T'),
                   _celluleEntete('TVA'),
                   _celluleEntete('P.U. TTC'),
+                  _celluleEntete('Mnt TTC'),
                 ],
               ),
               for (final ligne in commande.lignes)
@@ -274,6 +276,15 @@ Future<Uint8List> genererFacturePdf({
                       _formatMontantPdf(
                         ligne.prixUnitaire * (1 - remisePourcent / 100),
                       ),
+                    ),
+                    // Montant TTC de la ligne (prix unitaire TTC × quantité,
+                    // après remise) — le vrai total dû pour cette ligne, pas
+                    // juste le prix d'une pièce (P.U. TTC ci-dessus).
+                    _celluleCorps(
+                      _formatMontantPdf(
+                        ligne.total * (1 - remisePourcent / 100),
+                      ),
+                      gras: true,
                     ),
                   ],
                 ),

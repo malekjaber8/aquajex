@@ -483,7 +483,11 @@ class _FactureScreenState extends State<FactureScreen> {
                                                 alignment:
                                                     Alignment.centerRight,
                                                 child: Text(
-                                                  '${_formatMontant(ligne.prixUnitaire * (1 - remisePourcent / 100))} DT TTC',
+                                                  // Montant TTC de la ligne
+                                                  // (P.U. TTC × quantité,
+                                                  // après remise), pas juste
+                                                  // le prix d'une pièce.
+                                                  '${_formatMontant(ligne.total * (1 - remisePourcent / 100))} DT TTC',
                                                   style: TextStyle(
                                                     fontSize: 13,
                                                     fontWeight: FontWeight.w800,
@@ -500,7 +504,7 @@ class _FactureScreenState extends State<FactureScreen> {
                                   SingleChildScrollView(
                                     scrollDirection: Axis.horizontal,
                                     child: SizedBox(
-                                      width: 760,
+                                      width: 830,
                                       child: Column(
                                         children: [
                                           Container(
@@ -569,6 +573,12 @@ class _FactureScreenState extends State<FactureScreen> {
                                                 _Cellule(
                                                   flex: 9,
                                                   texte: 'P.U. TTC',
+                                                  style: _styleEntete,
+                                                  droite: true,
+                                                ),
+                                                _Cellule(
+                                                  flex: 9,
+                                                  texte: 'Mnt TTC',
                                                   style: _styleEntete,
                                                   droite: true,
                                                 ),
@@ -670,6 +680,23 @@ class _FactureScreenState extends State<FactureScreen> {
                                                                   100),
                                                     ),
                                                     droite: true,
+                                                  ),
+                                                  // Montant TTC de la ligne
+                                                  // (P.U. TTC × quantité,
+                                                  // après remise) : le vrai
+                                                  // total dû, pas juste le
+                                                  // prix d'une pièce.
+                                                  _Cellule(
+                                                    flex: 9,
+                                                    texte: _formatMontant(
+                                                      ligne.total *
+                                                          (1 -
+                                                              remisePourcent /
+                                                                  100),
+                                                    ),
+                                                    droite: true,
+                                                    gras: true,
+                                                    couleur: accent.last,
                                                   ),
                                                 ],
                                               ),
