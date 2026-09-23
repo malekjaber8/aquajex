@@ -189,7 +189,7 @@ class _FactureScreenState extends State<FactureScreen> {
                       padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
                       child: Center(
                         child: ConstrainedBox(
-                          constraints: const BoxConstraints(maxWidth: 820),
+                          constraints: const BoxConstraints(maxWidth: 900),
                           child: Container(
                             width: double.infinity,
                             padding: const EdgeInsets.fromLTRB(28, 28, 28, 24),
