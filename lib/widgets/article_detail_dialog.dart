@@ -58,6 +58,8 @@ class _ArticleDetailCard extends StatelessWidget {
       if (article.codeBarre != null) ('Code à barre', article.codeBarre!),
       if (article.taille != null) ('Taille', article.taille!),
       if (article.colisage != null) ('Colisage', '${article.colisage}'),
+      if (article.quantiteParCarton != null)
+        ('Quantité par carton', '${article.quantiteParCarton}'),
     ];
 
     return ConstrainedBox(

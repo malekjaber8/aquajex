@@ -32,6 +32,7 @@ class _ArticleFormScreenState extends State<ArticleFormScreen> {
   late final TextEditingController _codeBarreCtrl;
   late final TextEditingController _tailleCtrl;
   late final TextEditingController _colisageCtrl;
+  late final TextEditingController _quantiteParCartonCtrl;
   late final TextEditingController _prixDetailCtrl;
   late final TextEditingController _prixGrosCtrl;
   late final TextEditingController _prixDetailBarreCtrl;
@@ -53,6 +54,9 @@ class _ArticleFormScreenState extends State<ArticleFormScreen> {
     _codeBarreCtrl = TextEditingController(text: a?.codeBarre ?? '');
     _tailleCtrl = TextEditingController(text: a?.taille ?? '');
     _colisageCtrl = TextEditingController(text: a?.colisage?.toString() ?? '');
+    _quantiteParCartonCtrl = TextEditingController(
+      text: a?.quantiteParCarton?.toString() ?? '',
+    );
     _prixDetailCtrl = TextEditingController(
       text: a?.prixDetail.toStringAsFixed(3) ?? '',
     );
@@ -78,6 +82,7 @@ class _ArticleFormScreenState extends State<ArticleFormScreen> {
     _codeBarreCtrl.dispose();
     _tailleCtrl.dispose();
     _colisageCtrl.dispose();
+    _quantiteParCartonCtrl.dispose();
     _prixDetailCtrl.dispose();
     _prixGrosCtrl.dispose();
     _prixDetailBarreCtrl.dispose();
@@ -139,6 +144,7 @@ class _ArticleFormScreenState extends State<ArticleFormScreen> {
       codeBarre: _videVersNull(_codeBarreCtrl.text),
       taille: _videVersNull(_tailleCtrl.text),
       colisage: int.tryParse(_colisageCtrl.text.trim()),
+      quantiteParCarton: int.tryParse(_quantiteParCartonCtrl.text.trim()),
       imageBytes: _imageBytes,
       statut: _statut,
       prixDetailBarre: _statut == StatutArticle.promo
@@ -246,6 +252,20 @@ class _ArticleFormScreenState extends State<ArticleFormScreen> {
                                   clavierNumerique: true,
                                 ),
                               ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _champTexte(
+                                  controller: _quantiteParCartonCtrl,
+                                  label: 'Quantité par carton',
+                                  clavierNumerique: true,
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              const Expanded(child: SizedBox.shrink()),
                             ],
                           ),
                           const SizedBox(height: 24),

@@ -65,6 +65,7 @@ class Article {
   final String? codeBarre;
   final String? taille;
   final int? colisage;
+  final int? quantiteParCarton;
   final Uint8List? imageBytes;
   final StatutArticle statut;
 
@@ -86,6 +87,7 @@ class Article {
     this.codeBarre,
     this.taille,
     this.colisage,
+    this.quantiteParCarton,
     this.imageBytes,
     this.statut = StatutArticle.normal,
     this.prixDetailBarre,
@@ -117,6 +119,7 @@ class Article {
     String? codeBarre,
     String? taille,
     int? colisage,
+    int? quantiteParCarton,
     Uint8List? imageBytes,
     StatutArticle? statut,
     double? prixDetailBarre,
@@ -135,6 +138,7 @@ class Article {
       codeBarre: codeBarre ?? this.codeBarre,
       taille: taille ?? this.taille,
       colisage: colisage ?? this.colisage,
+      quantiteParCarton: quantiteParCarton ?? this.quantiteParCarton,
       imageBytes: imageBytes ?? this.imageBytes,
       statut: statut ?? this.statut,
       prixDetailBarre: effacerPrixDetailBarre
