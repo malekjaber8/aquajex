@@ -251,7 +251,7 @@ Future<Uint8List> genererFacturePdf({
                     _celluleCorps(
                       ligne.colisage != null ? '${ligne.colisage}' : '-',
                     ),
-                    _celluleCorps('${ligne.quantite}'),
+                    _celluleCorps(formatQuantite(ligne.quantite)),
                     // ligne.prixUnitaire est un prix TTC (voir
                     // LigneCommande.prixUnitaire) : le HT s'en déduit par
                     // division, jamais en le multipliant par 1 + TVA.

@@ -5,6 +5,21 @@ import 'mode_prix.dart';
 /// Taux de TVA appliqué aux factures (19%, taux standard en Tunisie).
 const double tauxTvaFacture = 0.19;
 
+/// Formate une quantité (potentiellement fractionnaire, ex. 0.4, 1.25) pour
+/// l'affichage : entière sans décimale ("10"), sinon jusqu'à 3 décimales
+/// sans zéro superflu ("0,4"), avec une virgule à la française.
+String formatQuantite(double quantite) {
+  if (quantite == quantite.roundToDouble()) {
+    return quantite.toStringAsFixed(0);
+  }
+  var texte = quantite.toStringAsFixed(3);
+  while (texte.endsWith('0')) {
+    texte = texte.substring(0, texte.length - 1);
+  }
+  if (texte.endsWith('.')) texte = texte.substring(0, texte.length - 1);
+  return texte.replaceAll('.', ',');
+}
+
 /// Statut de suivi d'une commande/facture, modifiable après sa création
 /// (depuis la liste des commandes).
 enum StatutCommande {
@@ -51,7 +66,7 @@ class LigneCommande {
   /// hors taxe : voir `Commande.totalHt`/`totalHtNet`/`montantTva`, qui en
   /// déduisent le HT par division plutôt que de l'ajouter par erreur.
   final double prixUnitaire;
-  final int quantite;
+  final double quantite;
   final String? codeArticle;
   final String? codeBarre;
   final int? colisage;
@@ -68,7 +83,7 @@ class LigneCommande {
 
   double get total => prixUnitaire * quantite;
 
-  LigneCommande copyWith({int? quantite}) => LigneCommande(
+  LigneCommande copyWith({double? quantite}) => LigneCommande(
     articleId: articleId,
     designation: designation,
     prixUnitaire: prixUnitaire,
@@ -92,7 +107,7 @@ class LigneCommande {
     articleId: j['articleId'] as String,
     designation: j['designation'] as String,
     prixUnitaire: (j['prixUnitaire'] as num).toDouble(),
-    quantite: j['quantite'] as int,
+    quantite: (j['quantite'] as num).toDouble(),
     codeArticle: j['codeArticle'] as String?,
     codeBarre: j['codeBarre'] as String?,
     colisage: j['colisage'] as int?,
@@ -149,7 +164,7 @@ class Commande {
 
   double get montantTva => totalTtcNet - totalHtNet;
 
-  int get nombreArticles => lignes.fold(0, (s, l) => s + l.quantite);
+  double get nombreArticles => lignes.fold(0, (s, l) => s + l.quantite);
 
   Commande copyWith({
     String? clientId,

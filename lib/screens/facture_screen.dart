@@ -456,7 +456,7 @@ class _FactureScreenState extends State<FactureScreen> {
                                                         .spaceBetween,
                                                 children: [
                                                   Text(
-                                                    '${ligne.quantite} × ${_formatMontant(ligne.prixUnitaire)} DT TTC'
+                                                    '${formatQuantite(ligne.quantite)} × ${_formatMontant(ligne.prixUnitaire)} DT TTC'
                                                     '${remisePourcent > 0 ? '  ·  -${remisePourcent.toStringAsFixed(0)}%' : ''}',
                                                     style: TextStyle(
                                                       fontSize: 11.5,
@@ -628,7 +628,9 @@ class _FactureScreenState extends State<FactureScreen> {
                                                   ),
                                                   _Cellule(
                                                     flex: 6,
-                                                    texte: '${ligne.quantite}',
+                                                    texte: formatQuantite(
+                                                      ligne.quantite,
+                                                    ),
                                                   ),
                                                   // ligne.prixUnitaire est un
                                                   // prix TTC : le HT s'en

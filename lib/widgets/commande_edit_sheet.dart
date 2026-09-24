@@ -148,11 +148,11 @@ class _CommandeEditSheetState extends State<_CommandeEditSheet> {
     ),
   );
 
-  void _modifierQuantite(int index, int delta) {
+  void _modifierQuantite(int index, double delta) {
     _definirQuantite(index, _lignes[index].quantite + delta);
   }
 
-  void _definirQuantite(int index, int quantite) {
+  void _definirQuantite(int index, double quantite) {
     setState(() {
       if (quantite <= 0) {
         _lignes.removeAt(index);

@@ -256,7 +256,7 @@ class _CommandeRecapScreenState extends State<CommandeRecapScreen> {
                                                 ),
                                               ),
                                               Text(
-                                                '${ligne.quantite} × ${_formatMontant(ligne.prixUnitaire)} DT',
+                                                '${formatQuantite(ligne.quantite)} × ${_formatMontant(ligne.prixUnitaire)} DT',
                                                 style: TextStyle(
                                                   fontSize: 12,
                                                   color: Colors.black

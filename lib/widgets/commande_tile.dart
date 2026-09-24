@@ -89,7 +89,7 @@ class CommandeTile extends StatelessWidget {
                       Padding(
                         padding: const EdgeInsets.only(top: 2),
                         child: Text(
-                          '${_formatDate(commande.date)} · ${commande.nombreArticles} article${commande.nombreArticles > 1 ? 's' : ''}',
+                          '${_formatDate(commande.date)} · ${formatQuantite(commande.nombreArticles)} article${commande.nombreArticles > 1 ? 's' : ''}',
                           style: TextStyle(
                             fontSize: 12,
                             color: Colors.black.withValues(alpha: 0.45),

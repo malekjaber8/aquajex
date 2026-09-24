@@ -1,14 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../models/commande.dart';
+
 /// Sélecteur de quantité : boutons +/- comme avant, mais le nombre au
-/// centre est aussi un champ éditable au clavier.
+/// centre est aussi un champ éditable au clavier. Accepte les quantités
+/// fractionnaires (ex. 0.4, 1.25), certains articles ne se vendant pas à
+/// l'unité entière.
 class StepperQuantite extends StatefulWidget {
-  final int quantite;
+  final double quantite;
   final List<Color> accent;
   final VoidCallback onMoins;
   final VoidCallback onPlus;
-  final ValueChanged<int> onChanged;
+  final ValueChanged<double> onChanged;
 
   const StepperQuantite({
     super.key,
@@ -25,13 +29,13 @@ class StepperQuantite extends StatefulWidget {
 
 class _StepperQuantiteState extends State<StepperQuantite> {
   late final TextEditingController _ctrl = TextEditingController(
-    text: '${widget.quantite}',
+    text: formatQuantite(widget.quantite),
   );
 
   @override
   void didUpdateWidget(covariant StepperQuantite oldWidget) {
     super.didUpdateWidget(oldWidget);
-    final texte = '${widget.quantite}';
+    final texte = formatQuantite(widget.quantite);
     if (oldWidget.quantite != widget.quantite && _ctrl.text != texte) {
       _ctrl.value = _ctrl.value.copyWith(
         text: texte,
@@ -47,9 +51,9 @@ class _StepperQuantiteState extends State<StepperQuantite> {
   }
 
   void _valider(String valeur) {
-    final n = int.tryParse(valeur.trim());
+    final n = double.tryParse(valeur.trim().replaceAll(',', '.'));
     if (n == null) {
-      _ctrl.text = '${widget.quantite}';
+      _ctrl.text = formatQuantite(widget.quantite);
       return;
     }
     widget.onChanged(n);
@@ -67,12 +71,16 @@ class _StepperQuantiteState extends State<StepperQuantite> {
         children: [
           _boutonStepper(Icons.remove, widget.onMoins),
           SizedBox(
-            width: 32,
+            width: 40,
             child: TextField(
               controller: _ctrl,
               textAlign: TextAlign.center,
-              keyboardType: TextInputType.number,
-              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
+              ],
               style: const TextStyle(
                 fontSize: 13.5,
                 fontWeight: FontWeight.w700,

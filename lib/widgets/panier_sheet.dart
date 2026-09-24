@@ -58,11 +58,11 @@ class _PanierSheetState extends State<_PanierSheet> {
     return '${buffer.toString()},${parts[1]}';
   }
 
-  void _modifierQuantite(int index, int delta) {
+  void _modifierQuantite(int index, double delta) {
     _definirQuantite(index, widget.lignes[index].quantite + delta);
   }
 
-  void _definirQuantite(int index, int quantite) {
+  void _definirQuantite(int index, double quantite) {
     setState(() {
       if (quantite <= 0) {
         widget.lignes.removeAt(index);

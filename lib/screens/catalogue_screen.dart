@@ -950,7 +950,9 @@ class _CatalogueScreenState extends State<CatalogueScreen> {
       }
     }
 
-    final panierCount = _panier.fold(0, (s, l) => s + l.quantite);
+    // Nombre d'articles distincts (pas la somme des quantités, qui peuvent
+    // désormais être fractionnaires) — le badge reste un petit entier lisible.
+    final panierCount = _panier.length;
 
     return LayoutBuilder(
       builder: (context, constraints) {
