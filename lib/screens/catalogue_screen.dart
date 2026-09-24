@@ -113,6 +113,21 @@ class _CatalogueScreenState extends State<CatalogueScreen> {
   @override
   void initState() {
     super.initState();
+    final panierVide = PanierService.assurerMode(widget.tarif, widget.modePrix);
+    if (panierVide) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Le tarif a changé depuis votre dernière visite : le panier a '
+              'été vidé pour éviter de mélanger prix détail et prix gros.',
+            ),
+            duration: Duration(seconds: 4),
+          ),
+        );
+      });
+    }
     _chargerGestion();
     // Le catalogue (familles/articles) est partagé en direct via Firestore :
     // toute modification faite par l'admin (PC) apparaît ici automatiquement,
