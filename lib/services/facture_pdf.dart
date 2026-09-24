@@ -203,6 +203,44 @@ Future<Uint8List> genererFacturePdf({
               ),
             ],
           ),
+          if (commande.note != null && commande.note!.isNotEmpty) ...[
+            pw.SizedBox(height: 12),
+            pw.Container(
+              width: double.infinity,
+              padding: const pw.EdgeInsets.symmetric(
+                horizontal: 10,
+                vertical: 8,
+              ),
+              decoration: pw.BoxDecoration(
+                color: PdfColors.amber50,
+                border: pw.Border.all(color: PdfColors.amber200),
+                borderRadius: pw.BorderRadius.circular(8),
+              ),
+              child: pw.RichText(
+                text: pw.TextSpan(
+                  children: [
+                    pw.TextSpan(
+                      text: 'NOTE : ',
+                      style: pw.TextStyle(
+                        fontSize: 11,
+                        fontWeight: pw.FontWeight.bold,
+                        color: accent,
+                      ),
+                    ),
+                    pw.TextSpan(
+                      text: commande.note!,
+                      style: pw.TextStyle(
+                        fontSize: 11,
+                        fontWeight: pw.FontWeight.bold,
+                        color: encre,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+
           pw.SizedBox(height: 16),
 
           // Tableau des articles.
@@ -359,36 +397,6 @@ Future<Uint8List> genererFacturePdf({
             montantEnLettres(commande.totalTtc),
             style: const pw.TextStyle(fontSize: 9),
           ),
-
-          if (commande.note != null && commande.note!.isNotEmpty) ...[
-            pw.SizedBox(height: 14),
-            pw.Container(
-              width: double.infinity,
-              padding: const pw.EdgeInsets.all(10),
-              decoration: pw.BoxDecoration(
-                color: PdfColors.grey100,
-                borderRadius: pw.BorderRadius.circular(8),
-              ),
-              child: pw.Column(
-                crossAxisAlignment: pw.CrossAxisAlignment.start,
-                children: [
-                  pw.Text(
-                    'NOTE',
-                    style: pw.TextStyle(
-                      fontSize: 9,
-                      fontWeight: pw.FontWeight.bold,
-                      color: PdfColors.grey600,
-                    ),
-                  ),
-                  pw.SizedBox(height: 4),
-                  pw.Text(
-                    commande.note!,
-                    style: const pw.TextStyle(fontSize: 10),
-                  ),
-                ],
-              ),
-            ),
-          ],
 
           pw.SizedBox(height: 24),
           pw.Row(

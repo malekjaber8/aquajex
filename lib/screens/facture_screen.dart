@@ -404,6 +404,48 @@ class _FactureScreenState extends State<FactureScreen> {
                                     );
                                   },
                                 ),
+
+                                if (commande.note != null &&
+                                    commande.note!.isNotEmpty) ...[
+                                  const SizedBox(height: 12),
+                                  Container(
+                                    width: double.infinity,
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 14,
+                                      vertical: 10,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFFFF8E6),
+                                      borderRadius: BorderRadius.circular(10),
+                                      border: Border.all(
+                                        color: const Color(0xFFF0D585),
+                                      ),
+                                    ),
+                                    child: RichText(
+                                      text: TextSpan(
+                                        children: [
+                                          TextSpan(
+                                            text: 'NOTE : ',
+                                            style: TextStyle(
+                                              fontSize: 13.5,
+                                              fontWeight: FontWeight.w800,
+                                              color: accent.last,
+                                            ),
+                                          ),
+                                          TextSpan(
+                                            text: commande.note!,
+                                            style: const TextStyle(
+                                              fontSize: 13.5,
+                                              fontWeight: FontWeight.w800,
+                                              color: Color(0xFF1B3B5F),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ],
+
                                 const SizedBox(height: 20),
 
                                 // Tableau des articles. Sur mobile, un tableau
@@ -791,35 +833,6 @@ class _FactureScreenState extends State<FactureScreen> {
                                   ),
                                 ),
 
-                                if (commande.note != null &&
-                                    commande.note!.isNotEmpty) ...[
-                                  const SizedBox(height: 16),
-                                  Container(
-                                    width: double.infinity,
-                                    padding: const EdgeInsets.all(14),
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFFF7F8FA),
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        _labelPetit('NOTE'),
-                                        const SizedBox(height: 6),
-                                        Text(
-                                          commande.note!,
-                                          style: TextStyle(
-                                            fontSize: 12.5,
-                                            color: Colors.black.withValues(
-                                              alpha: 0.65,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
                                 const SizedBox(height: 20),
 
                                 // Cachet & signature.
