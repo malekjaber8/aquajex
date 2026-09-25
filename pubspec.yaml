@@ -38,6 +38,13 @@ dependencies:
   # Sélection de fichiers image pour les fiches articles.
   file_picker: ^10.1.9
 
+  # Prise de photo du RNE d'un client (caméra sur tablette/téléphone,
+  # sélecteur de fichier sur PC).
+  image_picker: ^1.1.2
+
+  # Redimensionnement/compression de la photo du RNE avant enregistrement.
+  image: ^4.5.4
+
   # Génération et partage de la facture PDF.
   pdf: ^3.11.1
   share_plus: ^10.1.2

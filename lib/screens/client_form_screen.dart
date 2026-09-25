@@ -1,6 +1,9 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 
 import '../models/client.dart';
+import '../services/photo_rne_service.dart';
 import '../widgets/decorative_background.dart';
 
 class ClientFormScreen extends StatefulWidget {
@@ -29,6 +32,8 @@ class _ClientFormScreenState extends State<ClientFormScreen> {
   late final TextEditingController _adresseCtrl;
   late final TextEditingController _matriculeCtrl;
   late final TextEditingController _cinCtrl;
+  Uint8List? _photoRne;
+  bool _photoEnCours = false;
 
   bool get _modification => widget.clientExistant != null;
   bool get _estSociete => _type == TypeClient.societe;
@@ -46,6 +51,7 @@ class _ClientFormScreenState extends State<ClientFormScreen> {
     _adresseCtrl = TextEditingController(text: c?.adresse ?? '');
     _matriculeCtrl = TextEditingController(text: c?.matriculeFiscal ?? '');
     _cinCtrl = TextEditingController(text: c?.cin ?? '');
+    _photoRne = c?.photoRne;
   }
 
   @override
@@ -63,6 +69,122 @@ class _ClientFormScreenState extends State<ClientFormScreen> {
 
   String? _videVersNull(String s) => s.trim().isEmpty ? null : s.trim();
 
+  Future<void> _prendrePhotoRne() async {
+    setState(() => _photoEnCours = true);
+    try {
+      final photo = await PhotoRneService.capturer();
+      if (photo != null && mounted) setState(() => _photoRne = photo);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.toString().replaceFirst('Exception: ', '')),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _photoEnCours = false);
+    }
+  }
+
+  void _agrandirPhotoRne() {
+    showDialog<void>(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.black,
+        insetPadding: const EdgeInsets.all(12),
+        child: Stack(
+          children: [
+            InteractiveViewer(
+              child: Image.memory(_photoRne!, fit: BoxFit.contain),
+            ),
+            Positioned(
+              top: 6,
+              right: 6,
+              child: IconButton(
+                onPressed: () => Navigator.of(context).pop(),
+                icon: const Icon(Icons.close, color: Colors.white),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _sectionPhotoRne() {
+    final accent = widget.accent;
+    final cameraDispo = PhotoRneService.cameraDisponible;
+    final photo = _photoRne;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Photo du RNE',
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w700,
+            color: Color(0xFF1B3B5F),
+          ),
+        ),
+        const SizedBox(height: 10),
+        if (photo != null) ...[
+          GestureDetector(
+            onTap: _agrandirPhotoRne,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(14),
+              child: Container(
+                width: double.infinity,
+                height: 200,
+                color: const Color(0xFFF3F5F8),
+                child: Image.memory(photo, fit: BoxFit.cover),
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
+        ],
+        Row(
+          children: [
+            OutlinedButton.icon(
+              onPressed: _photoEnCours ? null : _prendrePhotoRne,
+              icon: _photoEnCours
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : Icon(
+                      cameraDispo
+                          ? Icons.photo_camera_outlined
+                          : Icons.upload_file_outlined,
+                      color: accent.last,
+                    ),
+              label: Text(
+                photo == null
+                    ? (cameraDispo ? 'Prendre une photo' : 'Choisir une image')
+                    : (cameraDispo
+                          ? 'Reprendre la photo'
+                          : "Remplacer l'image"),
+                style: TextStyle(color: accent.last),
+              ),
+            ),
+            if (photo != null) ...[
+              const SizedBox(width: 10),
+              TextButton.icon(
+                onPressed: () => setState(() => _photoRne = null),
+                icon: const Icon(Icons.delete_outline, color: Colors.red),
+                label: const Text(
+                  'Supprimer',
+                  style: TextStyle(color: Colors.red),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ],
+    );
+  }
+
   void _enregistrer() {
     if (!_formKey.currentState!.validate()) return;
     final client = Client(
@@ -78,6 +200,7 @@ class _ClientFormScreenState extends State<ClientFormScreen> {
       adresse: _videVersNull(_adresseCtrl.text),
       matriculeFiscal: _videVersNull(_matriculeCtrl.text),
       cin: _estSociete ? null : _videVersNull(_cinCtrl.text),
+      photoRne: _photoRne,
     );
     Navigator.of(context).pop(client);
   }
@@ -218,6 +341,13 @@ class _ClientFormScreenState extends State<ClientFormScreen> {
                               ],
                             ),
                           ],
+                          const SizedBox(height: 24),
+                          Container(
+                            height: 1,
+                            color: Colors.black.withValues(alpha: 0.06),
+                          ),
+                          const SizedBox(height: 24),
+                          _sectionPhotoRne(),
                         ],
                       ),
                     ),

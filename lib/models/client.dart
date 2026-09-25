@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 enum TypeClient { particulier, societe }
 
 class Client {
@@ -12,6 +14,10 @@ class Client {
   final String? matriculeFiscal;
   final String? cin;
 
+  /// Photo du RNE du client (JPEG compressé), stockée en base64 dans le
+  /// document Firestore comme les images d'articles.
+  final Uint8List? photoRne;
+
   const Client({
     required this.id,
     this.type = TypeClient.particulier,
@@ -23,6 +29,7 @@ class Client {
     this.adresse,
     this.matriculeFiscal,
     this.cin,
+    this.photoRne,
   });
 
   bool get estSociete => type == TypeClient.societe;

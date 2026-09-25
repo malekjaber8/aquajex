@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -93,6 +95,7 @@ class GestionRepository {
     'adresse': c.adresse,
     'matriculeFiscal': c.matriculeFiscal,
     'cin': c.cin,
+    'photoRne': c.photoRne != null ? base64Encode(c.photoRne!) : null,
   };
 
   Client _versClient(Map<String, dynamic> d) => Client(
@@ -106,6 +109,9 @@ class GestionRepository {
     adresse: d['adresse'] as String?,
     matriculeFiscal: d['matriculeFiscal'] as String?,
     cin: d['cin'] as String?,
+    photoRne: d['photoRne'] != null
+        ? base64Decode(d['photoRne'] as String)
+        : null,
   );
 
   // --- Commandes ---
@@ -237,6 +243,7 @@ class GestionRepository {
               'adresse': c.adresse,
               'matriculeFiscal': c.matriculeFiscal,
               'cin': c.cin,
+              'photoRne': c.photoRne != null ? base64Encode(c.photoRne!) : null,
             },
           )
           .toList(),
@@ -287,6 +294,9 @@ class GestionRepository {
             adresse: m['adresse'] as String?,
             matriculeFiscal: m['matriculeFiscal'] as String?,
             cin: m['cin'] as String?,
+            photoRne: m['photoRne'] != null
+                ? base64Decode(m['photoRne'] as String)
+                : null,
           ),
         ),
       );
