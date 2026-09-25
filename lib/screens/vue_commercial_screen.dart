@@ -802,6 +802,58 @@ class _FicheClientSheet extends StatelessWidget {
                   icone: Icons.credit_card_outlined,
                   texte: 'CIN : ${c.cin}',
                 ),
+              if (c.photoRne != null) ...[
+                const SizedBox(height: 20),
+                Text(
+                  'Photo du RNE',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.black.withValues(alpha: 0.45),
+                    letterSpacing: 0.3,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                GestureDetector(
+                  onTap: () => showDialog<void>(
+                    context: context,
+                    builder: (context) => Dialog(
+                      backgroundColor: Colors.black,
+                      insetPadding: const EdgeInsets.all(12),
+                      child: Stack(
+                        children: [
+                          InteractiveViewer(
+                            child: Image.memory(
+                              c.photoRne!,
+                              fit: BoxFit.contain,
+                            ),
+                          ),
+                          Positioned(
+                            top: 6,
+                            right: 6,
+                            child: IconButton(
+                              onPressed: () => Navigator.of(context).pop(),
+                              icon: const Icon(
+                                Icons.close,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(14),
+                    child: Container(
+                      width: double.infinity,
+                      height: 200,
+                      color: const Color(0xFFF3F5F8),
+                      child: Image.memory(c.photoRne!, fit: BoxFit.cover),
+                    ),
+                  ),
+                ),
+              ],
               const SizedBox(height: 24),
               Text(
                 'Commandes (${commandes.length})',
