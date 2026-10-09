@@ -910,6 +910,7 @@ class _CatalogueScreenState extends State<CatalogueScreen> {
             clients: _clients,
             onEdit: _modifierCommande,
             onDelete: _supprimerCommande,
+            isAdmin: widget.isAdmin,
             onChangerStatut: widget.isAdmin ? _changerStatutCommande : null,
             recherche: _rechercheCommande,
             onRechercheChanged: (v) => setState(() => _rechercheCommande = v),

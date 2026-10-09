@@ -15,6 +15,13 @@ class CommandesSection extends StatelessWidget {
   final ValueChanged<Commande> onEdit;
   final ValueChanged<Commande> onDelete;
 
+  /// Un commercial ne peut modifier/supprimer une commande que tant qu'elle
+  /// est "En attente" : dès que l'admin la passe en "Confirmée" ou
+  /// "Livrée", elle est verrouillée pour lui (seul l'admin peut la
+  /// remodifier, en remettant par exemple le statut à "En attente"). L'admin
+  /// n'a lui jamais cette restriction.
+  final bool isAdmin;
+
   /// null = commercial connecté : le statut est visible mais pas modifiable
   /// (seul l'admin peut le changer, voir CommandeTile/_StatutBadge).
   final void Function(Commande commande, StatutCommande statut)?
@@ -33,6 +40,7 @@ class CommandesSection extends StatelessWidget {
     required this.clients,
     required this.onEdit,
     required this.onDelete,
+    required this.isAdmin,
     required this.onChangerStatut,
     required this.recherche,
     required this.onRechercheChanged,
@@ -110,6 +118,8 @@ class CommandesSection extends StatelessWidget {
                   itemCount: resultats.length,
                   itemBuilder: (context, index) {
                     final commande = resultats[index];
+                    final modifiable =
+                        isAdmin || commande.statut == StatutCommande.enAttente;
                     return CommandeTile(
                       commande: commande,
                       accent: accent,
@@ -119,12 +129,14 @@ class CommandesSection extends StatelessWidget {
                             commande: commande,
                             client: _clientPour(commande),
                             tarif: tarif,
-                            onModifier: () => onEdit(commande),
+                            onModifier: modifiable
+                                ? () => onEdit(commande)
+                                : null,
                           ),
                         ),
                       ),
-                      onEdit: () => onEdit(commande),
-                      onDelete: () => onDelete(commande),
+                      onEdit: modifiable ? () => onEdit(commande) : null,
+                      onDelete: modifiable ? () => onDelete(commande) : null,
                       onChangerStatut: onChangerStatut == null
                           ? null
                           : (statut) => onChangerStatut!(commande, statut),
