@@ -1,11 +1,13 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 
 import '../models/article.dart';
 import '../models/mode_prix.dart';
 import '../models/tarif.dart';
 import '../services/catalogue_repository.dart';
+import '../services/export_photos_service.dart';
 import '../widgets/decorative_background.dart';
 import '../widgets/gestion_stock_view.dart';
 import '../widgets/sidebar_nav.dart';
@@ -93,6 +95,49 @@ class _TarifSelectionScreenState extends State<TarifSelectionScreen> {
     Navigator.of(
       context,
     ).push(MaterialPageRoute(builder: (_) => const GestionCommerciauxScreen()));
+  }
+
+  /// Enregistre sur le disque toutes les photos d'articles déjà dans le
+  /// catalogue — utile pour les réutiliser ailleurs (ex. le site vitrine)
+  /// sans jamais manipuler d'identifiants Firebase en dehors de l'appli.
+  Future<void> _exporterPhotos() async {
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator()),
+    );
+    try {
+      final resultat = await ExportPhotosService.exporter();
+      if (!mounted) return;
+      Navigator.of(context).pop();
+      if (resultat == null) return;
+      await showDialog<void>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Export terminé'),
+          content: Text(
+            '${resultat.nombrePhotos} photo(s) enregistrée(s) dans :\n'
+            '${resultat.dossier}'
+            '${resultat.nombreArticlesSansPhoto > 0 ? '\n\n${resultat.nombreArticlesSansPhoto} article(s) sans photo, ignoré(s).' : ''}',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('OK'),
+            ),
+          ],
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      Navigator.of(context).pop();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Échec de l\'export : $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   void _ouvrirCatalogue(Tarif tarif, {Article? article}) {
@@ -330,6 +375,14 @@ class _TarifSelectionScreenState extends State<TarifSelectionScreen> {
                     _AdminActionBadge(onTap: _ouvrirGestionCommerciaux),
                     const SizedBox(height: 10),
                   ],
+                  if (widget.isAdmin && !kIsWeb) ...[
+                    _AdminActionBadge(
+                      onTap: _exporterPhotos,
+                      icone: Icons.download_outlined,
+                      libelle: 'Exporter photos',
+                    ),
+                    const SizedBox(height: 10),
+                  ],
                   _ModePrixBadge(modePrix: _modePrix, onTap: _choisirModePrix),
                 ],
               ),
@@ -379,8 +432,14 @@ class _TarifSelectionScreenState extends State<TarifSelectionScreen> {
 
 class _AdminActionBadge extends StatelessWidget {
   final VoidCallback onTap;
+  final IconData icone;
+  final String libelle;
 
-  const _AdminActionBadge({required this.onTap});
+  const _AdminActionBadge({
+    required this.onTap,
+    this.icone = Icons.admin_panel_settings_outlined,
+    this.libelle = 'Commerciaux',
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -400,13 +459,13 @@ class _AdminActionBadge extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(
-                Icons.admin_panel_settings_outlined,
+                icone,
                 size: 15,
                 color: Colors.black.withValues(alpha: 0.35),
               ),
               const SizedBox(width: 6),
               Text(
-                'Commerciaux',
+                libelle,
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
